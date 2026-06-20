@@ -385,7 +385,7 @@ export function HeroSection() {
       <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-7 lg:px-12">
 
         {/* === 第一区：左侧品牌文案 + 右侧盾牌/跑马灯 === */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 md:gap-10 lg:gap-14 items-start pt-2 sm:pt-8 md:pt-12 lg:pt-16 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] lg:grid-cols-[1fr_360px] gap-6 md:gap-8 lg:gap-14 items-start pt-2 sm:pt-8 md:pt-12 lg:pt-16 pb-4">
 
           {/* ── 左列：品牌文案（紧凑一体化） ── */}
           <div className="max-w-xl order-1 sm:pr-4 md:pr-6 lg:pr-10 xl:pr-16">
