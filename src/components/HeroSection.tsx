@@ -1,14 +1,11 @@
-import { useState, useEffect, useRef, Suspense } from 'react'
-import React from 'react'
-import { Shield, Sparkles, ArrowRight, Zap, GraduationCap, ShieldCheck, Newspaper, Briefcase, Target, BookOpen, MessageCircle, Star } from 'lucide-react'
-import { Canvas } from '@react-three/fiber'
-import { AnimatePresence, motion } from 'framer-motion'
-
-import { useAppContext } from '../context/AppContext'
+﻿import React, { useState, useEffect, useRef } from 'react'
+import ReactDOM from 'react-dom'
+import { Sparkles, ArrowRight, Target, BookOpen, GraduationCap, MessageCircle, Newspaper } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 /* ═══════════════════════════════════════════════════════════════
-   AIShield Lab — Hero Section v4
-   B/D variant switcher + drag hint + feature card nav + ripple CTA
+   AIShield Lab — Hero Section v12
+   紧凑三段式：品牌区(左) → 盾牌+跑马灯(右) → 功能卡(底)
    ═══════════════════════════════════════════════════════════════ */
 
 const STAR_DATA = [
@@ -48,7 +45,6 @@ function StarField() {
   )
 }
 
-/* ── Ripple effect hook ── */
 function useRipple() {
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([])
   const idRef = useRef(0)
@@ -64,190 +60,201 @@ function useRipple() {
   return { ripples, handleClick }
 }
 
-/* ── Feature Showcase — immersive horizontal gallery ── */
-function FeatureShowcase() {
-  const { dispatch } = useAppContext()
-  const sections = [
-    {
-      tag: '靶场',
-      tagColor: '#22D3EE',
-      tagBg: 'rgba(34,211,238,0.1)',
-      tagBorder: 'rgba(34,211,238,0.2)',
-      title: '游戏化靶场',
-      desc: '50+ 实战关卡，覆盖 Prompt 注入、对抗攻击、数据泄露等核心方向',
-      cta: '进入挑战',
-      gradient: 'linear-gradient(145deg, #0C1428 0%, #0A1628 50%, #0D1A35 100%)',
-      borderGlow: 'rgba(34,211,238,0.15)',
-      accentGlow: 'rgba(34,211,238,0.08)',
-      nav: 'range' as const,
-    },
-    {
-      tag: '课程',
-      tagColor: '#A78BFA',
-      tagBg: 'rgba(167,139,250,0.1)',
-      tagBorder: 'rgba(167,139,250,0.2)',
-      title: '交互式课程',
-      desc: '200+ 安全教程，从入门到精通，AI 与安全交叉领域全覆盖',
-      cta: '开始学习',
-      gradient: 'linear-gradient(145deg, #130D28 0%, #110A25 50%, #160D30 100%)',
-      borderGlow: 'rgba(167,139,250,0.15)',
-      accentGlow: 'rgba(167,139,250,0.08)',
-      nav: 'knowledge' as const,
-    },
-    {
-      tag: '社区',
-      tagColor: '#34D399',
-      tagBg: 'rgba(52,211,153,0.1)',
-      tagBorder: 'rgba(52,211,153,0.2)',
-      title: '技术社区',
-      desc: '10K+ 学习者聚集地，共享实战经验、讨论前沿话题、组队刷题',
-      cta: '加入讨论',
-      gradient: 'linear-gradient(145deg, #0A1410 0%, #081210 50%, #0C1812 100%)',
-      borderGlow: 'rgba(52,211,153,0.15)',
-      accentGlow: 'rgba(52,211,153,0.08)',
-      nav: 'community' as const,
-    },
-    {
-      tag: '招聘',
-      tagColor: '#FBBF24',
-      tagBg: 'rgba(251,191,36,0.1)',
-      tagBorder: 'rgba(251,191,36,0.2)',
-      title: '安全招聘',
-      desc: '企业直招安全岗位，实习/全职/远程灵活选择，快速匹配上岸',
-      cta: '查看岗位',
-      gradient: 'linear-gradient(145deg, #14100A 0%, #120E08 50%, #181208 100%)',
-      borderGlow: 'rgba(251,191,36,0.15)',
-      accentGlow: 'rgba(251,191,36,0.08)',
-      nav: 'jobs' as const,
-    },
-  ]
-
+/* ── 右侧盾牌 ── */
+function HeroVisual() {
   return (
-    <div className="flex gap-3 w-full overflow-x-auto pb-2 scrollbar-hide">
-      {sections.map((s, i) => (
-        <motion.button
-          key={s.title}
-          initial={{ opacity: 0, y: 12 }}
+    <div className="relative w-full h-full flex items-center justify-center">
+      {/* 环境光 */}
+      <div className="absolute w-[320px] h-[320px] rounded-full blur-[100px] opacity-[0.10]"
+        style={{ background: 'radial-gradient(circle, #8B5CF6 0%, #6366F1 50%, transparent 70%)' }} />
+      <div className="absolute w-[220px] h-[220px] rounded-full blur-[80px] opacity-[0.06]"
+        style={{ background: 'radial-gradient(circle, #22D3EE 0%, transparent 70%)' }} />
+
+      {/* 轨道环 */}
+      <div className="absolute w-[260px] h-[260px] rounded-full border border-purple-400/[0.10] animate-spin-slow"
+        style={{ animationDuration: '24s' }} />
+      <div className="absolute w-[310px] h-[310px] rounded-full border border-cyan-400/[0.06] animate-spin-slow"
+        style={{ animationDuration: '36s', animationDirection: 'reverse' }} />
+
+      {/* 盾牌主体 */}
+      <motion.div
+        animate={{ y: [0, -8, 0], rotateY: [0, 6, -6, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        className="relative z-10"
+      >
+        <svg viewBox="0 0 140 170" className="w-28 sm:w-32 md:w-36 lg:w-44 h-auto"
+          style={{ filter: 'drop-shadow(0 0 30px rgba(180,190,210,0.25)) drop-shadow(0 0 60px rgba(140,150,180,0.15))' }}>
+          <defs>
+            {/* 金属主体渐变 — 银钢色 */}
+            <linearGradient id="metalBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#E8ECF2" />
+              <stop offset="20%" stopColor="#C8D0DC" />
+              <stop offset="45%" stopColor="#A8B4C4" />
+              <stop offset="65%" stopColor="#8896AA" />
+              <stop offset="85%" stopColor="#B0BCC8" />
+              <stop offset="100%" stopColor="#D0D8E4" />
+            </linearGradient>
+            {/* 高光渐变 — 左上角反光 */}
+            <linearGradient id="metalHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
+              <stop offset="35%" stopColor="rgba(255,255,255,0.15)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </linearGradient>
+            {/* 边缘金属描边 */}
+            <linearGradient id="metalEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#F0F4F8" />
+              <stop offset="30%" stopColor="#9AACBC" />
+              <stop offset="70%" stopColor="#6A7A8C" />
+              <stop offset="100%" stopColor="#B8C4D0" />
+            </linearGradient>
+            {/* 内部暗面 */}
+            <linearGradient id="metalInner" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3A4555" />
+              <stop offset="40%" stopColor="#252D3A" />
+              <stop offset="70%" stopColor="#1A2230" />
+              <stop offset="100%" stopColor="#2A3545" />
+            </linearGradient>
+            {/* 盾牌中心徽章渐变 — 淡紫蓝点缀 */}
+            <linearGradient id="metalEmblem" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#A78BFA" />
+              <stop offset="50%" stopColor="#7C8CF0" />
+              <stop offset="100%" stopColor="#38BDF8" />
+            </linearGradient>
+            {/* 金属光泽滤镜 */}
+            <filter id="metalShine"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="metalGlow"><feGaussianBlur stdDeviation="4" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+
+          {/* 盾牌外层光晕 */}
+          <path d="M70 6 L130 35 L130 90 C130 125 98 154 70 164 C42 154 10 125 10 90 L10 35 Z"
+            fill="rgba(180,195,215,0.08)" />
+
+          {/* 盾牌主体 — 金属渐变填充 */}
+          <path d="M70 8 L128 36 L128 88 C128 122 98 150 70 160 C42 150 12 122 12 88 L12 36 Z"
+            fill="url(#metalBody)" stroke="url(#metalEdge)" strokeWidth="2.5" strokeLinejoin="round" filter="url(#metalShine)" />
+
+          {/* 高光层 — 左上角斜向反光带 */}
+          <path d="M70 10 L126 37 L126 50 C110 42 90 34 70 30 C50 34 30 42 14 50 L14 37 Z"
+            fill="url(#metalHighlight)" opacity="0.6" />
+
+          {/* 内层深色区域 */}
+          <path d="M70 24 L112 43 L112 84 C112 108 89 130 70 138 C51 130 28 108 28 84 L28 43 Z"
+            fill="url(#metalInner)" stroke="rgba(160,175,195,0.3)" strokeWidth="1.2" strokeLinejoin="round" />
+
+          {/* 内层高光 */}
+          <path d="M70 28 L108 45 L108 55 C95 48 82 42 70 39 C58 42 45 48 32 55 L32 45 Z"
+            fill="rgba(255,255,255,0.06)" />
+
+          {/* 中心闪电/盾牌徽章 */}
+          <g transform="translate(46, 62)">
+            {/* 外圈 */}
+            <circle cx="24" cy="22" r="20" fill="none" stroke="url(#metalEmblem)" strokeWidth="1.8" opacity="0.7" />
+            <circle cx="24" cy="22" r="16" fill="rgba(167,139,250,0.06)" stroke="rgba(167,139,250,0.2)" strokeWidth="1" />
+            {/* 闪电符号 */}
+            <path d="M26 10 L18 23 L24 23 L20 34 L30 19 L24 19 Z" fill="url(#metalEmblem)" opacity="0.9">
+              <animate attributeName="opacity" values="0.9;1;0.85;0.9" dur="2.5s" repeatCount="indefinite" />
+            </path>
+          </g>
+
+          {/* 边缘铆钉装饰 */}
+          <circle cx="20" cy="40" r="2.5" fill="url(#metalEdge)" opacity="0.8" />
+          <circle cx="120" cy="40" r="2.5" fill="url(#metalEdge)" opacity="0.8" />
+          <circle cx="16" cy="78" r="2" fill="url(#metalEdge)" opacity="0.6" />
+          <circle cx="124" cy="78" r="2" fill="url(#metalEdge)" opacity="0.6" />
+          <circle cx="28" cy="115" r="2" fill="url(#metalEdge)" opacity="0.5" />
+          <circle cx="112" cy="115" r="2" fill="url(#metalEdge)" opacity="0.5" />
+
+          {/* 顶部闪烁星光 */}
+          <circle cx="28" cy="22" r="2" fill="white" opacity="0.5" filter="url(#metalGlow)">
+            <animate attributeName="opacity" values="0.5;0.9;0.5" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="114" cy="52" r="1.5" fill="white" opacity="0.3" filter="url(#metalGlow)">
+            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.2s" repeatCount="indefinite" />
+          </circle>
+        </svg>
+      </motion.div>
+    </div>
+  )
+}
+
+/* ── 功能特性卡片（4张核心卡） ── */
+const FEATURE_CARDS = [
+  {
+    icon: GraduationCap,
+    title: '零基础友好',
+    desc: '专为在校生设计，不用装环境不用买服务器',
+    color: '#34D399',
+    bg: 'rgba(52,211,153,0.06)',
+    border: 'rgba(52,211,153,0.18)',
+  },
+  {
+    icon: BookOpen,
+    title: '系统化教程',
+    desc: '200+ 教程覆盖 AI 安全核心知识体系',
+    color: '#A78BFA',
+    bg: 'rgba(167,139,250,0.06)',
+    border: 'rgba(167,139,250,0.18)',
+  },
+  {
+    icon: Target,
+    title: '实战靶场',
+    desc: '50+ 关卡浏览器直接开练，游戏化闯关',
+    color: '#22D3EE',
+    bg: 'rgba(34,211,238,0.06)',
+    border: 'rgba(34,211,238,0.18)',
+  },
+  {
+    icon: MessageCircle,
+    title: 'AI 面试训练',
+    desc: '双 AI 角色，模拟真实面试场景',
+    color: '#F472B6',
+    bg: 'rgba(244,114,182,0.06)',
+    border: 'rgba(244,114,182,0.18)',
+  },
+]
+
+function FeatureGrid() {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 w-full max-w-4xl mx-auto">
+      {FEATURE_CARDS.map((card, i) => (
+        <motion.div
+          key={card.title}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: i * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: s.nav })}
-          className="group relative flex-shrink-0 w-56 rounded-2xl p-5 text-left cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1"
+          transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="group relative rounded-2xl p-5 lg:p-7 cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1"
           style={{
-            background: s.gradient,
-            border: `1px solid ${s.borderGlow}`,
-            boxShadow: `0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)`,
+            background: 'linear-gradient(145deg, rgba(15,18,35,0.8) 0%, rgba(10,14,28,0.9) 100%)',
+            border: `1px solid ${card.border}`,
+            boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.boxShadow = `0 12px 40px rgba(0,0,0,0.4), 0 0 24px ${s.borderGlow}, inset 0 1px 0 rgba(255,255,255,0.05)`
+            e.currentTarget.style.boxShadow = `0 16px 48px rgba(0,0,0,0.45), 0 0 32px ${card.bg}, inset 0 1px 0 rgba(255,255,255,0.05)`
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.boxShadow = `0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)`
+            e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)'
           }}
         >
-          {/* Background accent glow */}
-          <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 80% 0%, ${s.accentGlow} 0%, transparent 60%)` }} />
-
-          {/* Tag badge */}
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold mb-3"
-            style={{ background: s.tagBg, color: s.tagColor, border: `1px solid ${s.tagBorder}` }}>
-            <span className="w-1 h-1 rounded-full" style={{ background: s.tagColor }} />
-            {s.tag}
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: `radial-gradient(ellipse at 70% 0%, ${card.bg} 0%, transparent 60%)` }} />
+          <div className="relative z-10 w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+            style={{ background: card.bg, border: `1px solid ${card.border}` }}>
+            <card.icon size={18} style={{ color: card.color }} />
           </div>
-
-          {/* Title */}
-          <div className="text-sm font-bold text-white/90 mb-2 group-hover:text-white transition-colors" style={{ letterSpacing: '-0.01em' }}>
-            {s.title}
+          <div className="relative z-10 text-sm font-bold text-white/90 mb-1.5 group-hover:text-white transition-colors">
+            {card.title}
           </div>
-
-          {/* Desc */}
-          <div className="text-[11px] leading-relaxed mb-4" style={{ color: 'rgba(148,163,184,0.6)' }}>
-            {s.desc}
+          <div className="relative z-10 text-xs leading-relaxed" style={{ color: 'rgba(148,163,184,0.6)' }}>
+            {card.desc}
           </div>
-
-          {/* CTA */}
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold transition-all group-hover:gap-2.5"
-            style={{ color: s.tagColor }}>
-            {s.cta}
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M2.5 6h7M6.5 3l3 3-3 3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        </motion.button>
+        </motion.div>
       ))}
     </div>
   )
 }
 
-/* ── 3D Model Canvas with auto-switch (B = 重装, D = 微笑) ── */
-function HeroVisual() {
-  const [showHint, setShowHint] = useState(true)
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowHint(false), 4000)
-    return () => clearTimeout(t)
-  }, [])
-
-  return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center gap-5">
-      {/* Ambient glow */}
-      <div className="absolute w-[380px] h-[380px] rounded-full blur-[120px] opacity-[0.1]"
-        style={{ background: 'radial-gradient(circle, #8B5CF6 0%, #3B82F6 40%, transparent 70%)' }} />
-      <div className="absolute w-[340px] h-[340px] rounded-full border border-purple-400/[0.2] animate-spin-slow" style={{ animationDuration: '20s', boxShadow: '0 0 15px rgba(167,139,250,0.08), inset 0 0 15px rgba(167,139,250,0.04)' }} />
-      <div className="absolute w-[420px] h-[420px] rounded-full border border-blue-400/[0.14] animate-spin-slow" style={{ animationDuration: '30s', animationDirection: 'reverse', boxShadow: '0 0 12px rgba(96,165,250,0.06), inset 0 0 12px rgba(96,165,250,0.03)' }} />
-
-      {/* 3D Model Canvas */}
-      <div className="relative w-[320px] h-[340px] z-10" style={{ perspective: '1000px' }}>
-        <Suspense fallback={
-          <div className="w-full h-full flex items-center justify-center">
-            <Shield className="w-24 h-24 text-purple-400/20 animate-pulse" strokeWidth={0.5} />
-          </div>
-        }>
-          <Canvas camera={{ position: [0, 0.2, 2.8], fov: 44 }} gl={{ antialias: true, alpha: true, toneMapping: 4, outputColorSpace: 'srgb' }} dpr={[1, 2]} style={{ background: 'transparent', width: '100%', height: '100%' }}>
-            <Suspense fallback={null}>
-              <Shieldy />
-            </Suspense>
-          </Canvas>
-        </Suspense>
-
-        {/* Drag hint */}
-        <AnimatePresence>
-          {showHint && (
-            <motion.div
-              key="drag-hint"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono whitespace-nowrap"
-              style={{
-                background: 'rgba(0,0,0,0.5)',
-                border: '1px solid rgba(167,139,250,0.2)',
-                color: 'rgba(167,139,250,0.7)',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1" strokeDasharray="2 1"/></svg>
-              拖拽旋转 · Drag to rotate
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Feature Showcase — horizontal scroll gallery */}
-      <FeatureShowcase />
-    </div>
-  )
-}
-
-/* ── Import + wrap the default export ── */
-import ShieldyModelRaw from './ShieldyModel'
-function Shieldy() {
-  return <ShieldyModelRaw />
-}
-
-/* ═══════════════════════════════════════════════════════════════ */
-
+/* ── 新闻跑马灯（全宽顶栏，参考图：亮紫渐变+大字号） ── */
 export function HeroNewsTicker() {
   const items = [
     { text: '深度伪造语音攻击导致金融诈骗损失上升300%', url: '#' },
@@ -298,19 +305,33 @@ export function HeroNewsTicker() {
           </div>
         </div>
       </div>
-      {/* Toast */}
-      <div style={{
-        position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)',
-        background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '12px 24px', borderRadius: '8px',
-        opacity: toast.visible ? 1 : 0, pointerEvents: 'none', transition: 'opacity 0.3s',
-        zIndex: 1000, fontSize: '14px'
-      }}>
-        {toast.text}
-      </div>
+
+      {/* Toast 提示 — 用 Portal 挂载到 body 避免被 overflow:hidden 裁剪 */}
+      {toast.visible && ReactDOM.createPortal(
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] animate-[fadeInUp_0.25s_ease-out]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(30,27,75,0.97) 0%, rgba(45,35,90,0.95) 100%)',
+            border: '1px solid rgba(139,92,246,0.3)',
+            borderRadius: '12px',
+            padding: '12px 20px',
+            maxWidth: '420px',
+            boxShadow: '0 8px 32px rgba(99,102,241,0.25), 0 0 0 1px rgba(255,255,255,0.05) inset',
+          }}>
+          <div className="flex items-start gap-3">
+            <span style={{ fontSize: '16px', lineHeight: 1 }}>📰</span>
+            <div>
+              <p className="text-white/95 text-sm font-medium leading-relaxed">{toast.text}</p>
+              <p className="text-purple-300/60 text-xs mt-1">（后续对接新闻详情页）</p>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
 
+/* ═══════════════════════════════════════════════════════════════ */
 export function HeroSection() {
   const heroRef = useRef<HTMLDivElement>(null)
   const { ripples, handleClick } = useRipple()
@@ -328,208 +349,177 @@ export function HeroSection() {
   }, [])
 
   return (
-    <section ref={heroRef} className="relative overflow-hidden min-h-screen flex items-center"
-      style={{ '--mouse-x': '50%', '--mouse-y': '50%' } as React.CSSProperties}>
+    <section ref={heroRef} className="relative overflow-hidden flex items-center" style={{ minHeight: '82vh', '--mouse-x': '50%', '--mouse-y': '50%' } as React.CSSProperties}>
 
-      {/* ── Layer 1: Deep cosmic gradient ── */}
+      {/* Background layers */}
       <div className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 120% 100% at 50% -20%, rgba(88,28,135,0.18) 0%, transparent 55%),' +
-            'radial-gradient(ellipse 90% 80% at 80% 60%, rgba(59,130,246,0.10) 0%, transparent 50%),' +
-            'radial-gradient(ellipse 70% 60% at 15% 70%, rgba(139,92,246,0.08) 0%, transparent 50%),' +
+            'radial-gradient(ellipse 120% 100% at 50% -20%, rgba(88,28,135,0.16) 0%, transparent 55%),' +
+            'radial-gradient(ellipse 80% 70% at 75% 50%, rgba(59,130,246,0.08) 0%, transparent 50%),' +
+            'radial-gradient(ellipse 60% 50% at 20% 70%, rgba(139,92,246,0.06) 0%, transparent 50%),' +
             'linear-gradient(180deg, #070B14 0%, #0C1027 40%, #0A0E1F 100%)',
         }}
       />
-
-      {/* ── Layer 2: Mouse-following spotlight ── */}
-      <div className="absolute w-[700px] h-[500px] rounded-full blur-[100px] opacity-[0.07] transition-all duration-700 ease-out pointer-events-none"
+      <div className="absolute w-[600px] h-[450px] rounded-full blur-[100px] opacity-[0.04] transition-all duration-700 ease-out pointer-events-none"
         style={{
           background: 'radial-gradient(circle, #8B5CF6 0%, #3B82F6 50%, transparent 70%)',
           left: 'var(--mouse-x)', top: 'var(--mouse-y)',
           transform: 'translate(-50%, -50%)',
         }}
       />
-
-      {/* ── Layer 3: Star field ── */}
       <StarField />
-
-      {/* ── Layer 4: Subtle grid ── */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
         style={{
           backgroundImage: 'linear-gradient(rgba(139,92,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.3) 1px, transparent 1px)',
           backgroundSize: '72px 72px',
         }}
       />
-
-      {/* ── Layer 5: Noise grain ── */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.018]"
+      <div className="absolute inset-0 pointer-events-none opacity-[0.015]"
         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }}
       />
 
+
+
       {/* ══════════════ MAIN CONTENT ══════════════ */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-10 py-28 lg:py-32">
-        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-20">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-7 lg:px-12">
 
-          {/* ───── LEFT COLUMN ───── */}
-          <div className="flex-1 max-w-2xl space-y-9">
+        {/* === 第一区：左侧品牌文案 + 右侧盾牌/跑马灯 === */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 md:gap-10 lg:gap-14 items-start pt-2 sm:pt-8 md:pt-12 lg:pt-16 pb-4">
 
+          {/* ── 左列：品牌文案（紧凑一体化） ── */}
+          <div className="max-w-xl order-1 sm:pr-4 md:pr-6 lg:pr-10 xl:pr-16">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full backdrop-blur-md border animate-fade"
-              style={{
-                background: 'linear-gradient(135deg, rgba(139,92,246,0.09), rgba(59,130,246,0.05))',
-                borderColor: 'rgba(139,92,246,0.16)',
-                boxShadow: '0 0 24px rgba(139,92,246,0.06), inset 0 1px 0 rgba(255,255,255,0.03)',
-              }}
-            >
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:gap-2.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide"
+                style={{ color: '#34D399', background: 'rgba(52,211,153,0.10)' }}>
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
+                知之学长
               </span>
-              <span className="text-[11px] font-mono tracking-widest uppercase" style={{ color: '#A78BFA' }}>v2.8 Beta</span>
-              <div className="w-px h-3 bg-white/8" />
-              <Sparkles className="w-3 h-3 text-purple-400/60" />
+            </motion.div>
+
+            {/* Title — 渐变文字 + 流动光柱 */}
+            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.08 }}
+              className="text-[2.6rem] sm:text-5xl md:text-6xl lg:text-[68px] xl:text-[76px] font-black leading-[1.05] tracking-[0.02em] mt-6 sm:mt-8 lg:mt-9">
+              <span className="relative block bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #60A5FA 40%, #22D3EE 70%, #34D399 100%)',
+                  backgroundSize: '300% auto',
+                  animation: 'shimmer 8s linear infinite',
+                }}>
+                AIShield Lab
+                {/* 流动光柱 overlay — 慢速扫过 */}
+                <span className="absolute inset-0 bg-clip-text text-transparent pointer-events-none" style={{
+                  backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 45%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.85) 55%, transparent 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'text-sweep 4s ease-in-out infinite',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                }} aria-hidden="true">AIShield Lab</span>
+              </span>
+              <span className="block text-white/95 mt-1 sm:mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-[44px] font-bold">AI 安全学习平台</span>
+            </motion.h1>
+
+            {/* Description — 含星星分隔符 */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.16 }}
+              className="mt-6 sm:mt-10">
+              {/* 分隔装饰线 */}
+              <div className="flex items-center gap-3 mb-4 sm:mb-5" style={{ maxWidth: '120px' }}>
+                <div className="flex-1 h-px rounded-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4))' }} />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: '#A78BFA' }}><path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" fill="currentColor" opacity="0.7"/></svg>
+                <div className="flex-1 h-px rounded-full" style={{ background: 'linear-gradient(90deg, rgba(139,92,246,0.4), transparent)' }} />
+              </div>
+              <p className="text-sm sm:text-base lg:text-lg leading-[1.8] sm:leading-[2]" style={{ color: 'rgba(203,213,225,0.78)' }}>
+                学长带你从青铜到王者，系统理论 + 靶场实战 + AI 面试训练 + 最新资讯，一站式 AI 安全学习平台
+              </p>
+            </motion.div>
+
+            {/* CTA Buttons */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.22 }}
+              className="flex flex-wrap items-center gap-3 sm:gap-4 mt-6 sm:mt-10">
+              {/* 主CTA：跟学长开练 */}
+              <button onClick={(e) => { handleClick(e); window.dispatchEvent(new Event('open-consult-modal')); }}
+                className="group relative inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-white overflow-hidden transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
+                style={{
+                  background: 'linear-gradient(135deg, #F472B6 0%, #EC4899 100%)',
+                  boxShadow: '0 6px 24px rgba(244,114,182,0.4), 0 0 0 1px rgba(244,114,182,0.15) inset',
+                }}>
+                {ripples.map(r => (
+                  <span key={r.id} className="absolute rounded-full pointer-events-none animate-ripple"
+                    style={{ left: r.x, top: r.y, width: 8, height: 8, background: 'rgba(255,255,255,0.3)', transform: 'translate(-50%, -50%)' }} />
+                ))}
+                <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ background: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.18) 0%, transparent 60%)' }} />
+                <Sparkles className="w-4 h-4 relative z-10 group-hover:rotate-12 transition-transform duration-300" strokeWidth={2} />
+                <span className="relative z-10 text-[13px] sm:text-[14px] tracking-wide">跟学长开练</span>
+                <ArrowRight className="w-3.5 h-3.5 relative z-10 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+              </button>
+              {/* 次CTA：看看学习路径 */}
+              <button onClick={() => {
+                const el = document.getElementById('knowledge-base');
+                if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+                else { window.location.href = '/knowledge'; }
+              }}
+                className="group relative inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-medium text-[13px] sm:text-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
+                style={{
+                  color: 'rgba(226,232,240,0.9)',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                }}>
+                <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'linear-gradient(135deg, rgba(244,114,182,0.08) 0%, rgba(99,102,241,0.04) 100%)' }} />
+                <BookOpen className="w-4 h-4 relative z-10 text-slate-400 group-hover:text-[#F472B6] transition-colors" strokeWidth={2} />
+                <span className="relative z-10">看看学习路径</span>
+                <ArrowRight className="w-3.5 h-3.5 relative z-10 text-slate-500 group-hover:text-[#F472B6] group-hover:translate-x-1 transition-all" strokeWidth={2} />
+              </button>
+            </motion.div>
+          </div>
+
+          {/* ── 右列：盾牌 + Slogan（移动端居中显示在文案下方） ── */}
+          <div className="flex flex-col lg:pl-4 items-center order-2 lg:order-2 mt-[12px] sm:mt-[16px] lg:mt-[20px]">
+            <div className="relative h-[160px] sm:h-[240px] md:h-[280px] lg:h-[320px] w-full flex items-center justify-center">
+              <HeroVisual />
             </div>
+            {/* Slogan — 盾牌正下方（移动端缩小字号） */}
+              <p className="mt-1 sm:mt-3 text-[11px] sm:text-base tracking-[0.12em] sm:tracking-[0.16em] font-medium text-center bg-clip-text text-transparent" style={{
+                backgroundImage: 'linear-gradient(135deg, #F472B6 0%, #A78BFA 50%, #818CF8 100%)',
+                WebkitBackgroundClip: 'text', backgroundClip: 'text', opacity: 0.7,
+              }}>
+                「 知之为知之，不知为不知，是智也 」
+              </p>
+          </div>
+        </div>
 
-            {/* Title */}
-            <div className="space-y-4">
-              <h1 className="text-5xl sm:text-6xl lg:text-[68px] font-black leading-[1.06] tracking-[-0.03em]">
-                <span className="block bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #818CF8 18%, #60A5FA 35%, #38BDF8 48%, #22D3EE 62%, #818CF8 78%, #C084FC 92%, #A78BFA 100%)',
-                    backgroundSize: '240% auto',
-                    animation: 'shimmer 6s linear infinite',
-                  }}
-                >
-                  AIShield Lab
-                </span>
-                <span className="block text-white/95 mt-2 font-bold tracking-tight" style={{ fontWeight: 700 }}>
-                  AI 安全学习平台
-                </span>
-              </h1>
-
-              {/* Decorative divider */}
-              <div className="flex items-center gap-3">
-                <div className="h-px w-10" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4))' }} />
-                <Star className="w-3 h-3 text-purple-400/40" strokeWidth={1.5} />
-                <div className="h-px w-10" style={{ background: 'linear-gradient(90deg, rgba(139,92,246,0.4), transparent)' }} />
+        {/* === 数据统计行（功能卡上方）=== */}
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.15 }}
+          className="pb-4 sm:pb-6 pt-3 sm:pt-5 flex items-center justify-start gap-4 sm:gap-10 lg:gap-16 max-w-lg">
+          {[
+            { icon: '⚡', num: '50+', label: '靶场关卡' },
+            { icon: '🎓', num: '200+', label: '安全课程' },
+            { icon: '✅', num: '10K+', label: '学习者' },
+          ].map((stat) => (
+            <div key={stat.label} className="flex items-center gap-2 sm:gap-2.5">
+              <span className="text-sm sm:text-base">{stat.icon}</span>
+              <div>
+                <div className="text-base sm:text-lg lg:text-xl font-bold bg-clip-text text-transparent" style={{
+                  backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #60A5FA 100%)',
+                  WebkitBackgroundClip: 'text', backgroundClip: 'text',
+                }}>{stat.num}</div>
+                <div className="text-[9px] sm:text-[10px]" style={{ color: 'rgba(148,163,184,0.4)' }}>{stat.label}</div>
               </div>
             </div>
+          ))}
+        </motion.div>
 
-            {/* Description */}
-            <p className="text-base lg:text-lg leading-relaxed max-w-xl" style={{ color: 'rgba(203,213,225,0.52)' }}>
-              面向{' '}
-              <span className="font-medium" style={{ color: 'rgba(96,165,250,0.9)' }}>在校生</span>
-              {' '}、{' '}
-              <span className="font-medium" style={{ color: 'rgba(167,139,250,0.9)' }}>转行者</span>
-              {' '}和{' '}
-              <span className="font-medium" style={{ color: 'rgba(52,211,153,0.9)' }}>传统安全从业者</span>
-              {' '}的一站式 AI 安全学习平台。
-              集成{' '}
-              <span className="font-medium text-white/65">游戏化靶场</span>、{' '}
-              <span className="font-medium text-white/65">交互式课程</span>、{' '}
-              <span className="font-medium text-white/65">技术社区</span>、{' '}
-              <span className="font-medium text-white/65">安全招聘</span> 与{' '}
-              <span className="font-medium text-white/65">AI 资讯实时更新</span>，
-              配合智能助教 Shieldy，帮你系统掌握 AI 安全技能。
-            </p>
-
-            {/* CTA Group with Ripple Effect */}
-            <div className="flex flex-wrap items-center gap-4 pt-1">
-              <button
-                onClick={handleClick}
-                className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl font-semibold text-white overflow-hidden transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer"
-                style={{
-                  fontSize: '0.95rem',
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 45%, #3B82F6 100%)',
-                  boxShadow: '0 0 0 1px rgba(139,92,246,0.2), 0 4px 20px rgba(99,102,241,0.3), 0 1px 3px rgba(0,0,0,0.3)',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.35), 0 8px 32px rgba(99,102,241,0.4), 0 2px 6px rgba(0,0,0,0.4)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.boxShadow = '0 0 0 1px rgba(139,92,246,0.2), 0 4px 20px rgba(99,102,241,0.3), 0 1px 3px rgba(0,0,0,0.3)'
-                }}
-              >
-                {/* Ripple elements */}
-                {ripples.map(r => (
-                  <span key={r.id}
-                    className="absolute rounded-full pointer-events-none animate-ripple"
-                    style={{
-                      left: r.x, top: r.y,
-                      width: 10, height: 10,
-                      background: 'rgba(255,255,255,0.3)',
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                  />
-                ))}
-                <Sparkles className="w-4.5 h-4.5 relative z-10" strokeWidth={2} />
-                <span className="relative z-10">开始学习</span>
-                <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
-              </button>
-
-              <button
-                className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-                style={{
-                  fontSize: '0.95rem',
-                  color: 'rgba(203,213,225,0.65)',
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.95)'
-                  e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)'
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.05))'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = 'rgba(203,213,225,0.65)'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))'
-                }}
-              >
-                查看文档
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="flex gap-10 pt-3">
-              {[
-                { value: '50+', label: '靶场关卡', icon: Zap },
-                { value: '200+', label: '安全课程', icon: GraduationCap },
-                { value: '10K+', label: '学习者', icon: ShieldCheck },
-              ].map(stat => {
-                const StatIcon = stat.icon
-                return (
-                  <div key={stat.label} className="group cursor-default">
-                    <div className="flex items-center gap-2.5 mb-1.5">
-                      <StatIcon className="w-4 h-4 text-purple-400/40 group-hover:text-purple-400/70 transition-colors" strokeWidth={1.8} />
-                      <span className="text-3xl font-black tabular-nums tracking-tight bg-clip-text text-transparent"
-                        style={{ backgroundImage: 'linear-gradient(180deg, #C4B5FD 0%, #A78BFA 50%, #818CF8 100%)' }}>
-                        {stat.value}
-                      </span>
-                    </div>
-                    <div className="text-[11px] font-mono tracking-wider uppercase" style={{ color: 'rgba(148,163,184,0.28)' }}>
-                      {stat.label}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* ───── RIGHT COLUMN ───── */}
-          <div className="flex-1 w-full min-h-[480px] lg:min-h-[560px] relative">
-            <HeroVisual />
-          </div>
-
+        {/* === 功能卡片 === */}
+        <div className="pb-6 sm:pb-12 pt-6 sm:pt-10">
+          <FeatureGrid />
         </div>
+
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2.5 opacity-25 hover:opacity-50 transition-opacity">
-        <span className="text-[10px] font-mono tracking-[0.2em] uppercase" style={{ color: 'rgba(203,213,225,0.35)' }}>Scroll</span>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 opacity-15 hover:opacity-35 transition-opacity">
         <div className="w-5 h-8 rounded-full border flex items-start justify-center p-1.5" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           <div className="w-1 h-1.5 rounded-full bg-purple-400/50 animate-bounce" />
         </div>
@@ -537,3 +527,8 @@ export function HeroSection() {
     </section>
   )
 }
+
+
+
+
+
