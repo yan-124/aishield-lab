@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import React from 'react'
 import { Shield, Sparkles, ArrowRight, Zap, GraduationCap, ShieldCheck, Newspaper, Briefcase, Target, BookOpen, MessageCircle, Star } from 'lucide-react'
 import { Canvas } from '@react-three/fiber'
