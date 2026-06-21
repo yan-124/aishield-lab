@@ -155,13 +155,11 @@ export function ShieldyAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-0 right-0 left-0 sm:bottom-6 sm:left-auto sm:z-[60] sm:w-[340px] sm:right-6 sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl flex flex-col"
+            className="fixed bottom-0 right-0 left-0 sm:bottom-6 sm:left-auto sm:z-[60] sm:w-[340px] sm:right-6 sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl flex flex-col sm:h-[560px] sm:max-h-[85vh] max-h-[75vh] h-[75vh]"
             style={{
               background: 'linear-gradient(165deg, #0E1530 0%, #0C1027 60%, #0A0E1F 100%)',
               border: '1px solid rgba(139,92,246,0.18)',
               boxShadow: '0 0 0 1px rgba(139,92,246,0.06), 0 24px 72px rgba(0,0,0,0.65), 0 0 56px rgba(139,92,246,0.06)',
-              maxHeight: 'sm:85vh sm:max-h-[560px] max-h-[75vh]',
-              height: 'auto',
             }}
           >
             {/* ── Header ── */}
