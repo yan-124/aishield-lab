@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, RotateCcw, User, Bot, MessageCircle, Lightbulb, Loader2, FileText, Upload, X, Sparkles, Mic, ChevronDown } from 'lucide-react'
+import { CozeAPI, ChatEventType, type Message } from '@coze/api'
 
 /* ═══════════════════════════════════════════════════════════════
    AIShield Lab — 双AI面试训练场 v3
@@ -7,11 +8,17 @@ import { Send, RotateCcw, User, Bot, MessageCircle, Lightbulb, Loader2, FileText
    左：IT面试助手（面试官） | 右：应聘搭子（参考回答）
    ═══════════════════════════════════════════════════════════════ */
 
-const COZE_API_BASE = 'https://api.coze.cn/v3/chat'
 const COZE_TOKEN = 'pat_A3CznYA1DZfBVkvBLq0asHTVVaIMcUMeFxttoJIbdcKSD8rRbCTqATgkgfpR9pJ0'
 
 const INTERVIEWER_BOT_ID = '7642509976887574571'
 const COACH_BOT_ID = '7642645272891523118'
+
+function getCozeClient() {
+  return new CozeAPI({
+    token: COZE_TOKEN,
+    baseURL: 'https://api.coze.cn',
+  })
+}
 
 interface Message {
   role: 'user' | 'assistant' | 'system'
@@ -32,7 +39,7 @@ interface UploadedFile {
   type: 'jd' | 'resume'
 }
 
-/* ── Coze Chat Hook ── */
+/* ── Coze Chat Hook (使用 @coze/api SDK) ── */
 function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: 'jd' | 'resume') {
   const [session, setSession] = useState<ChatSession>({
     messages: [],
@@ -40,7 +47,7 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
     isLoading: false,
     input: '',
   })
-  const abortRef = useRef<AbortController | null>(null)
+  const streamRef = useRef<AsyncIterable<unknown> | null>(null)
 
   const buildContextPrompt = useCallback((filterType?: 'jd' | 'resume'): string => {
     const files = filterType ? contextFiles.filter(f => f.type === filterType) : contextFiles
@@ -67,66 +74,48 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
       isLoading: true,
     }))
 
-    abortRef.current = new AbortController()
+    const client = getCozeClient()
     const contextPrompt = buildContextPrompt(filterType)
-    const additionalMessages: Record<string, unknown>[] = []
+    const msgs: Array<{ role: string; content: string; content_type?: string }> = []
 
     if (contextPrompt) {
-      additionalMessages.push({ role: 'user', content: contextPrompt, content_type: 'text' })
-      additionalMessages.push({ role: 'assistant', content: '收到，我将基于提供的JD/简历信息进行针对性面试。', content_type: 'text' })
+      msgs.push({ role: 'user', content: contextPrompt, content_type: 'text' })
+      msgs.push({ role: 'assistant', content: '收到，我将基于提供的JD/简历信息进行针对性面试。', content_type: 'text' })
     }
-    additionalMessages.push({ role: 'user', content: text.trim(), content_type: 'text' })
+    msgs.push({ role: 'user', content: text.trim(), content_type: 'text' })
 
     try {
-      const res = await fetch(COZE_API_BASE, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${COZE_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bot_id: botId,
-          user_id: `aishield_user_${Date.now()}`,
-          stream: true,
-          auto_save_history: true,
-          ...(session.conversationId ? { conversation_id: session.conversationId } : {}),
-          additional_messages: additionalMessages,
-        }),
-        signal: abortRef.current.signal,
-      })
-
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => '')
-        throw new Error(`API ${res.status}: ${errBody.slice(0, 200)}`)
-      }
-
-      const reader = res.body?.getReader()
-      if (!reader) throw new Error('No response body')
-
       let assistantContent = ''
       let convId = session.conversationId
-      const decoder = new TextDecoder()
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+      // 使用 @coze/api SDK 的流式接口（自带 CORS 处理）
+      const stream = await client.chat.stream({
+        bot_id: botId,
+        user_id: `aishield_user_${Date.now()}`,
+        auto_save_history: true,
+        ...(session.conversationId ? { conversation_id: session.conversationId } : {}),
+        additional_messages: msgs.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          content_type: m.content_type as any,
+        })),
+      })
 
-        const chunk = decoder.decode(value, { stream: true })
-        for (const line of chunk.split('\n')) {
-          if (line.startsWith('data:')) {
-            try {
-              const data = JSON.parse(line.slice(5))
-              if (data.type === 'conversation.message.delta' && data.data?.content) {
-                assistantContent += data.data.content
-              }
-              if (data.type === 'conversation.message.completed') {
-                convId = data.data?.conversation_id || convId
-              }
-              if (data.type === 'conversation.message.started') {
-                convId = data.data?.conversation_id || convId
-              }
-            } catch {}
-          }
+      streamRef.current = stream as AsyncIterable<unknown>
+
+      for await (const event of stream) {
+        switch (event.event) {
+          case ChatEventType.CONVERSATION_MESSAGE_DELTA:
+            assistantContent += (event as any)?.message?.content ?? ''
+            break
+          case ChatEventType.CONVERSATION_MESSAGE_COMPLETED:
+          case ChatEventType.CONVERSATION_CHAT_STARTED:
+            convId = (event as any)?.data?.conversation_id
+              || (event as any)?.conversation_id
+              || convId
+            break
+          case ChatEventType.ERROR:
+            throw new Error(`Coze Error: ${(event as any)?.error?.msg || event.event}`)
         }
 
         setSession(prev => {
@@ -141,13 +130,14 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
         })
       }
 
+      streamRef.current = null
       setSession(prev => ({ ...prev, isLoading: false }))
     } catch (err: unknown) {
-      if ((err as Error).name === 'AbortError') return
+      streamRef.current = null
       const errMsg = (err as Error).message || ''
       console.error('Chat error:', err)
       let displayErr = `❌ 连接失败: ${errMsg}`
-      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('Load failed')) {
+      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('Load failed') || errMsg.includes('CORS')) {
         displayErr = '⚠️ 面试训练场正在升级中，暂时无法连接 AI 面试官。请稍后再试，或先去靶场练练手～'
       }
       setSession(prev => ({
@@ -159,7 +149,8 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
   }
 
   const reset = () => {
-    abortRef.current?.abort()
+    // @coze/api 不支持 AbortController，直接重置状态即可
+    streamRef.current = null
     setSession({ messages: [], conversationId: null, isLoading: false, input: '' })
   }
 
