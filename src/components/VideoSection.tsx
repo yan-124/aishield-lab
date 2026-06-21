@@ -42,7 +42,7 @@ const gradients = [
 
 export const VideoSection = ({ compact = false }: { compact?: boolean }) => {
   const VideoGrid = ({ limit }: { limit: number }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
       {videos.slice(0, limit).map((video, i) => {
         const color = catColors[video.category] || '#38BDF8';
         return (

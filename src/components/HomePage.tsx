@@ -14,8 +14,8 @@ import { useEffect } from 'react'
    Unified section headers + framer-motion cards + rich Footer
    ═══════════════════════════════════════════════════════════════ */
 
-const sectionClass = "max-w-7xl mx-auto px-6 lg:px-8"
-const sectionSpacing = "py-16 lg:py-24"
+const sectionClass = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+const sectionSpacing = "py-10 sm:py-12 md:py-16 lg:py-24"
 
 /* ── Unified section header ── */
 function SectionHeader({
@@ -46,12 +46,12 @@ function SectionHeader({
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           {/* Brand badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-4"
+          <div className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium mb-3 sm:mb-4"
             style={{ background: badgeBg, color: badgeColor, border: `1px solid ${badgeBorder}` }}>
             {badgeIcon}
             <span>{badgeText}</span>
           </div>
-          <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-white/90 mb-3"
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white/90 mb-3"
             style={{ background: 'linear-gradient(135deg, #F1F5F9 0%, #94A3B8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             {title}
           </h2>

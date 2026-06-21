@@ -210,8 +210,8 @@ function FileUploadBar({
           <Upload size={15} style={{ color: dragOver ? '#22D3EE' : '#3B82F6' }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[12.5px] text-white/70 font-medium">上传岗位 JD 和个人简历</div>
-          <div className="text-[10px] text-white/25">支持 .txt .pdf .md .docx · 面试官参考 JD+简历 · 教练参考简历</div>
+          <div className="text-[12.5px] text-white/70 font-medium">上传 JD / 简历</div>
+          <div className="text-[10px] text-white/25 hidden sm:block">支持 .txt .pdf .md .docx · 面试官参考 JD+简历 · 教练参考简历</div>
         </div>
         <input
           ref={fileInputRef}
@@ -422,7 +422,7 @@ function ChatPanel({
           <button
             onClick={() => onSend(session.input)}
             disabled={session.isLoading || !session.input.trim()}
-            className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5 cursor-pointer disabled:opacity-25 disabled:hover:translate-y-0 shadow-lg"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5 cursor-pointer disabled:opacity-25 disabled:hover:translate-y-0 shadow-lg shrink-0"
             style={{
               background: `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})`,
               boxShadow: `0 4px 20px ${gradientFrom}45`,
@@ -439,6 +439,7 @@ function ChatPanel({
 
 export function InterviewArena() {
   const [contextFiles, setContextFiles] = useState<UploadedFile[]>([])
+  const [showCoach, setShowCoach] = useState(true)
 
   const interviewer = useCozeChat(INTERVIEWER_BOT_ID, contextFiles, undefined)
   const coach = useCozeChat(COACH_BOT_ID, contextFiles, 'resume')
@@ -490,7 +491,7 @@ export function InterviewArena() {
         </div>
 
         {/* 文件上传区 — 靠左 */}
-        <div className="flex justify-start">
+        <div className="flex flex-wrap items-center gap-3 justify-start">
           <FileUploadBar
             files={contextFiles}
             onUpload={handleFileUpload}
@@ -498,8 +499,21 @@ export function InterviewArena() {
           />
         </div>
 
+        {/* 移动端：教练面板切换按钮 */}
+        <div className="md:hidden flex justify-end mb-2">
+          <button onClick={() => setShowCoach(!showCoach)}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all"
+            style={{
+              background: showCoach ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.05)',
+              color: showCoach ? '#34D399' : 'rgba(148,163,184,0.6)',
+              border: showCoach ? '1px solid rgba(52,211,153,0.25)' : '1px solid rgba(255,255,255,0.08)',
+            }}>
+            {showCoach ? '💡 隐藏教练' : '💡 显示教练'}
+          </button>
+        </div>
+
         {/* 双栏聊天 — 窄高长形 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5" style={{ height: 'calc(100vh - 260px)', minHeight: '380px', maxHeight: '520px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5" style={{ height: 'auto', minHeight: '380px', maxHeight: '600px' }}>
           <ChatPanel
             title="🎯 面试官"
             subtitle="IT面试助手 · 真实追问"
@@ -513,19 +527,21 @@ export function InterviewArena() {
             onInputChange={v => interviewer.setSession(s => ({ ...s, input: v }))}
             placeholder="描述你想应聘的岗位，开始面试..."
           />
-          <ChatPanel
-            title="💡 教练"
-            subtitle="应聘搭子 · 参考回答"
-            icon={Lightbulb}
-            accentColor="#34D399"
-            gradientFrom="#059669"
-            gradientTo="#10B981"
-            session={coach.session}
-            onSend={(t) => coach.sendMessage(t)}
-            onReset={coach.reset}
-            onInputChange={v => coach.setSession(s => ({ ...s, input: v }))}
-            placeholder="同步接收面试问题..."
-          />
+          {showCoach && (
+            <ChatPanel
+              title="💡 教练"
+              subtitle="应聘搭子 · 参考回答"
+              icon={Lightbulb}
+              accentColor="#34D399"
+              gradientFrom="#059669"
+              gradientTo="#10B981"
+              session={coach.session}
+              onSend={(t) => coach.sendMessage(t)}
+              onReset={coach.reset}
+              onInputChange={v => coach.setSession(s => ({ ...s, input: v }))}
+              placeholder="同步接收面试问题..."
+            />
+          )}
         </div>
       </div>
     </section>

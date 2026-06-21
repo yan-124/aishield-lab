@@ -195,7 +195,7 @@ export const Navigation = () => {
                       if (e.key === 'Enter' && searchResults.length > 0) handleSearchSelect(searchResults[0].id)
                     }}
                     placeholder="搜索文章..."
-                    className="w-52 pl-9 pr-4 py-2 rounded-xl text-sm text-[#F1F5F9] outline-none transition-all"
+                    className="w-36 max-w-[140px] sm:w-52 pl-9 pr-4 py-2 rounded-xl text-sm text-[#F1F5F9] outline-none transition-all"
                     style={{
                       background: '#111833',
                       border: searchFocused ? '1px solid rgba(139,92,246,0.45)' : '1px solid rgba(139,92,246,0.2)',
@@ -322,13 +322,13 @@ export const Navigation = () => {
                 color: 'white',
                 boxShadow: '0 0 20px rgba(139,92,246,0.2)',
               }}>
-              注册 / 登录
+              <span className="hidden sm:inline">注册 / 登录</span><span className="sm:hidden">登录</span>
             </button>
           )}
 
           {/* 联系学长 CTA */}
           <button onClick={() => setShowConsult(true)}
-            className="hidden xl:flex px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            className="hidden lg:flex px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             style={{
               background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
               color: 'white',
@@ -355,7 +355,7 @@ export const Navigation = () => {
           return (
             <button key={item.key}
               onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: item.key as ViewMode })}
-              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg transition-all duration-200 min-w-[56px]"
+              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg transition-all duration-200 min-w-[44px] xs:min-w-[56px]"
               style={{ color: isActive ? '#A78BFA' : '#64748B' }}>
               <Icon size={18} strokeWidth={isActive ? 2.5 : 1.5} />
               <span className="text-[10px] font-medium">{item.label}</span>
@@ -369,7 +369,7 @@ export const Navigation = () => {
             window.scrollTo({ top: 0, behavior: 'smooth' })
             window.dispatchEvent(new CustomEvent('open-shieldy'))
           }}
-          className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg transition-all duration-200 min-w-[56px]"
+          className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg transition-all duration-200 min-w-[44px] xs:min-w-[56px]"
           style={{ color: '#A78BFA' }}>
           <div className="relative">
             <Bot size={18} strokeWidth={2} />
@@ -386,7 +386,7 @@ export const Navigation = () => {
           return (
             <button key={item.key}
               onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: item.key as ViewMode })}
-              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg transition-all duration-200 min-w-[56px]"
+              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg transition-all duration-200 min-w-[44px] xs:min-w-[56px]"
               style={{ color: isActive ? '#A78BFA' : '#64748B' }}>
               <Icon size={18} strokeWidth={isActive ? 2.5 : 1.5} />
               <span className="text-[10px] font-medium">{item.label}</span>

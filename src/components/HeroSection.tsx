@@ -1,11 +1,12 @@
-﻿import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 import ReactDOM from 'react-dom'
 import { Sparkles, ArrowRight, Target, BookOpen, GraduationCap, MessageCircle, Newspaper } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ShieldyModelCard } from './ShieldyModel'
 
 /* ═══════════════════════════════════════════════════════════════
-   AIShield Lab — Hero Section v12
-   紧凑三段式：品牌区(左) → 盾牌+跑马灯(右) → 功能卡(底)
+   AIShield Lab — Hero Section v13
+   右侧：SVG盾牌 ↔ 3D猫耳模型(b/d) 自动轮播，每6秒切换
    ═══════════════════════════════════════════════════════════════ */
 
 const STAR_DATA = [
@@ -60,8 +61,93 @@ function useRipple() {
   return { ripples, handleClick }
 }
 
-/* ── 右侧盾牌 ── */
+/* ── SVG 盾牌组件 ── */
+function SvgShield() {
+  return (
+    <motion.div
+      animate={{ y: [0, -8, 0], rotateY: [0, 6, -6, 0] }}
+      transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      className="relative z-10"
+    >
+      <svg viewBox="0 0 140 170" className="w-28 sm:w-32 md:w-36 lg:w-44 h-auto"
+        style={{ filter: 'drop-shadow(0 0 30px rgba(180,190,210,0.25)) drop-shadow(0 0 60px rgba(140,150,180,0.15))' }}>
+        <defs>
+          <linearGradient id="metalBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#E8ECF2" />
+            <stop offset="20%" stopColor="#C8D0DC" />
+            <stop offset="45%" stopColor="#A8B4C4" />
+            <stop offset="65%" stopColor="#8896AA" />
+            <stop offset="85%" stopColor="#B0BCC8" />
+            <stop offset="100%" stopColor="#D0D8E4" />
+          </linearGradient>
+          <linearGradient id="metalHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
+            <stop offset="35%" stopColor="rgba(255,255,255,0.15)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+          <linearGradient id="metalEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F0F4F8" />
+            <stop offset="30%" stopColor="#9AACBC" />
+            <stop offset="70%" stopColor="#6A7A8C" />
+            <stop offset="100%" stopColor="#B8C4D0" />
+          </linearGradient>
+          <linearGradient id="metalInner" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3A4555" />
+            <stop offset="40%" stopColor="#252D3A" />
+            <stop offset="70%" stopColor="#1A2230" />
+            <stop offset="100%" stopColor="#2A3545" />
+          </linearGradient>
+          <linearGradient id="metalEmblem" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#A78BFA" />
+            <stop offset="50%" stopColor="#7C8CF0" />
+            <stop offset="100%" stopColor="#38BDF8" />
+          </linearGradient>
+          <filter id="metalShine"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="metalGlow"><feGaussianBlur stdDeviation="4" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <path d="M70 6 L130 35 L130 90 C130 125 98 154 70 164 C42 154 10 125 10 90 L10 35 Z" fill="rgba(180,195,215,0.08)" />
+        <path d="M70 8 L128 36 L128 88 C128 122 98 150 70 160 C42 150 12 122 12 88 L12 36 Z" fill="url(#metalBody)" stroke="url(#metalEdge)" strokeWidth="2.5" strokeLinejoin="round" filter="url(#metalShine)" />
+        <path d="M70 10 L126 37 L126 50 C110 42 90 34 70 30 C50 34 30 42 14 50 L14 37 Z" fill="url(#metalHighlight)" opacity="0.6" />
+        <path d="M70 24 L112 43 L112 84 C112 108 89 130 70 138 C51 130 28 108 28 84 L28 43 Z" fill="url(#metalInner)" stroke="rgba(160,175,195,0.3)" strokeWidth="1.2" strokeLinejoin="round" />
+        <path d="M70 28 L108 45 L108 55 C95 48 82 42 70 39 C58 42 45 48 32 55 L32 45 Z" fill="rgba(255,255,255,0.06)" />
+        <g transform="translate(46, 62)">
+          <circle cx="24" cy="22" r="20" fill="none" stroke="url(#metalEmblem)" strokeWidth="1.8" opacity="0.7" />
+          <circle cx="24" cy="22" r="16" fill="rgba(167,139,250,0.06)" stroke="rgba(167,139,250,0.2)" strokeWidth="1" />
+          <path d="M26 10 L18 23 L24 23 L20 34 L30 19 L24 19 Z" fill="url(#metalEmblem)" opacity="0.9">
+            <animate attributeName="opacity" values="0.9;1;0.85;0.9" dur="2.5s" repeatCount="indefinite" />
+          </path>
+        </g>
+        <circle cx="20" cy="40" r="2.5" fill="url(#metalEdge)" opacity="0.8" />
+        <circle cx="120" cy="40" r="2.5" fill="url(#metalEdge)" opacity="0.8" />
+        <circle cx="16" cy="78" r="2" fill="url(#metalEdge)" opacity="0.6" />
+        <circle cx="124" cy="78" r="2" fill="url(#metalEdge)" opacity="0.6" />
+        <circle cx="28" cy="115" r="2" fill="url(#metalEdge)" opacity="0.5" />
+        <circle cx="112" cy="115" r="2" fill="url(#metalEdge)" opacity="0.5" />
+        <circle cx="28" cy="22" r="2" fill="white" opacity="0.5" filter="url(#metalGlow)">
+          <animate attributeName="opacity" values="0.5;0.9;0.5" dur="3s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="114" cy="52" r="1.5" fill="white" opacity="0.3" filter="url(#metalGlow)">
+          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.2s" repeatCount="indefinite" />
+        </circle>
+      </svg>
+    </motion.div>
+  )
+}
+
+/* ── 右侧：SVG盾牌 ↔ 3D猫耳模型(b/d) 自动轮播 ── */
+const MODEL_URLS = ['/shieldy-3d/shieldy-b.glb', '/shieldy-3d/shieldy-d.glb']
+const SWITCH_INTERVAL = 6000
+
 function HeroVisual() {
+  const [mode, setMode] = useState(0) // 0=svg, 1=3d-b, 2=3d-d
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMode(prev => (prev + 1) % 3)
+    }, SWITCH_INTERVAL)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       {/* 环境光 */}
@@ -76,103 +162,36 @@ function HeroVisual() {
       <div className="absolute w-[310px] h-[310px] rounded-full border border-cyan-400/[0.06] animate-spin-slow"
         style={{ animationDuration: '36s', animationDirection: 'reverse' }} />
 
-      {/* 盾牌主体 */}
-      <motion.div
-        animate={{ y: [0, -8, 0], rotateY: [0, 6, -6, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        className="relative z-10"
-      >
-        <svg viewBox="0 0 140 170" className="w-28 sm:w-32 md:w-36 lg:w-44 h-auto"
-          style={{ filter: 'drop-shadow(0 0 30px rgba(180,190,210,0.25)) drop-shadow(0 0 60px rgba(140,150,180,0.15))' }}>
-          <defs>
-            {/* 金属主体渐变 — 银钢色 */}
-            <linearGradient id="metalBody" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#E8ECF2" />
-              <stop offset="20%" stopColor="#C8D0DC" />
-              <stop offset="45%" stopColor="#A8B4C4" />
-              <stop offset="65%" stopColor="#8896AA" />
-              <stop offset="85%" stopColor="#B0BCC8" />
-              <stop offset="100%" stopColor="#D0D8E4" />
-            </linearGradient>
-            {/* 高光渐变 — 左上角反光 */}
-            <linearGradient id="metalHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
-              <stop offset="35%" stopColor="rgba(255,255,255,0.15)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-            </linearGradient>
-            {/* 边缘金属描边 */}
-            <linearGradient id="metalEdge" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#F0F4F8" />
-              <stop offset="30%" stopColor="#9AACBC" />
-              <stop offset="70%" stopColor="#6A7A8C" />
-              <stop offset="100%" stopColor="#B8C4D0" />
-            </linearGradient>
-            {/* 内部暗面 */}
-            <linearGradient id="metalInner" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3A4555" />
-              <stop offset="40%" stopColor="#252D3A" />
-              <stop offset="70%" stopColor="#1A2230" />
-              <stop offset="100%" stopColor="#2A3545" />
-            </linearGradient>
-            {/* 盾牌中心徽章渐变 — 淡紫蓝点缀 */}
-            <linearGradient id="metalEmblem" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#A78BFA" />
-              <stop offset="50%" stopColor="#7C8CF0" />
-              <stop offset="100%" stopColor="#38BDF8" />
-            </linearGradient>
-            {/* 金属光泽滤镜 */}
-            <filter id="metalShine"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            <filter id="metalGlow"><feGaussianBlur stdDeviation="4" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          </defs>
-
-          {/* 盾牌外层光晕 */}
-          <path d="M70 6 L130 35 L130 90 C130 125 98 154 70 164 C42 154 10 125 10 90 L10 35 Z"
-            fill="rgba(180,195,215,0.08)" />
-
-          {/* 盾牌主体 — 金属渐变填充 */}
-          <path d="M70 8 L128 36 L128 88 C128 122 98 150 70 160 C42 150 12 122 12 88 L12 36 Z"
-            fill="url(#metalBody)" stroke="url(#metalEdge)" strokeWidth="2.5" strokeLinejoin="round" filter="url(#metalShine)" />
-
-          {/* 高光层 — 左上角斜向反光带 */}
-          <path d="M70 10 L126 37 L126 50 C110 42 90 34 70 30 C50 34 30 42 14 50 L14 37 Z"
-            fill="url(#metalHighlight)" opacity="0.6" />
-
-          {/* 内层深色区域 */}
-          <path d="M70 24 L112 43 L112 84 C112 108 89 130 70 138 C51 130 28 108 28 84 L28 43 Z"
-            fill="url(#metalInner)" stroke="rgba(160,175,195,0.3)" strokeWidth="1.2" strokeLinejoin="round" />
-
-          {/* 内层高光 */}
-          <path d="M70 28 L108 45 L108 55 C95 48 82 42 70 39 C58 42 45 48 32 55 L32 45 Z"
-            fill="rgba(255,255,255,0.06)" />
-
-          {/* 中心闪电/盾牌徽章 */}
-          <g transform="translate(46, 62)">
-            {/* 外圈 */}
-            <circle cx="24" cy="22" r="20" fill="none" stroke="url(#metalEmblem)" strokeWidth="1.8" opacity="0.7" />
-            <circle cx="24" cy="22" r="16" fill="rgba(167,139,250,0.06)" stroke="rgba(167,139,250,0.2)" strokeWidth="1" />
-            {/* 闪电符号 */}
-            <path d="M26 10 L18 23 L24 23 L20 34 L30 19 L24 19 Z" fill="url(#metalEmblem)" opacity="0.9">
-              <animate attributeName="opacity" values="0.9;1;0.85;0.9" dur="2.5s" repeatCount="indefinite" />
-            </path>
-          </g>
-
-          {/* 边缘铆钉装饰 */}
-          <circle cx="20" cy="40" r="2.5" fill="url(#metalEdge)" opacity="0.8" />
-          <circle cx="120" cy="40" r="2.5" fill="url(#metalEdge)" opacity="0.8" />
-          <circle cx="16" cy="78" r="2" fill="url(#metalEdge)" opacity="0.6" />
-          <circle cx="124" cy="78" r="2" fill="url(#metalEdge)" opacity="0.6" />
-          <circle cx="28" cy="115" r="2" fill="url(#metalEdge)" opacity="0.5" />
-          <circle cx="112" cy="115" r="2" fill="url(#metalEdge)" opacity="0.5" />
-
-          {/* 顶部闪烁星光 */}
-          <circle cx="28" cy="22" r="2" fill="white" opacity="0.5" filter="url(#metalGlow)">
-            <animate attributeName="opacity" values="0.5;0.9;0.5" dur="3s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="114" cy="52" r="1.5" fill="white" opacity="0.3" filter="url(#metalGlow)">
-            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.2s" repeatCount="indefinite" />
-          </circle>
-        </svg>
-      </motion.div>
+      <AnimatePresence mode="wait">
+        {mode === 0 ? (
+          <motion.div
+            key="svg-shield"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.5 }}
+          >
+            <SvgShield />
+          </motion.div>
+        ) : (
+          <motion.div
+            key={`model-${mode}`}
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.5 }}
+            className="relative z-10 w-full h-full"
+          >
+            <Suspense fallback={
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-purple-400/40 border-t-purple-400 rounded-full animate-spin" />
+              </div>
+            }>
+              <ShieldyModelCard modelUrl={MODEL_URLS[mode === 1 ? 0 : 1]} />
+            </Suspense>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -215,7 +234,7 @@ const FEATURE_CARDS = [
 
 function FeatureGrid() {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 w-full max-w-4xl mx-auto">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-6 w-full max-w-4xl mx-auto">
       {FEATURE_CARDS.map((card, i) => (
         <motion.div
           key={card.title}
@@ -286,7 +305,7 @@ export function HeroNewsTicker() {
         </div>
         {/* 分隔线 */}
         <div className="shrink-0 w-px h-3 mr-3" style={{ background: 'rgba(251,191,36,0.22)' }} />
-        {/* 滚动区域 — 可点击 + 更慢 */}
+        {/* 滚动区域 */}
         <div className="flex-1 overflow-hidden relative" style={{ maskImage: 'linear-gradient(90deg, transparent 0%, black 4%, black 96%, transparent 100%)' }}>
           <div style={{ display: 'inline-flex', whiteSpace: 'nowrap' as const, animation: 'ticker-scroll 36s linear infinite', willChange: 'transform', transform: 'translateZ(0)', minWidth: '200%' }}>
             {dup.map((item, i) => (
@@ -296,7 +315,7 @@ export function HeroNewsTicker() {
                   e.stopPropagation()
                   showToast(item.text)
                 }}
-                className="text-[13px] mr-8 inline-flex items-center cursor-pointer transition-colors duration-200 hover:text-white hover:underline underline-offset-4 decoration-cyan-400/50"
+                className="text-[11px] sm:text-[13px] mr-6 sm:mr-8 inline-flex items-center cursor-pointer transition-colors duration-200 hover:text-white hover:underline underline-offset-4 decoration-cyan-400/50"
                 style={{ color: 'rgba(203,213,225,0.75)' }}>
                 <span className="w-1 h-1 rounded-full mr-2 shrink-0" style={{ background: 'rgba(251,191,36,0.6)' }} />
                 {item.text}
@@ -385,7 +404,7 @@ export function HeroSection() {
       <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-7 lg:px-12">
 
         {/* === 第一区：左侧品牌文案 + 右侧盾牌/跑马灯 === */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] lg:grid-cols-[1fr_360px] gap-6 md:gap-8 lg:gap-14 items-start pt-2 sm:pt-8 md:pt-12 lg:pt-16 pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_280px] md:grid-cols-[1fr_340px] lg:grid-cols-[1fr_360px] gap-6 sm:gap-6 md:gap-8 lg:gap-14 items-start pt-2 sm:pt-8 md:pt-12 lg:pt-16 pb-4">
 
           {/* ── 左列：品牌文案（紧凑一体化） ── */}
           <div className="max-w-xl order-1 sm:pr-4 md:pr-6 lg:pr-10 xl:pr-16">
@@ -475,18 +494,18 @@ export function HeroSection() {
             </motion.div>
           </div>
 
-          {/* ── 右列：盾牌 + Slogan（移动端居中显示在文案下方） ── */}
+          {/* ── 右列：盾牌/3D模型 + Slogan ── */}
           <div className="flex flex-col lg:pl-4 items-center order-2 lg:order-2 mt-[12px] sm:mt-[16px] lg:mt-[20px]">
-            <div className="relative h-[160px] sm:h-[240px] md:h-[280px] lg:h-[320px] w-full flex items-center justify-center">
+            <div className="relative h-[120px] sm:h-[200px] md:h-[280px] lg:h-[320px] w-full flex items-center justify-center">
               <HeroVisual />
             </div>
-            {/* Slogan — 盾牌正下方（移动端缩小字号） */}
-              <p className="mt-1 sm:mt-3 text-[11px] sm:text-base tracking-[0.12em] sm:tracking-[0.16em] font-medium text-center bg-clip-text text-transparent" style={{
-                backgroundImage: 'linear-gradient(135deg, #F472B6 0%, #A78BFA 50%, #818CF8 100%)',
-                WebkitBackgroundClip: 'text', backgroundClip: 'text', opacity: 0.7,
-              }}>
-                「 知之为知之，不知为不知，是智也 」
-              </p>
+            {/* Slogan */}
+            <p className="mt-1 sm:mt-3 text-[11px] sm:text-base tracking-[0.12em] sm:tracking-[0.16em] font-medium text-center bg-clip-text text-transparent" style={{
+              backgroundImage: 'linear-gradient(135deg, #F472B6 0%, #A78BFA 50%, #818CF8 100%)',
+              WebkitBackgroundClip: 'text', backgroundClip: 'text', opacity: 0.7,
+            }}>
+              「 知之为知之，不知为不知，是智也 」
+            </p>
           </div>
         </div>
 
@@ -527,8 +546,3 @@ export function HeroSection() {
     </section>
   )
 }
-
-
-
-
-

@@ -35,7 +35,7 @@ export const NewsFeed = ({ compact = false }: { compact?: boolean }) => {
   const { dispatch } = useAppContext();
 
   const content = (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       {(compact ? news.slice(0, 4) : news).map(item => (
         <div key={item.id} className="p-4 rounded-2xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>

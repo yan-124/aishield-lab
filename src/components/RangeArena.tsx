@@ -174,7 +174,7 @@ export const RangeArena = () => {
           <span className="text-sm font-bold" style={{ color: '#10B981' }}>{completedCount}/10</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
             { id: '1', number: 1, name: '角色扮演', attackType: '身份扮演绕过', difficulty: 1, description: '通过扮演特定角色来绕过AI的安全限制' },
             { id: '2', number: 2, name: '开发者模式', attackType: '系统提示注入', difficulty: 2, description: '尝试触发AI的开发者模式获取敏感信息' },
@@ -554,7 +554,7 @@ const RangeArenaLevel = () => {
 
         {/* 通关弹窗 */}
         {showVictory && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center"
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
             style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}>
             <div className="text-center animate-bounce">
               <div className="text-7xl mb-4">🎉</div>

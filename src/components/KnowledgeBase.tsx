@@ -138,7 +138,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
 
   // ── Full page mode ──
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 space-y-8 relative overflow-hidden">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6 sm:space-y-8 relative overflow-hidden">
       {/* sky/cyan ambient glow in header */}
       <div
         className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10 blur-3xl pointer-events-none"
@@ -196,7 +196,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
       </div>
 
       {/* category filter pills */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-1">
         <button
           onClick={() => setSelectedCat(null)}
           className="px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all duration-200"
@@ -226,7 +226,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
       </div>
 
       {/* category cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {categories.map(cat => (
           <div
             key={cat.id}
@@ -283,8 +283,8 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
       {/* article list header */}
       <div className="flex items-center justify-between pt-4">
         <div className="flex items-center gap-2">
-          <div className="w-1 h-5 rounded-full" style={{ background: 'var(--color-primary-400)' }} />
-          <h2 className="text-lg font-bold text-white">文章列表</h2>
+          <div className="w-1 h-5 rounded-full hidden sm:block" style={{ background: 'var(--color-primary-400)' }} />
+          <h2 className="text-base sm:text-lg font-bold text-white">文章列表</h2>
         </div>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
           共 {filtered.length} 篇
@@ -292,7 +292,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
       </div>
 
       {/* article list */}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {filtered.map(article => {
           const cat = categories.find(c => c.id === article.categoryId)!;
           return (

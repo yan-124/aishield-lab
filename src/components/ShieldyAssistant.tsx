@@ -155,12 +155,13 @@ export function ShieldyAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-6 right-6 z-[60] w-[340px] sm:w-[400px] rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+            className="fixed bottom-0 right-0 left-0 sm:bottom-6 sm:left-auto sm:z-[60] sm:w-[340px] sm:right-6 sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl flex flex-col"
             style={{
               background: 'linear-gradient(165deg, #0E1530 0%, #0C1027 60%, #0A0E1F 100%)',
               border: '1px solid rgba(139,92,246,0.18)',
               boxShadow: '0 0 0 1px rgba(139,92,246,0.06), 0 24px 72px rgba(0,0,0,0.65), 0 0 56px rgba(139,92,246,0.06)',
-              maxHeight: '85vh',
+              maxHeight: 'sm:85vh sm:max-h-[560px] max-h-[75vh]',
+              height: 'auto',
             }}
           >
             {/* ── Header ── */}
@@ -202,7 +203,7 @@ export function ShieldyAssistant() {
 
 
             {/* ── Messages ── */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[180px] scrollbar-thin"
+            <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-3 min-h-[120px] sm:min-h-[180px] max-h-[45vh] sm:max-h-none scrollbar-thin"
               style={{ background: 'rgba(255,255,255,[0.01])' }}>
               {messages.map((msg, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
@@ -244,10 +245,10 @@ export function ShieldyAssistant() {
                 <Sparkles size={11} className="text-purple-400/50" />
                 <span className="text-[10px] text-white/25 uppercase tracking-widest font-mono">快捷提问</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-1.5">
                 {QUICK_QUESTIONS.slice(0, expanded ? 4 : 2).map(q => (
                   <button key={q.label} onClick={() => handleQuickQuestion(q)}
-                    className="px-2.5 py-1.5 rounded-xl text-[11px] leading-tight transition-all hover:-translate-y-0.5 cursor-pointer"
+                    className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl text-[10px] sm:text-[11px] leading-tight transition-all hover:-translate-y-0.5 cursor-pointer"
                     style={{
                       background: 'rgba(139,92,246,0.07)',
                       border: '1px solid rgba(139,92,246,0.13)',
@@ -273,7 +274,7 @@ export function ShieldyAssistant() {
                   placeholder="输入你的问题..."
                   className="flex-1 text-[13px] text-white/85 bg-transparent outline-none placeholder:text-white/18"/>
                 <button onClick={handleSend} disabled={isLoading}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:opacity-40 cursor-pointer"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:opacity-40 cursor-pointer"
                   style={{ background: 'linear-gradient(135deg, #8B5CF6, #6366F1)' }}>
                   <Send size={13} color="white" />
                 </button>

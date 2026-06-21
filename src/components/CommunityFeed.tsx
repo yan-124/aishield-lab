@@ -28,8 +28,8 @@ export const CommunityFeed = ({ compact = false }: { compact?: boolean }) => {
     <div className="space-y-4">
       {(compact ? posts.slice(0, 4) : posts).map(post => (
         <div key={post.id} className="p-5 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
+          <div className="flex items-start sm:items-center gap-3 mb-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg flex-shrink-0"
               style={{ background: 'rgba(16,185,129,0.1)' }}>{post.avatar}</div>
             <div>
               <div className="text-sm font-semibold text-white">{post.author}</div>
