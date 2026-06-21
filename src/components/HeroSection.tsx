@@ -135,7 +135,7 @@ function SvgShield() {
 }
 
 /* ── 右侧：SVG盾牌 ↔ 3D猫耳模型(b/d) 自动轮播 ── */
-const MODEL_URLS = ['/shieldy-3d/shieldy-b.glb', '/shieldy-3d/shieldy-d.glb']
+const MODEL_URLS = ['https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-b.glb', 'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb']
 const SWITCH_INTERVAL = 6000
 
 function HeroVisual() {

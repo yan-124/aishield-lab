@@ -162,7 +162,7 @@ export function ShieldyModelCard({
 }
 
 /* ── Main multi-variant component (renders inside parent Canvas) ── */
-const MODEL_URLS = ['/shieldy-3d/shieldy-b.glb', '/shieldy-3d/shieldy-d.glb']
+const MODEL_URLS = ['https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-b.glb', 'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb']
 
 export default function ShieldyModel() {
   const [models, setModels] = useState<THREE.Group[]>([])
