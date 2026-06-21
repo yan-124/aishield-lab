@@ -200,11 +200,12 @@ export function ShieldyAssistant() {
               </div>
             </div>
 
+            {/* 固定分隔线（不随消息滚动） */}
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.22), transparent)', flexShrink: 0 }} />
 
-
-            {/* ── Messages ── */}
+            {/* ── Messages (border on outer wrapper, not scrolling area) ── */}
             <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-3 min-h-[120px] sm:min-h-[180px] max-h-[45vh] sm:max-h-none scrollbar-thin"
-              style={{ background: 'rgba(255,255,255,0.015)', borderTop: '1px solid rgba(139,92,246,0.18)' }}>
+              style={{ background: 'rgba(255,255,255,0.015)' }}>
               {messages.map((msg, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>

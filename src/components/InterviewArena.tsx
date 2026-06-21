@@ -1,25 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, RotateCcw, User, Bot, MessageCircle, Lightbulb, Loader2, FileText, Upload, X, Sparkles, Mic, ChevronDown } from 'lucide-react'
-import { CozeAPI, ChatEventType, type Message } from '@coze/api'
 
 /* ═══════════════════════════════════════════════════════════════
-   AIShield Lab — 双AI面试训练场 v3
+   AIShield Lab — 双AI面试训练场 v4
    蓝色UI重设计：参考 Coze/ChatGPT 风格
    左：IT面试助手（面试官） | 右：应聘搭子（参考回答）
+   
+   API 调用通过 Cloudflare Worker 代理（/api/coze/chat）
+   Token 存储在 Workers 环境变量中，前端不可见
    ═══════════════════════════════════════════════════════════════ */
 
-const COZE_TOKEN = 'pat_A3CznYA1DZfBVkvBLq0asHTVVaIMcUMeFxttoJIbdcKSD8rRbCTqATgkgfpR9pJ0'
+const PROXY_URL = '/api/coze/chat'  // Cloudflare Worker 代理路径
 
 const INTERVIEWER_BOT_ID = '7642509976887574571'
 const COACH_BOT_ID = '7642645272891523118'
-
-function getCozeClient() {
-  return new CozeAPI({
-    token: COZE_TOKEN,
-    baseURL: 'https://api.coze.cn',
-    allowPersonalAccessTokenInBrowser: true,
-  })
-}
 
 interface Message {
   role: 'user' | 'assistant' | 'system'
@@ -75,7 +69,6 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
       isLoading: true,
     }))
 
-    const client = getCozeClient()
     const contextPrompt = buildContextPrompt(filterType)
     const msgs: Array<{ role: string; content: string; content_type?: string }> = []
 
@@ -89,56 +82,76 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
       let assistantContent = ''
       let convId = session.conversationId
 
-      // 使用 @coze/api SDK 的流式接口（自带 CORS 处理）
-      const stream = await client.chat.stream({
-        bot_id: botId,
-        user_id: `aishield_user_${Date.now()}`,
-        auto_save_history: true,
-        ...(session.conversationId ? { conversation_id: session.conversationId } : {}),
-        additional_messages: msgs.map(m => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-          content_type: m.content_type as any,
-        })),
+      // 通过 Cloudflare Worker 代理调用 Coze API（SSE 流式）
+      const response = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bot_id: botId,
+          user_id: `aishield_user_${Date.now()}`,
+          auto_save_history: true,
+          ...(session.conversationId ? { conversation_id: session.conversationId } : {}),
+          additional_messages: msgs.map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+            content_type: m.content_type as any,
+          })),
+        }),
       })
 
-      streamRef.current = stream as AsyncIterable<unknown>
-
-      for await (const event of stream) {
-        switch (event.event) {
-          case ChatEventType.CONVERSATION_MESSAGE_DELTA:
-            assistantContent += (event as any)?.message?.content ?? ''
-            break
-          case ChatEventType.CONVERSATION_MESSAGE_COMPLETED:
-          case ChatEventType.CONVERSATION_CHAT_STARTED:
-            convId = (event as any)?.data?.conversation_id
-              || (event as any)?.conversation_id
-              || convId
-            break
-          case ChatEventType.ERROR:
-            throw new Error(`Coze Error: ${(event as any)?.error?.msg || event.event}`)
-        }
-
-        setSession(prev => {
-          const msgs = [...prev.messages]
-          const lastMsg = msgs[msgs.length - 1]
-          if (lastMsg?.role === 'assistant') {
-            msgs[msgs.length - 1] = { ...lastMsg, content: assistantContent }
-          } else {
-            msgs.push({ role: 'assistant', content: assistantContent, timestamp: Date.now() })
-          }
-          return { ...prev, messages: msgs, conversationId: convId }
-        })
+      if (!response.ok || !response.body) {
+        throw new Error(`HTTP ${response.status}`)
       }
 
-      streamRef.current = null
-      setSession(prev => ({ ...prev, isLoading: false }))
+      // 手动解析 SSE 流
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue
+          const data = line.slice(5).trim()
+          if (!data || data === '[DONE]') continue
+
+          try {
+            const event = JSON.parse(data)
+            if (event.event === 'conversation.message.delta') {
+              assistantContent += event.message?.content ?? ''
+              setSession(prev => {
+                const ms = [...prev.messages]
+                const last = ms[ms.length - 1]
+                if (last?.role === 'assistant') {
+                  ms[ms.length - 1] = { ...last, content: assistantContent }
+                } else {
+                  ms.push({ role: 'assistant', content: assistantContent, timestamp: Date.now() })
+                }
+                return { ...prev, messages: ms }
+              })
+            } else if (event.event === 'conversation.message.completed' || event.event === 'conversation.chat.started') {
+              convId = event.conversation_id || event.data?.conversation_id || convId
+            } else if (event.event === 'error') {
+              throw new Error(event.msg || event.error?.msg || 'Coze API error')
+            }
+          } catch (e) {
+            // 非JSON行，忽略
+          }
+        }
+      }
+
+      setSession(prev => ({ ...prev, isLoading: false, conversationId: convId }))
     } catch (err: unknown) {
-      streamRef.current = null
       const errMsg = (err as Error).message || ''
       console.error('Chat error:', err)
       let displayErr = `❌ 连接失败: ${errMsg}`
-      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('Load failed') || errMsg.includes('CORS')) {
+      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('Load failed') || errMsg.includes('CORS') || errMsg.includes('404') || errMsg.includes('502')) {
         displayErr = '⚠️ 面试训练场正在升级中，暂时无法连接 AI 面试官。请稍后再试，或先去靶场练练手～'
       }
       setSession(prev => ({
@@ -150,7 +163,6 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
   }
 
   const reset = () => {
-    // @coze/api 不支持 AbortController，直接重置状态即可
     streamRef.current = null
     setSession({ messages: [], conversationId: null, isLoading: false, input: '' })
   }
