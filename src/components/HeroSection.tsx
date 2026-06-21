@@ -134,16 +134,16 @@ function SvgShield() {
   )
 }
 
-/* ── 右侧：SVG盾牌 ↔ 3D猫耳模型(b/d) 自动轮播 ── */
+/* ── 右侧：3D猫耳模型(b/d) 自动轮播 ── */
 const MODEL_URLS = ['https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-b.glb', 'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb']
 const SWITCH_INTERVAL = 6000
 
 function HeroVisual() {
-  const [mode, setMode] = useState(0) // 0=svg, 1=3d-b, 2=3d-d
+  const [modelIndex, setModelIndex] = useState(0) // 0=shieldy-b, 1=shieldy-d
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setMode(prev => (prev + 1) % 3)
+      setModelIndex(prev => (prev + 1) % 2)
     }, SWITCH_INTERVAL)
     return () => clearInterval(timer)
   }, [])
@@ -163,34 +163,22 @@ function HeroVisual() {
         style={{ animationDuration: '36s', animationDirection: 'reverse' }} />
 
       <AnimatePresence mode="wait">
-        {mode === 0 ? (
-          <motion.div
-            key="svg-shield"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.92 }}
-            transition={{ duration: 0.5 }}
-          >
-            <SvgShield />
-          </motion.div>
-        ) : (
-          <motion.div
-            key={`model-${mode}`}
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.92 }}
-            transition={{ duration: 0.5 }}
-            className="relative z-10 w-full h-full"
-          >
-            <Suspense fallback={
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-purple-400/40 border-t-purple-400 rounded-full animate-spin" />
-              </div>
-            }>
-              <ShieldyModelCard modelUrl={MODEL_URLS[mode === 1 ? 0 : 1]} />
-            </Suspense>
-          </motion.div>
-        )}
+        <motion.div
+          key={`model-${modelIndex}`}
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.92 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10 w-full h-full"
+        >
+          <Suspense fallback={
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-purple-400/40 border-t-purple-400 rounded-full animate-spin" />
+            </div>
+          }>
+            <ShieldyModelCard modelUrl={MODEL_URLS[modelIndex]} />
+          </Suspense>
+        </motion.div>
       </AnimatePresence>
     </div>
   )
