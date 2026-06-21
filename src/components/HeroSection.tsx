@@ -134,16 +134,21 @@ function SvgShield() {
   )
 }
 
-/* ── 右侧：3D猫耳模型(b/d) 自动轮播 ── */
-const MODEL_URLS = ['https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-b.glb', 'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb']
+/* ── 右侧：3D猫耳模型(e/f/d/b) 自动轮播（排除黑色模型） ── */
+const MODEL_URLS = [
+  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-e.glb',
+  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-f.glb',
+  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb',
+  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-b.glb',
+]
 const SWITCH_INTERVAL = 6000
 
 function HeroVisual() {
-  const [modelIndex, setModelIndex] = useState(0) // 0=shieldy-b, 1=shieldy-d
+  const [modelIndex, setModelIndex] = useState(0)
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setModelIndex(prev => (prev + 1) % 2)
+      setModelIndex(prev => (prev + 1) % MODEL_URLS.length)
     }, SWITCH_INTERVAL)
     return () => clearInterval(timer)
   }, [])
