@@ -7,7 +7,7 @@ import { Send, RotateCcw, User, Bot, MessageCircle, Lightbulb, Loader2, FileText
    左：IT面试助手（面试官） | 右：应聘搭子（参考回答）
    ═══════════════════════════════════════════════════════════════ */
 
-const COZE_API_BASE = '/api/coze/v3/chat'
+const COZE_API_BASE = 'https://api.coze.cn/v3/chat'
 const COZE_TOKEN = 'pat_A3CznYA1DZfBVkvBLq0asHTVVaIMcUMeFxttoJIbdcKSD8rRbCTqATgkgfpR9pJ0'
 
 const INTERVIEWER_BOT_ID = '7642509976887574571'
@@ -326,7 +326,12 @@ function ChatPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = messagesEndRef.current
+    if (!el) return
+    const parent = el.parentElement
+    if (parent) {
+      parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' })
+    }
   }, [session.messages.length, session.isLoading])
 
   return (
