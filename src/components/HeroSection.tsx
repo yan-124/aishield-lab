@@ -139,7 +139,6 @@ const MODEL_URLS = [
   'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-e.glb',
   'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-f.glb',
   'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb',
-  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-b.glb',
 ]
 const SWITCH_INTERVAL = 6000
 
