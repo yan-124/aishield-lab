@@ -204,7 +204,7 @@ export function ShieldyAssistant() {
 
             {/* ── Messages ── */}
             <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-3 min-h-[120px] sm:min-h-[180px] max-h-[45vh] sm:max-h-none scrollbar-thin"
-              style={{ background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(139,92,246,0.08)' }}>
+              style={{ background: 'rgba(255,255,255,0.015)', borderTop: '1px solid rgba(139,92,246,0.18)' }}>
               {messages.map((msg, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>

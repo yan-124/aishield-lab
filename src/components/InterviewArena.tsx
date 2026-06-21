@@ -17,6 +17,7 @@ function getCozeClient() {
   return new CozeAPI({
     token: COZE_TOKEN,
     baseURL: 'https://api.coze.cn',
+    allowPersonalAccessTokenInBrowser: true,
   })
 }
 
