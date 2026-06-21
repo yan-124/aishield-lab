@@ -21,8 +21,15 @@ function loadGLB(url: string): Promise<THREE.Group> {
               const mats = Array.isArray(child.material) ? child.material : [child.material]
               mats.forEach((mat: any) => {
                 if (mat.isMeshStandardMaterial || mat.isMeshPhongMaterial) {
-                  mat.roughness = Math.max(0.25, (mat.roughness ?? 0.7) - 0.15)
-                  mat.metalness = Math.min(0.45, (mat.metalness ?? 0.1) + 0.12)
+                  mat.roughness = Math.max(0.15, (mat.roughness ?? 0.7) - 0.25)
+                  mat.metalness = Math.min(0.55, (mat.metalness ?? 0.1) + 0.2)
+                  if (mat.color) {
+                    const c = mat.color
+                    const boost = 1.15
+                    c.r = Math.min(1, c.r * boost)
+                    c.g = Math.min(1, c.g * boost)
+                    c.b = Math.min(1, c.b * boost)
+                  }
                 }
               })
             }
@@ -30,10 +37,10 @@ function loadGLB(url: string): Promise<THREE.Group> {
           const box = new THREE.Box3().setFromObject(scene)
           const size = box.getSize(new THREE.Vector3())
           const maxDim = Math.max(size.x, size.y, size.z) || 1
-          scene.scale.setScalar(1.35 / maxDim)
+          scene.scale.setScalar(1.75 / maxDim)
           const box2 = new THREE.Box3().setFromObject(scene)
           const center = box2.getCenter(new THREE.Vector3())
-          scene.position.set(-center.x, -center.y - 0.08, -center.z)
+          scene.position.set(-center.x, -center.y - 0.12, -center.z)
           resolve(scene)
         },
         undefined,
@@ -109,18 +116,20 @@ function LoadingSpinner() {
 export function SceneLighting() {
   return (
     <>
-      <ambientLight intensity={0.5} color="#dde8ff" />
-      <hemisphereLight intensity={0.35} color="#88bbff" groundColor="#050510" />
-      <directionalLight position={[0, 6, 5]} intensity={2.5} color="#ffffff" />
-      <directionalLight position={[-4, 3, 3]} intensity={0.7} color="#60b8ff" />
-      <pointLight position={[2, 1.5, -2]} intensity={0.8} color="#38BDF8" distance={5} />
-      <pointLight position={[0, -1, 1.5]} intensity={0.3} color="#ffffff" distance={4} />
+      <ambientLight intensity={0.75} color="#e8eeff" />
+      <hemisphereLight intensity={0.55} color="#99ccff" groundColor="#0a0a15" />
+      <directionalLight position={[0, 6, 5]} intensity={3.5} color="#ffffff" />
+      <directionalLight position={[-4, 3, 3]} intensity={1.2} color="#60b8ff" />
+      <directionalLight position={[3, 2, -2]} intensity={0.8} color="#a78bfa" />
+      <pointLight position={[2, 1.5, -2]} intensity={1.2} color="#38BDF8" distance={6} />
+      <pointLight position={[0, -1, 1.5]} intensity={0.5} color="#ffffff" distance={5} />
+      <pointLight position={[-2, 0, 2]} intensity={0.6} color="#f472b6" distance={4} />
     </>
   )
 }
 
 /* ── Camera + GL options (reusable) ── */
-export const CAM = { position: [0, 0.2, 2.8] as [number, number, number], fov: 44 }
+export const CAM = { position: [0, 0.15, 2.4] as [number, number, number], fov: 42 }
 export const GL_OPTS = { antialias: true, alpha: true, toneMapping: 4, outputColorSpace: 'srgb' as const }
 
 /* ── Standalone card — used by HeroSection ── */

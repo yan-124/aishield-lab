@@ -412,7 +412,12 @@ function ChatPanel({
               type="text"
               value={session.input}
               onChange={e => onInputChange(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && onSend(session.input)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  onSend(session.input)
+                }
+              }}
               placeholder={placeholder}
               disabled={session.isLoading}
               className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/15 outline-none transition-all duration-300 disabled:opacity-40 hover:border-white/[0.14] focus:border-[#3B82F6]/50 focus:bg-white/[0.05]"

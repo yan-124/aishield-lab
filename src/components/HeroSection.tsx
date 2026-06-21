@@ -166,14 +166,14 @@ function HeroVisual() {
       <div className="absolute w-[310px] h-[310px] rounded-full border border-cyan-400/[0.06] animate-spin-slow"
         style={{ animationDuration: '36s', animationDirection: 'reverse' }} />
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="sync">
         <motion.div
           key={`model-${modelIndex}`}
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.92 }}
-          transition={{ duration: 0.5 }}
-          className="relative z-10 w-full h-full"
+          initial={{ opacity: 0, scale: 0.88, rotateY: -15 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          exit={{ opacity: 0, scale: 0.88, rotateY: 15 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 z-10 w-full h-full"
         >
           <Suspense fallback={
             <div className="w-full h-full flex items-center justify-center">
@@ -411,7 +411,7 @@ export function HeroSection() {
 
             {/* Title — 渐变文字 + 流动光柱 */}
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.08 }}
-              className="text-[2.6rem] sm:text-5xl md:text-6xl lg:text-[68px] xl:text-[76px] font-black leading-[1.05] tracking-[0.02em] mt-6 sm:mt-8 lg:mt-9">
+              className="text-[3rem] sm:text-6xl md:text-7xl lg:text-[80px] xl:text-[88px] font-black leading-[1.05] tracking-[0.02em] mt-6 sm:mt-8 lg:mt-9">
               <span className="relative block bg-clip-text text-transparent"
                 style={{
                   backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #60A5FA 40%, #22D3EE 70%, #34D399 100%)',
@@ -428,7 +428,7 @@ export function HeroSection() {
                   backgroundClip: 'text',
                 }} aria-hidden="true">AIShield Lab</span>
               </span>
-              <span className="block text-white/95 mt-1 sm:mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-[44px] font-bold">AI 安全学习平台</span>
+              <span className="block text-white/95 mt-1 sm:mt-2 text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-bold">AI 安全学习平台</span>
             </motion.h1>
 
             {/* Description — 含星星分隔符 */}
@@ -440,7 +440,7 @@ export function HeroSection() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: '#A78BFA' }}><path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" fill="currentColor" opacity="0.7"/></svg>
                 <div className="flex-1 h-px rounded-full" style={{ background: 'linear-gradient(90deg, rgba(139,92,246,0.4), transparent)' }} />
               </div>
-              <p className="text-sm sm:text-base lg:text-lg leading-[1.8] sm:leading-[2]" style={{ color: 'rgba(203,213,225,0.78)' }}>
+              <p className="text-base sm:text-lg lg:text-xl leading-[1.8] sm:leading-[2]" style={{ color: 'rgba(203,213,225,0.78)' }}>
                 学长带你从青铜到王者，系统理论 + 靶场实战 + AI 面试训练 + 最新资讯，一站式 AI 安全学习平台
               </p>
             </motion.div>
@@ -488,7 +488,7 @@ export function HeroSection() {
 
           {/* ── 右列：盾牌/3D模型 + Slogan ── */}
           <div className="flex flex-col lg:pl-4 items-center order-2 lg:order-2 mt-[12px] sm:mt-[16px] lg:mt-[20px]">
-            <div className="relative h-[120px] sm:h-[200px] md:h-[280px] lg:h-[320px] w-full flex items-center justify-center">
+            <div className="relative h-[180px] sm:h-[280px] md:h-[360px] lg:h-[420px] w-full flex items-center justify-center">
               <HeroVisual />
             </div>
             {/* Slogan */}
