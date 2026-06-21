@@ -156,16 +156,14 @@ export function ShieldyModelCard({
     return () => { cancelled = true }
   }, [modelUrl])
 
+  // 模型加载失败时返回null，不渲染残环
+  if (error) return null
+
   return (
     <Canvas camera={CAM} gl={GL_OPTS} dpr={[1, 2]} className={className}
       style={{ background: 'transparent', width: '100%', height: '100%' }}>
       <SceneLighting />
-      {loading ? <LoadingSpinner /> : error ? (
-        <mesh position={[0, 0, 0]}>
-          <torusGeometry args={[0.35, 0.04, 16, 48]} />
-          <meshStandardMaterial color="#6366F1" emissive="#6366F1" emissiveIntensity={0.6} transparent opacity={0.4} />
-        </mesh>
-      ) : <><GlowRing /><Particles count={35} /><AnimatedModel model={model!} /></>}
+      {loading ? <LoadingSpinner /> : <><GlowRing /><Particles count={35} /><AnimatedModel model={model!} /></>}
     </Canvas>
   )
 }
