@@ -144,10 +144,15 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
       setSession(prev => ({ ...prev, isLoading: false }))
     } catch (err: unknown) {
       if ((err as Error).name === 'AbortError') return
+      const errMsg = (err as Error).message || ''
       console.error('Chat error:', err)
+      let displayErr = `❌ 连接失败: ${errMsg}`
+      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('Load failed')) {
+        displayErr = '⚠️ 面试训练场正在升级中，暂时无法连接 AI 面试官。请稍后再试，或先去靶场练练手～'
+      }
       setSession(prev => ({
         ...prev,
-        messages: [...prev.messages, { role: 'system', content: `❌ 连接失败: ${(err as Error).message}`, timestamp: Date.now() }],
+        messages: [...prev.messages, { role: 'system', content: displayErr, timestamp: Date.now() }],
         isLoading: false,
       }))
     }
