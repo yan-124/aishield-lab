@@ -447,7 +447,7 @@ export function HeroSection() {
 
             {/* CTA Buttons */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.22 }}
-              className="flex flex-wrap items-center gap-3 sm:gap-4 mt-6 sm:mt-10">
+              className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 sm:mt-6">
               {/* 主CTA：跟学长开练 */}
               <button onClick={(e) => { handleClick(e); window.dispatchEvent(new Event('open-consult-modal')); }}
                 className="group relative inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-white overflow-hidden transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
@@ -488,7 +488,7 @@ export function HeroSection() {
 
           {/* ── 右列：盾牌/3D模型 + Slogan ── */}
           <div className="flex flex-col lg:pl-4 items-center order-2 lg:order-2 mt-[12px] sm:mt-[16px] lg:mt-[20px]">
-            <div className="relative h-[180px] sm:h-[280px] md:h-[360px] lg:h-[420px] w-full flex items-center justify-center">
+            <div className="relative h-[140px] sm:h-[220px] md:h-[300px] lg:h-[340px] w-full flex items-center justify-center overflow-visible">
               <HeroVisual />
             </div>
             {/* Slogan */}
@@ -503,7 +503,7 @@ export function HeroSection() {
 
         {/* === 数据统计行（功能卡上方）=== */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.15 }}
-          className="pb-4 sm:pb-6 pt-3 sm:pt-5 flex items-center justify-start gap-4 sm:gap-10 lg:gap-16 max-w-lg">
+          className="pb-2 sm:pb-4 pt-2 sm:pt-3 flex items-center justify-start gap-4 sm:gap-8 lg:gap-12 max-w-lg">
           {[
             { icon: '⚡', num: '50+', label: '靶场关卡' },
             { icon: '🎓', num: '200+', label: '安全课程' },

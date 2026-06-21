@@ -37,7 +37,7 @@ function loadGLB(url: string): Promise<THREE.Group> {
           const box = new THREE.Box3().setFromObject(scene)
           const size = box.getSize(new THREE.Vector3())
           const maxDim = Math.max(size.x, size.y, size.z) || 1
-          scene.scale.setScalar(1.75 / maxDim)
+          scene.scale.setScalar(1.45 / maxDim)
           const box2 = new THREE.Box3().setFromObject(scene)
           const center = box2.getCenter(new THREE.Vector3())
           scene.position.set(-center.x, -center.y - 0.12, -center.z)
@@ -129,7 +129,7 @@ export function SceneLighting() {
 }
 
 /* ── Camera + GL options (reusable) ── */
-export const CAM = { position: [0, 0.15, 2.4] as [number, number, number], fov: 42 }
+export const CAM = { position: [0, 0.2, 2.8] as [number, number, number], fov: 46 }
 export const GL_OPTS = { antialias: true, alpha: true, toneMapping: 4, outputColorSpace: 'srgb' as const }
 
 /* ── Standalone card — used by HeroSection ── */
