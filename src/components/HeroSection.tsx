@@ -181,7 +181,7 @@ export function HeroSection() {
             {/* Title — 渐变文字 + 流动光柱 */}
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.08 }}
               className="flex flex-col leading-[1.08] tracking-[0.01em] mt-6 sm:mt-8 lg:mt-9">
-              <span className="relative inline-block bg-clip-text text-transparent font-extrabold mt-1 sm:mt-2 text-[36px] sm:text-[42px] md:text-[48px] lg:text-[56px] xl:text-[64px]"
+              <span className="relative inline-block bg-clip-text text-transparent font-extrabold mt-1 sm:mt-2 text-[44px] sm:text-[52px] md:text-[60px] lg:text-[70px] xl:text-[80px]"
                 style={{
                   backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #60A5FA 40%, #22D3EE 70%, #34D399 100%)',
                   backgroundSize: '300% auto',
@@ -197,8 +197,8 @@ export function HeroSection() {
                   backgroundClip: 'text',
                 }} aria-hidden="true" />
               </span>
-              <span className="mt-2 sm:mt-3 font-semibold tracking-wide text-[20px] sm:text-[22px] md:text-[24px] lg:text-[26px] xl:text-[28px]" style={{
-                color: 'rgba(203,213,225,0.85)',
+              <span className="mt-2 sm:mt-3 font-semibold tracking-wide text-[26px] sm:text-[28px] md:text-[32px] lg:text-[36px] xl:text-[40px]" style={{
+                color: '#FFFFFF',
                 lineHeight: '1.1',
               }}>AI Agent 安全实战平台</span>
             </motion.h1>
