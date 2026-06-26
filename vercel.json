@@ -1,1 +1,1 @@
-{"buildCommand": "npm run build", "outputDirectory": "dist3", "framework": null, "installCommand": "npm install"}
+{"framework": "vite", "installCommand": "npm install", "buildCommand": "npm run build", "outputDirectory": "dist3"}
