@@ -188,7 +188,7 @@ export function HeroSection() {
                   animation: 'shimmer 8s linear infinite',
                   lineHeight: '1.1',
                 }}>
-                AIShield Lab ✅
+                AIShield Lab 🔴 NEW
                 <span className="absolute inset-0 bg-clip-text text-transparent pointer-events-none" style={{
                   backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 45%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.85) 55%, transparent 100%)',
                   backgroundSize: '200% 100%',
