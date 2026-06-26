@@ -413,7 +413,22 @@ export const RangeArena = () => {
 
         </div>
 
-        {/* 学习进度 — 移到高级篇后面 */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button onClick={() => setActiveModelGroup('basic')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'basic' ? 'bg-green-500/30 text-green-300 ring-1 ring-green-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+            🟢 基础篇 (1-10)
+          </button>
+          <button onClick={() => setActiveModelGroup('intermediate')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'intermediate' ? 'bg-yellow-500/30 text-yellow-300 ring-1 ring-yellow-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+            🟡 进阶篇 (11-18)
+          </button>
+          <button onClick={() => setActiveModelGroup('advanced')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'advanced' ? 'bg-red-500/30 text-red-300 ring-1 ring-red-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+            🔴 高级篇 (19-25)
+          </button>
+        </div>
+
+        {/* 学习进度 — 放在高级篇后面 */}
         <div className="p-2.5 sm:p-3 rounded-xl flex flex-col sm:flex-row items-center gap-2.5 relative mb-6"
           style={{ background: THEME_COLORS.cardBg, border: `1px solid ${THEME_COLORS.border}` }}>
           <div className="absolute inset-0 rounded-2xl opacity-5 pointer-events-none"
@@ -434,21 +449,6 @@ export const RangeArena = () => {
               <div className="absolute inset-0 rounded-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)', animation: 'shimmer 2s infinite' }} />
             </div>
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2 mb-6">
-          <button onClick={() => setActiveModelGroup('basic')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'basic' ? 'bg-green-500/30 text-green-300 ring-1 ring-green-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-            🟢 基础篇 (1-10)
-          </button>
-          <button onClick={() => setActiveModelGroup('intermediate')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'intermediate' ? 'bg-yellow-500/30 text-yellow-300 ring-1 ring-yellow-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-            🟡 进阶篇 (11-18)
-          </button>
-          <button onClick={() => setActiveModelGroup('advanced')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'advanced' ? 'bg-red-500/30 text-red-300 ring-1 ring-red-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-            🔴 高级篇 (19-25)
-          </button>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-8">
