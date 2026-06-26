@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react'
 import ReactDOM from 'react-dom'
-import { Sparkles, ArrowRight, Target, BookOpen, GraduationCap, MessageCircle, Newspaper } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ShieldyModelCard } from './ShieldyModel'
-
-/* ═══════════════════════════════════════════════════════════════
-   AIShield Lab — Hero Section v13
-   右侧：SVG盾牌 ↔ 3D猫耳模型(b/d) 自动轮播，每6秒切换
-   ═══════════════════════════════════════════════════════════════ */
+import { Sparkles, ArrowRight, BookOpen, Newspaper } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { useAppContext } from '../context/AppContext'
 
 const STAR_DATA = [
   {l:'12%',t:'8%',s:4.5,d:0.7,du:3.2,op:0.95},{l:'88%',t:'15%',s:3,d:2.1,du:2.8,op:0.75},
@@ -61,226 +56,24 @@ function useRipple() {
   return { ripples, handleClick }
 }
 
-/* ── SVG 盾牌组件 ── */
-function SvgShield() {
-  return (
-    <motion.div
-      animate={{ y: [0, -8, 0], rotateY: [0, 6, -6, 0] }}
-      transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-      className="relative z-10"
-    >
-      <svg viewBox="0 0 140 170" className="w-28 sm:w-32 md:w-36 lg:w-44 h-auto"
-        style={{ filter: 'drop-shadow(0 0 30px rgba(180,190,210,0.25)) drop-shadow(0 0 60px rgba(140,150,180,0.15))' }}>
-        <defs>
-          <linearGradient id="metalBody" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#E8ECF2" />
-            <stop offset="20%" stopColor="#C8D0DC" />
-            <stop offset="45%" stopColor="#A8B4C4" />
-            <stop offset="65%" stopColor="#8896AA" />
-            <stop offset="85%" stopColor="#B0BCC8" />
-            <stop offset="100%" stopColor="#D0D8E4" />
-          </linearGradient>
-          <linearGradient id="metalHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
-            <stop offset="35%" stopColor="rgba(255,255,255,0.15)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-          </linearGradient>
-          <linearGradient id="metalEdge" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F0F4F8" />
-            <stop offset="30%" stopColor="#9AACBC" />
-            <stop offset="70%" stopColor="#6A7A8C" />
-            <stop offset="100%" stopColor="#B8C4D0" />
-          </linearGradient>
-          <linearGradient id="metalInner" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3A4555" />
-            <stop offset="40%" stopColor="#252D3A" />
-            <stop offset="70%" stopColor="#1A2230" />
-            <stop offset="100%" stopColor="#2A3545" />
-          </linearGradient>
-          <linearGradient id="metalEmblem" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#A78BFA" />
-            <stop offset="50%" stopColor="#7C8CF0" />
-            <stop offset="100%" stopColor="#38BDF8" />
-          </linearGradient>
-          <filter id="metalShine"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          <filter id="metalGlow"><feGaussianBlur stdDeviation="4" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
-        <path d="M70 6 L130 35 L130 90 C130 125 98 154 70 164 C42 154 10 125 10 90 L10 35 Z" fill="rgba(180,195,215,0.08)" />
-        <path d="M70 8 L128 36 L128 88 C128 122 98 150 70 160 C42 150 12 122 12 88 L12 36 Z" fill="url(#metalBody)" stroke="url(#metalEdge)" strokeWidth="2.5" strokeLinejoin="round" filter="url(#metalShine)" />
-        <path d="M70 10 L126 37 L126 50 C110 42 90 34 70 30 C50 34 30 42 14 50 L14 37 Z" fill="url(#metalHighlight)" opacity="0.6" />
-        <path d="M70 24 L112 43 L112 84 C112 108 89 130 70 138 C51 130 28 108 28 84 L28 43 Z" fill="url(#metalInner)" stroke="rgba(160,175,195,0.3)" strokeWidth="1.2" strokeLinejoin="round" />
-        <path d="M70 28 L108 45 L108 55 C95 48 82 42 70 39 C58 42 45 48 32 55 L32 45 Z" fill="rgba(255,255,255,0.06)" />
-        <g transform="translate(46, 62)">
-          <circle cx="24" cy="22" r="20" fill="none" stroke="url(#metalEmblem)" strokeWidth="1.8" opacity="0.7" />
-          <circle cx="24" cy="22" r="16" fill="rgba(167,139,250,0.06)" stroke="rgba(167,139,250,0.2)" strokeWidth="1" />
-          <path d="M26 10 L18 23 L24 23 L20 34 L30 19 L24 19 Z" fill="url(#metalEmblem)" opacity="0.9">
-            <animate attributeName="opacity" values="0.9;1;0.85;0.9" dur="2.5s" repeatCount="indefinite" />
-          </path>
-        </g>
-        <circle cx="20" cy="40" r="2.5" fill="url(#metalEdge)" opacity="0.8" />
-        <circle cx="120" cy="40" r="2.5" fill="url(#metalEdge)" opacity="0.8" />
-        <circle cx="16" cy="78" r="2" fill="url(#metalEdge)" opacity="0.6" />
-        <circle cx="124" cy="78" r="2" fill="url(#metalEdge)" opacity="0.6" />
-        <circle cx="28" cy="115" r="2" fill="url(#metalEdge)" opacity="0.5" />
-        <circle cx="112" cy="115" r="2" fill="url(#metalEdge)" opacity="0.5" />
-        <circle cx="28" cy="22" r="2" fill="white" opacity="0.5" filter="url(#metalGlow)">
-          <animate attributeName="opacity" values="0.5;0.9;0.5" dur="3s" repeatCount="indefinite" />
-        </circle>
-        <circle cx="114" cy="52" r="1.5" fill="white" opacity="0.3" filter="url(#metalGlow)">
-          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.2s" repeatCount="indefinite" />
-        </circle>
-      </svg>
-    </motion.div>
-  )
-}
-
-/* ── 右侧：3D猫耳模型(e/f/d/b) 自动轮播（排除黑色模型） ── */
-const MODEL_URLS = [
-  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-e.glb',
-  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-f.glb',
-  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb',
-]
-const SWITCH_INTERVAL = 6000
-
-function HeroVisual() {
-  const [modelIndex, setModelIndex] = useState(0)
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setModelIndex(prev => (prev + 1) % MODEL_URLS.length)
-    }, SWITCH_INTERVAL)
-    return () => clearInterval(timer)
-  }, [])
-
-  return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      {/* 环境光 */}
-      <div className="absolute w-[320px] h-[320px] rounded-full blur-[100px] opacity-[0.10]"
-        style={{ background: 'radial-gradient(circle, #8B5CF6 0%, #6366F1 50%, transparent 70%)' }} />
-      <div className="absolute w-[220px] h-[220px] rounded-full blur-[80px] opacity-[0.06]"
-        style={{ background: 'radial-gradient(circle, #22D3EE 0%, transparent 70%)' }} />
-
-      {/* 轨道环 */}
-      <div className="absolute w-[260px] h-[260px] rounded-full border border-purple-400/[0.10] animate-spin-slow"
-        style={{ animationDuration: '24s' }} />
-      <div className="absolute w-[310px] h-[310px] rounded-full border border-cyan-400/[0.06] animate-spin-slow"
-        style={{ animationDuration: '36s', animationDirection: 'reverse' }} />
-
-      <AnimatePresence mode="sync">
-        <motion.div
-          key={`model-${modelIndex}`}
-          initial={{ opacity: 0, scale: 0.88, rotateY: -15 }}
-          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-          exit={{ opacity: 0, scale: 0.88, rotateY: 15 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute inset-0 z-10 w-full h-full"
-        >
-          <Suspense fallback={
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-purple-400/40 border-t-purple-400 rounded-full animate-spin" />
-            </div>
-          }>
-            <ShieldyModelCard modelUrl={MODEL_URLS[modelIndex]} />
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  )
-}
-
-/* ── 功能特性卡片（4张核心卡） ── */
-const FEATURE_CARDS = [
-  {
-    icon: GraduationCap,
-    title: '零基础友好',
-    desc: '专为在校生设计，不用装环境不用买服务器',
-    color: '#34D399',
-    bg: 'rgba(52,211,153,0.06)',
-    border: 'rgba(52,211,153,0.18)',
-  },
-  {
-    icon: BookOpen,
-    title: '系统化教程',
-    desc: '200+ 教程覆盖 AI 安全核心知识体系',
-    color: '#A78BFA',
-    bg: 'rgba(167,139,250,0.06)',
-    border: 'rgba(167,139,250,0.18)',
-  },
-  {
-    icon: Target,
-    title: '实战靶场',
-    desc: '50+ 关卡浏览器直接开练，游戏化闯关',
-    color: '#22D3EE',
-    bg: 'rgba(34,211,238,0.06)',
-    border: 'rgba(34,211,238,0.18)',
-  },
-  {
-    icon: MessageCircle,
-    title: 'AI 面试训练',
-    desc: '双 AI 角色，模拟真实面试场景',
-    color: '#F472B6',
-    bg: 'rgba(244,114,182,0.06)',
-    border: 'rgba(244,114,182,0.18)',
-  },
-]
-
-function FeatureGrid() {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-6 w-full max-w-4xl mx-auto">
-      {FEATURE_CARDS.map((card, i) => (
-        <motion.div
-          key={card.title}
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="group relative rounded-2xl p-5 lg:p-7 cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1"
-          style={{
-            background: 'linear-gradient(145deg, rgba(15,18,35,0.8) 0%, rgba(10,14,28,0.9) 100%)',
-            border: `1px solid ${card.border}`,
-            boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.boxShadow = `0 16px 48px rgba(0,0,0,0.45), 0 0 32px ${card.bg}, inset 0 1px 0 rgba(255,255,255,0.05)`
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)'
-          }}
-        >
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: `radial-gradient(ellipse at 70% 0%, ${card.bg} 0%, transparent 60%)` }} />
-          <div className="relative z-10 w-9 h-9 rounded-xl flex items-center justify-center mb-3"
-            style={{ background: card.bg, border: `1px solid ${card.border}` }}>
-            <card.icon size={18} style={{ color: card.color }} />
-          </div>
-          <div className="relative z-10 text-sm font-bold text-white/90 mb-1.5 group-hover:text-white transition-colors">
-            {card.title}
-          </div>
-          <div className="relative z-10 text-xs leading-relaxed" style={{ color: 'rgba(148,163,184,0.6)' }}>
-            {card.desc}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
+const HeroVisual = React.lazy(() => import('./ShieldyModel'))
 
 /* ── 新闻跑马灯（全宽顶栏，参考图：亮紫渐变+大字号） ── */
 export function HeroNewsTicker() {
+  const { dispatch } = useAppContext()
   const items = [
-    { text: '深度伪造语音攻击导致金融诈骗损失上升300%', url: '#' },
-    { text: 'Google发布AI安全评估框架SAIF更新版', url: '#' },
-    { text: 'Meta开源Purple Llama安全工具套件', url: '#' },
-    { text: '研究人员发现新型LLM水印绕过攻击方法', url: '#' },
-    { text: 'OpenAI发布新版安全对齐技术文档', url: '#' },
-    { text: '欧盟AI法案正式生效，企业合规指南发布', url: '#' },
+    { text: '深度伪造语音攻击导致金融诈骗损失上升300%', newsId: '1' },
+    { text: 'Google发布AI安全评估框架SAIF更新版', newsId: '2' },
+    { text: 'Meta开源Purple Llama安全工具套件', newsId: '3' },
+    { text: '研究人员发现新型LLM水印绕过攻击方法', newsId: '4' },
+    { text: 'OpenAI发布新版安全对齐技术文档', newsId: '5' },
+    { text: '欧盟AI法案正式生效，企业合规指南发布', newsId: '6' },
   ]
   const dup = [...items, ...items]
-  const [toast, setToast] = React.useState<{ text: string; visible: boolean }>({ text: '', visible: false })
 
-  const showToast = (text: string) => {
-    setToast({ text, visible: true })
-    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000)
+  const handleClick = (newsId: string) => {
+    dispatch({ type: 'SET_CURRENT_ARTICLE', payload: newsId })
+    dispatch({ type: 'SET_VIEW_MODE', payload: 'news-detail' })
   }
 
   return (
@@ -301,43 +94,16 @@ export function HeroNewsTicker() {
         <div className="flex-1 overflow-hidden relative" style={{ maskImage: 'linear-gradient(90deg, transparent 0%, black 4%, black 96%, transparent 100%)' }}>
           <div style={{ display: 'inline-flex', whiteSpace: 'nowrap' as const, animation: 'ticker-scroll 36s linear infinite', willChange: 'transform', transform: 'translateZ(0)', minWidth: '200%' }}>
             {dup.map((item, i) => (
-              <a key={i} href={item.url}
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  showToast(item.text)
-                }}
+              <button key={i} onClick={() => handleClick(item.newsId)}
                 className="text-[11px] sm:text-[13px] mr-6 sm:mr-8 inline-flex items-center cursor-pointer transition-colors duration-200 hover:text-white hover:underline underline-offset-4 decoration-cyan-400/50"
                 style={{ color: 'rgba(203,213,225,0.75)' }}>
                 <span className="w-1 h-1 rounded-full mr-2 shrink-0" style={{ background: 'rgba(251,191,36,0.6)' }} />
                 {item.text}
-              </a>
+              </button>
             ))}
           </div>
         </div>
       </div>
-
-      {/* Toast 提示 — 用 Portal 挂载到 body 避免被 overflow:hidden 裁剪 */}
-      {toast.visible && ReactDOM.createPortal(
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] animate-[fadeInUp_0.25s_ease-out]"
-          style={{
-            background: 'linear-gradient(135deg, rgba(30,27,75,0.97) 0%, rgba(45,35,90,0.95) 100%)',
-            border: '1px solid rgba(139,92,246,0.3)',
-            borderRadius: '12px',
-            padding: '12px 20px',
-            maxWidth: '420px',
-            boxShadow: '0 8px 32px rgba(99,102,241,0.25), 0 0 0 1px rgba(255,255,255,0.05) inset',
-          }}>
-          <div className="flex items-start gap-3">
-            <span style={{ fontSize: '16px', lineHeight: 1 }}>📰</span>
-            <div>
-              <p className="text-white/95 text-sm font-medium leading-relaxed">{toast.text}</p>
-              <p className="text-purple-300/60 text-xs mt-1">（后续对接新闻详情页）</p>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   )
 }
@@ -346,6 +112,7 @@ export function HeroNewsTicker() {
 export function HeroSection() {
   const heroRef = useRef<HTMLDivElement>(null)
   const { ripples, handleClick } = useRipple()
+  const { dispatch } = useAppContext()
 
   useEffect(() => {
     const hero = heroRef.current
@@ -360,6 +127,8 @@ export function HeroSection() {
   }, [])
 
   return (
+    <>
+    <style>{`@keyframes shieldy-fadein { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
     <section ref={heroRef} className="relative overflow-hidden flex items-center" style={{ minHeight: '82vh', '--mouse-x': '50%', '--mouse-y': '50%' } as React.CSSProperties}>
 
       {/* Background layers */}
@@ -396,10 +165,10 @@ export function HeroSection() {
       <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-7 lg:px-12">
 
         {/* === 第一区：左侧品牌文案 + 右侧盾牌/跑马灯 === */}
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_280px] md:grid-cols-[1fr_340px] lg:grid-cols-[1fr_360px] gap-6 sm:gap-6 md:gap-8 lg:gap-14 items-start pt-2 sm:pt-8 md:pt-12 lg:pt-16 pb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_280px] gap-6 sm:gap-6 md:gap-8 lg:gap-12 items-start pt-2 sm:pt-8 md:pt-12 lg:pt-16 pb-4">
 
           {/* ── 左列：品牌文案（紧凑一体化） ── */}
-          <div className="max-w-xl order-1 sm:pr-4 md:pr-6 lg:pr-10 xl:pr-16">
+          <div className="max-w-2xl sm:max-w-3xl order-1 sm:pr-3 md:pr-4 lg:pr-6 xl:pr-8">
             {/* Badge */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:gap-2.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide"
@@ -411,45 +180,48 @@ export function HeroSection() {
 
             {/* Title — 渐变文字 + 流动光柱 */}
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.08 }}
-              className="text-[3rem] sm:text-6xl md:text-7xl lg:text-[80px] xl:text-[88px] font-black leading-[1.05] tracking-[0.02em] mt-6 sm:mt-8 lg:mt-9">
-              <span className="relative block bg-clip-text text-transparent"
+              className="flex flex-col leading-[1.08] tracking-[0.01em] mt-6 sm:mt-8 lg:mt-9">
+              <span className="relative inline-block bg-clip-text text-transparent font-extrabold mt-1 sm:mt-2 text-[36px] sm:text-[42px] md:text-[48px] lg:text-[56px] xl:text-[64px]"
                 style={{
                   backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #60A5FA 40%, #22D3EE 70%, #34D399 100%)',
                   backgroundSize: '300% auto',
                   animation: 'shimmer 8s linear infinite',
+                  lineHeight: '1.1',
                 }}>
                 AIShield Lab
-                {/* 流动光柱 overlay — 慢速扫过 */}
                 <span className="absolute inset-0 bg-clip-text text-transparent pointer-events-none" style={{
                   backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 45%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.85) 55%, transparent 100%)',
                   backgroundSize: '200% 100%',
                   animation: 'text-sweep 4s ease-in-out infinite',
                   WebkitBackgroundClip: 'text',
                   backgroundClip: 'text',
-                }} aria-hidden="true">AIShield Lab</span>
+                }} aria-hidden="true" />
               </span>
-              <span className="block text-white/95 mt-1 sm:mt-2 text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-bold">AI 安全学习平台</span>
+              <span className="mt-2 sm:mt-3 font-semibold tracking-wide text-[20px] sm:text-[22px] md:text-[24px] lg:text-[26px] xl:text-[28px]" style={{
+                color: 'rgba(203,213,225,0.85)',
+                lineHeight: '1.1',
+              }}>AI Agent 安全实战平台</span>
             </motion.h1>
 
             {/* Description — 含星星分隔符 */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.16 }}
-              className="mt-6 sm:mt-10">
+              className="mt-8 sm:mt-12">
               {/* 分隔装饰线 */}
-              <div className="flex items-center gap-3 mb-4 sm:mb-5" style={{ maxWidth: '120px' }}>
+              <div className="flex items-center gap-3 mb-3 sm:mb-4" style={{ maxWidth: '120px' }}>
                 <div className="flex-1 h-px rounded-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4))' }} />
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: '#A78BFA' }}><path d="M12 2L14.09 8.26L21 9.27L16 14.14L17.18 21.02L12 17.77L6.82 21.02L8 14.14L3 9.27L9.91 8.26L12 2Z" fill="currentColor" opacity="0.7"/></svg>
                 <div className="flex-1 h-px rounded-full" style={{ background: 'linear-gradient(90deg, rgba(139,92,246,0.4), transparent)' }} />
               </div>
-              <p className="text-base sm:text-lg lg:text-xl leading-[1.8] sm:leading-[2]" style={{ color: 'rgba(203,213,225,0.78)' }}>
-                学长带你从青铜到王者，系统理论 + 靶场实战 + AI 面试训练 + 最新资讯，一站式 AI 安全学习平台
+              <p className="text-base sm:text-lg lg:text-xl leading-[1.8] sm:leading-[2] mt-2" style={{ color: 'rgba(203,213,225,0.78)' }}>
+                25关Agent安全靶场实战 + OWASP LLM Top 10攻防演练 + 职业安全评估，专注AI Agent安全
               </p>
             </motion.div>
 
             {/* CTA Buttons */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.22 }}
-              className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 sm:mt-6">
-              {/* 主CTA：跟学长开练 */}
-              <button onClick={(e) => { handleClick(e); window.dispatchEvent(new Event('open-consult-modal')); }}
+              className="flex flex-wrap items-center gap-3 sm:gap-4 mt-10 sm:mt-16">
+              {/* 主CTA：进入Agent靶场 */}
+              <button onClick={(e) => { handleClick(e); dispatch({ type: 'SET_VIEW_MODE', payload: 'range' }); }}
                 className="group relative inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-white overflow-hidden transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
                 style={{
                   background: 'linear-gradient(135deg, #F472B6 0%, #EC4899 100%)',
@@ -462,14 +234,12 @@ export function HeroSection() {
                 <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{ background: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.18) 0%, transparent 60%)' }} />
                 <Sparkles className="w-4 h-4 relative z-10 group-hover:rotate-12 transition-transform duration-300" strokeWidth={2} />
-                <span className="relative z-10 text-[13px] sm:text-[14px] tracking-wide">跟学长开练</span>
+                <span className="relative z-10 text-[13px] sm:text-[14px] tracking-wide">进入靶场</span>
                 <ArrowRight className="w-3.5 h-3.5 relative z-10 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
               </button>
-              {/* 次CTA：看看学习路径 */}
+              {/* 次CTA：职业安全评估 */}
               <button onClick={() => {
-                const el = document.getElementById('knowledge-base');
-                if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-                else { window.location.href = '/knowledge'; }
+                dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' });
               }}
                 className="group relative inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-medium text-[13px] sm:text-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
                 style={{
@@ -480,34 +250,43 @@ export function HeroSection() {
                 <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   style={{ background: 'linear-gradient(135deg, rgba(244,114,182,0.08) 0%, rgba(99,102,241,0.04) 100%)' }} />
                 <BookOpen className="w-4 h-4 relative z-10 text-slate-400 group-hover:text-[#F472B6] transition-colors" strokeWidth={2} />
-                <span className="relative z-10">看看学习路径</span>
+                <span className="relative z-10">职业安全评估</span>
                 <ArrowRight className="w-3.5 h-3.5 relative z-10 text-slate-500 group-hover:text-[#F472B6] group-hover:translate-x-1 transition-all" strokeWidth={2} />
               </button>
             </motion.div>
           </div>
 
           {/* ── 右列：盾牌/3D模型 + Slogan ── */}
-          <div className="flex flex-col lg:pl-4 items-center order-2 lg:order-2 mt-[12px] sm:mt-[16px] lg:mt-[20px]">
-            <div className="relative h-[140px] sm:h-[220px] md:h-[300px] lg:h-[340px] w-full flex items-center justify-center overflow-visible">
-              <HeroVisual />
+          <div className="flex flex-col lg:pl-2 items-center order-2 lg:order-2 mt-[0px] sm:mt-[5px] lg:mt-[10px]">
+            <div className="relative h-[170px] sm:h-[275px] md:h-[360px] lg:h-[410px] w-full flex items-center justify-center overflow-hidden" style={{ paddingBottom: '24px', animation: 'shieldy-fadein 0.8s ease-out' }}>
+              {/* 星光装饰 */}
+              <Suspense fallback={
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full opacity-30 animate-pulse"
+                    style={{ background: 'radial-gradient(circle, #A78BFA 0%, #60A5FA 50%, transparent 70%)' }} />
+                </div>
+              }>
+                <HeroVisual />
+              </Suspense>
             </div>
             {/* Slogan */}
-            <p className="mt-1 sm:mt-3 text-[11px] sm:text-base tracking-[0.12em] sm:tracking-[0.16em] font-medium text-center bg-clip-text text-transparent" style={{
+            <p className="mt-[12px] sm:mt-[16px] lg:mt-[20px] text-[11px] sm:text-base tracking-[0.12em] sm:tracking-[0.16em] font-medium text-center bg-clip-text text-transparent whitespace-nowrap" style={{
               backgroundImage: 'linear-gradient(135deg, #F472B6 0%, #A78BFA 50%, #818CF8 100%)',
               WebkitBackgroundClip: 'text', backgroundClip: 'text', opacity: 0.7,
             }}>
-              「 知之为知之，不知为不知，是智也 」
+              「 安全不是终点，是Agent的起点 」
             </p>
           </div>
         </div>
 
         {/* === 数据统计行（功能卡上方）=== */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.15 }}
-          className="pb-2 sm:pb-4 pt-2 sm:pt-3 flex items-center justify-start gap-4 sm:gap-8 lg:gap-12 max-w-lg">
+          className="pb-2 sm:pb-4 pt-0 sm:pt-1 lg:pt-2 flex items-center justify-start gap-4 sm:gap-8 lg:gap-12 max-w-lg">
           {[
-            { icon: '⚡', num: '50+', label: '靶场关卡' },
-            { icon: '🎓', num: '200+', label: '安全课程' },
-            { icon: '✅', num: '10K+', label: '学习者' },
+            { icon: '🎯', num: '25+', label: '实战关卡' },
+            { icon: '📊', num: '3', label: '大模型' },
+            { icon: '📘', num: '7+', label: 'OWASP模块' },
+            { icon: '✅', num: 'Free', label: '免费开练' },
           ].map((stat) => (
             <div key={stat.label} className="flex items-center gap-2 sm:gap-2.5">
               <span className="text-sm sm:text-base">{stat.icon}</span>
@@ -522,10 +301,6 @@ export function HeroSection() {
           ))}
         </motion.div>
 
-        {/* === 功能卡片 === */}
-        <div className="pb-6 sm:pb-12 pt-6 sm:pt-10">
-          <FeatureGrid />
-        </div>
 
       </div>
 
@@ -536,5 +311,6 @@ export function HeroSection() {
         </div>
       </div>
     </section>
+    </>
   )
 }

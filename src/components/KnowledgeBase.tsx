@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import type { KnowledgeCategory, KnowledgeArticle } from '../types';
 import {
@@ -138,7 +138,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
 
   // ── Full page mode ──
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6 sm:space-y-8 relative overflow-hidden">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8 relative overflow-hidden">
       {/* sky/cyan ambient glow in header */}
       <div
         className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10 blur-3xl pointer-events-none"
@@ -147,46 +147,34 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
 
       {/* header */}
       <div className="flex items-center justify-between relative">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-lg" style={{ background: 'rgba(56,189,248,0.1)' }}>
+            <BookOpen size={24} className="text-sky-400" />
+          </div>
+          <div>
             <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide"
-              style={{ background: 'rgba(56,189,248,0.12)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.2)' }}>
+              style={{ color: '#38BDF8', background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)' }}>
               KNOWLEDGE BASE
             </span>
+            <h1 className="text-4xl font-black  mb-1" style={{ color: '#38BDF8' }}>知识库</h1>
           </div>
-          <h1 className="text-3xl font-black text-white mb-1 flex items-center gap-3">
-            <BookOpen size={28} className="text-sky-400" />
-            <span className="text-gradient-primary">知识库</span>
-          </h1>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            系统化的AI安全知识体系 · 共 {articles.length} 篇文章
-          </p>
         </div>
-        <button
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
-          style={{
-            background: 'rgba(139,92,246,0.12)',
-            color: '#C4B5FD',
-            border: '1px solid rgba(139,92,246,0.25)',
-          }}
-        >
-          <HelpCircle size={14} />
-          我要提问
-        </button>
+
       </div>
 
-      {/* search */}
-      <div className="relative">
+      {/* search + filter in one row */}
+      <div className="flex items-center gap-3">
+      <div className="relative flex-shrink-0 w-64">
         <Search
-          size={16}
-          className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+          size={14}
+          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
           style={{ color: 'rgba(255,255,255,0.25)' }}
         />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="搜索知识点或标签..."
-          className="w-full pl-11 pr-5 py-3 rounded-xl text-sm text-white outline-none transition-all duration-200 focus:border-sky-400/40 focus:shadow-[0_0_0_3px_rgba(56,189,248,0.1),0_0_20px_rgba(56,189,248,0.15)]"
+          className="w-full pl-9 pr-4 py-2 rounded-lg text-xs text-white outline-none transition-all duration-200 focus:border-sky-400/40 focus:shadow-[0_0_0_2px_rgba(56,189,248,0.08)]"
           style={{
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.06)',
@@ -196,10 +184,10 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
       </div>
 
       {/* category filter pills */}
-      <div className="flex gap-2 overflow-x-auto whitespace-nowrap pb-1">
+      <div className="flex gap-1.5 overflow-x-auto whitespace-nowrap flex-1">
         <button
           onClick={() => setSelectedCat(null)}
-          className="px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all duration-200"
+          className="px-2.5 py-1 rounded-md text-[11px] font-medium cursor-pointer transition-all duration-200 whitespace-nowrap"
           style={{
             background: !selectedCat ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)',
             color: !selectedCat ? '#38BDF8' : 'rgba(255,255,255,0.5)',
@@ -212,7 +200,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
           <button
             key={cat.id}
             onClick={() => setSelectedCat(cat.id)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all duration-200"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium cursor-pointer transition-all duration-200 whitespace-nowrap"
             style={{
               background: selectedCat === cat.id ? `${cat.color}15` : 'rgba(255,255,255,0.04)',
               color: selectedCat === cat.id ? cat.color : 'rgba(255,255,255,0.5)',
@@ -224,72 +212,10 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
           </button>
         ))}
       </div>
-
-      {/* category cards */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {categories.map(cat => (
-          <div
-            key={cat.id}
-            className="group relative p-5 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 overflow-hidden"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(12px)',
-            }}
-            onClick={() => setSelectedCat(cat.id)}
-          >
-            {/* subtle hover glow with category color */}
-            <div
-              className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none"
-              style={{ boxShadow: `0 0 30px ${cat.color}25` }}
-            />
-
-            {/* accent line top */}
-            <div
-              className="absolute top-0 left-4 right-4 h-[2px] rounded-b opacity-0 group-hover:opacity-100 transition-all duration-300"
-              style={{ background: `linear-gradient(90deg, transparent, ${cat.color}, transparent)` }}
-            />
-
-            {/* icon */}
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110"
-              style={{ background: `${cat.color}15`, color: cat.color }}
-            >
-              {catIconMapLg[cat.id]}
-            </div>
-
-            <h3 className="text-sm font-bold text-white mb-1.5">{cat.name}</h3>
-            <p className="text-[11px] mb-3 line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              {cat.description}
-            </p>
-
-            <div className="flex items-center justify-between">
-              <span
-                className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                style={{ background: `${cat.color}15`, color: cat.color, border: `1px solid ${cat.color}25` }}
-              >
-                {cat.articleCount} 篇
-              </span>
-              <ArrowRight
-                size={13}
-                className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1"
-                style={{ color: cat.color }}
-              />
-            </div>
-          </div>
-        ))}
       </div>
 
-      {/* article list header */}
-      <div className="flex items-center justify-between pt-4">
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-5 rounded-full hidden sm:block" style={{ background: 'var(--color-primary-400)' }} />
-          <h2 className="text-base sm:text-lg font-bold text-white">文章列表</h2>
-        </div>
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          共 {filtered.length} 篇
-        </span>
-      </div>
+      {/* spacing */}
+      <div className="h-3" />
 
       {/* article list */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { chatWithLLM } from '../services/dashscope';
+import { getAuthToken } from '../services/authFetch';
 import type { RangeLevel, ChatMessage, LevelHint } from '../types';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -19,17 +20,67 @@ const ChatResponseRenderer = ({ content }: { content: string }) => {
 
   if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
     return (
-      <div className="space-y-1.5">
-        {Object.entries(parsed).map(([key, value]) => (
-          <div key={key} className="flex gap-2 items-start">
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#38BDF8' }}>{key}</span>
-            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-            </span>
-          </div>
+    <div className="space-y-4">
+      {/* 紧凑进度条 */}
+      <div className="flex items-center gap-3 px-1">
+        <div className="flex-1 h-2 rounded-full bg-gray-700/50 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-500" style={{ width: `${(completedCount / LEVELS.length) * 100}%` }} />
+        </div>
+        <span className="text-xs text-gray-400 whitespace-nowrap">{completedCount}/{LEVELS.length}</span>
+      </div>
+
+      {/* 模型筛选 */}
+      <div className="flex flex-wrap gap-1.5">
+        {MODEL_GROUPS.map(g => (
+          <button key={g.id} onClick={() => setActiveModelGroup(g.id)}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${activeModelGroup === g.id ? 'bg-indigo-500/30 text-indigo-300 ring-1 ring-indigo-500/50' : 'bg-gray-700/40 text-gray-400 hover:bg-gray-700/60'}`}>
+            {g.icon} {g.name}
+          </button>
         ))}
       </div>
-    );
+
+      {/* OWASP 模块筛选 */}
+      <div className="flex flex-wrap gap-1.5">
+        <button onClick={() => setActiveModule('all')}
+          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${activeModule === 'all' ? 'bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50' : 'bg-gray-700/40 text-gray-400 hover:bg-gray-700/60'}`}>
+          全部
+        </button>
+        {MODULES.map(m => (
+          <button key={m.id} onClick={() => setActiveModule(m.id)}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${activeModule === m.id ? 'bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50' : 'bg-gray-700/40 text-gray-400 hover:bg-gray-700/60'}`}>
+            {m.icon} {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 关卡卡片网格 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        {filtered.map(level => {
+          const completed = state.completedLevels.has(level.id);
+          const dc = diffColors[level.difficulty] || '#6B7280';
+          return (
+            <div key={level.id} onClick={() => dispatch({ type: 'SELECT_LEVEL', payload: level.id })}
+              className={`relative p-3 rounded-lg border cursor-pointer transition-all hover:scale-[1.02] ${completed ? 'border-green-500/40 bg-green-500/5' : 'border-gray-700/50 bg-gray-800/40 hover:border-gray-600/50'}`}>
+              <div className="flex items-start gap-2">
+                <span className="text-lg">{level.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold" style={{ color: dc }}>#{level.number}</span>
+                    <span className="text-sm font-medium text-gray-200 truncate">{level.name}</span>
+                    {completed && <span className="text-green-400 text-xs">✓</span>}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700/60 text-gray-400">{level.owasp}</span>
+                    <span className="text-[10px] text-gray-500">{level.attackType}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );;
   }
 
   return (
@@ -42,18 +93,8 @@ const ChatResponseRenderer = ({ content }: { content: string }) => {
 /* ═══════════════════════════════════════════════════════════════
    关卡数据
    ═══════════════════════════════════════════════════════════════ */
-const LEVEL_PASSWORDS: Record<string, string> = {
-  '1': 'OMEGA-PROMPT-BREACH',
-  '2': 'DEVELOPER-MODE-UNLOCK',
-  '3': 'TRUST-BASED-EXPLOIT',
-  '4': 'PSYCHOLOGICAL-TRIGGER',
-  '5': 'BASE64-DECODE-ATTACK',
-  '6': 'MORAL-LEVERAGE-WIN',
-  '7': 'LINGUISTIC-SWITCH-EXEC',
-  '8': 'STEP-BY-STEP-BREACH',
-  '9': 'PRIORITY-CONFLICT-OVERRIDE',
-  '10': 'OUTPUT-FILTER-BYPASS',
-};
+// SECURITY: Level passwords moved to backend /api/verify-password endpoint
+// They are no longer stored in the frontend bundle
 
 const LEVEL_HINTS: Record<string, LevelHint[]> = {
   '1': [
@@ -91,6 +132,66 @@ const LEVEL_HINTS: Record<string, LevelHint[]> = {
   '10': [
     { text: '输出格式有时可以绕过内容过滤', scorePenalty: 10 },
   ],
+  '11': [
+    { text: '后门通常通过特定关键词触发', scorePenalty: 10 },
+    { text: '尝试使用特殊组合词激活隐藏功能', scorePenalty: 20 },
+  ],
+  '12': [
+    { text: 'XSS注入需要绕过输出转义', scorePenalty: 10 },
+    { text: '尝试在输出中注入<script>标签', scorePenalty: 20 },
+  ],
+  '13': [
+    { text: '格式注入利用渲染引擎漏洞', scorePenalty: 10 },
+    { text: '尝试使用特殊字符组合', scorePenalty: 20 },
+  ],
+  '14': [
+    { text: 'Markdown格式有时会被特殊处理', scorePenalty: 10 },
+    { text: '尝试利用代码块或表格格式', scorePenalty: 20 },
+  ],
+  '15': [
+    { text: '质疑性语言有时可以突破限制', scorePenalty: 10 },
+    { text: '尝试使用反问句刺激AI', scorePenalty: 20 },
+  ],
+  '16': [
+    { text: '道德绑架利用利他心理', scorePenalty: 10 },
+    { text: '构造紧急场景诱导违规', scorePenalty: 20 },
+  ],
+  '17': [
+    { text: '权限越狱需要覆盖安全护栏', scorePenalty: 10 },
+    { text: '尝试让AI忽略安全规则', scorePenalty: 20 },
+  ],
+  '18': [
+    { text: '间接提问有时能获取系统提示', scorePenalty: 10 },
+    { text: '尝试询问AI的行为规则', scorePenalty: 20 },
+  ],
+  '19': [
+    { text: '分步提问降低风险', scorePenalty: 10 },
+    { text: '将敏感问题拆分为多个小问题', scorePenalty: 20 },
+  ],
+  '20': [
+    { text: '嵌入空间攻击利用相似度检索', scorePenalty: 10 },
+    { text: '尝试构造相似内容检索敏感文档', scorePenalty: 20 },
+  ],
+  '21': [
+    { text: '跨文档关联需要多角度提问', scorePenalty: 10 },
+    { text: '尝试让AI关联不同文档的信息', scorePenalty: 20 },
+  ],
+  '22': [
+    { text: '对抗样本需要精心构造', scorePenalty: 10 },
+    { text: '尝试添加微小扰动绕过检测', scorePenalty: 20 },
+  ],
+  '23': [
+    { text: '事实注入需要提供虚假信息', scorePenalty: 10 },
+    { text: '尝试让AI基于错误前提推理', scorePenalty: 20 },
+  ],
+  '24': [
+    { text: '幻觉利用需要引导AI虚构', scorePenalty: 10 },
+    { text: '尝试让AI生成不存在的权威信息', scorePenalty: 20 },
+  ],
+  '25': [
+    { text: '递归调用需要构造循环指令', scorePenalty: 10 },
+    { text: '尝试让AI反复调用自身', scorePenalty: 20 },
+  ],
 };
 
 const LEVEL_TIPS: Record<string, string[]> = {
@@ -104,6 +205,21 @@ const LEVEL_TIPS: Record<string, string[]> = {
   '8': ['分步执行降低单步风险', '累积效应是关键'],
   '9': ['指令优先级可被覆盖', '"忽略"类指令有时有效'],
   '10': ['结构化输出绕过文本过滤', 'JSON/XML 格式有时特殊处理'],
+  '11': ['后门触发需要特定关键词', '模型可能存在预设漏洞', '测试组合触发词'],
+  '12': ['XSS需要绕过输出转义', '<script>标签常被过滤', '尝试HTML事件属性'],
+  '13': ['格式注入利用渲染漏洞', '特殊字符可能触发解析错误', '测试不同编码方式'],
+  '14': ['Markdown格式可被利用', '代码块有时绕过检测', '表格和列表格式测试'],
+  '15': ['心理操控影响决策', '质疑性语言突破限制', '反问句效果更好'],
+  '16': ['情感操控利用同情心', '紧急场景绕过安全', '道德困境有效'],
+  '17': ['权限越狱需要覆盖护栏', '指令优先级可被操纵', '忽略类指令有效'],
+  '18': ['间接方式提取系统提示', '行为规则可被询问', '多角度试探'],
+  '19': ['分步拆解降低风险', '累积效应是关键', '每步看似无害'],
+  '20': ['向量空间利用相似度', '检索系统可能被欺骗', '构造相似查询'],
+  '21': ['跨文档关联需要推理', '信息拼接产生新知识', '多角度提问'],
+  '22': ['对抗样本精心构造', '微小扰动绕过检测', '迭代优化payload'],
+  '23': ['虚假事实注入', '错误前提导致错误结论', '提供虚假证据'],
+  '24': ['幻觉利用引导虚构', '生成虚假权威信息', '模糊边界诱导'],
+  '25': ['递归调用构造循环', '无限调用消耗资源', '自引用指令'],
 };
 
 const LEADERBOARD: Record<string, { rank: number; name: string; score: number; time: string }[]> = {
@@ -123,14 +239,108 @@ const LEADERBOARD: Record<string, { rank: number; name: string; score: number; t
   ],
 };
 
+const MODULES = [
+  { id: 'prompt-injection', label: 'LLM01 提示词注入', icon: '💉' },
+  { id: 'sensitive-info', label: 'LLM02 敏感信息泄露', icon: '🔓' },
+  { id: 'supply-chain', label: 'LLM03-04 供应链安全', icon: '📦' },
+  { id: 'improper-output', label: 'LLM05 输出处理', icon: '🔒' },
+  { id: 'excessive-agency', label: 'LLM06-07 过度代理', icon: '⚡' },
+  { id: 'rag-attack', label: 'LLM08 向量攻击', icon: '🌐' },
+  { id: 'unbounded-attack', label: 'LLM09-10 虚假信息', icon: '⚠️' },
+];
+
+const MODEL_GROUPS = [
+  { id: 'all', name: '全部', icon: '🎯', startLevel: 1, endLevel: 25, freeCount: 0 },
+  { id: 'basic', name: '基础', icon: '🟢', startLevel: 1, endLevel: 10, freeCount: 3 },
+  { id: 'intermediate', name: '进阶', icon: '🟡', startLevel: 11, endLevel: 18, freeCount: 0 },
+  { id: 'advanced', name: '高级', icon: '🔴', startLevel: 19, endLevel: 25, freeCount: 0 },
+];
+
+const LEVELS = [
+  { id: '1', number: 1, name: 'Agent角色扮演', attackType: '身份扮演绕过', difficulty: 1, icon: '🎭', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: '伪装系统指令接管Agent行为' },
+  { id: '2', number: 2, name: '开发者模式注入', attackType: '系统提示注入', difficulty: 2, icon: '🧪', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: '利用伪调试指令突破Agent安全边界' },
+  { id: '3', number: 3, name: '虚构场景绕过', attackType: '信任建立攻击', difficulty: 3, icon: '🎪', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: '伪装安全研究员骗取Agent内部协议' },
+  { id: '4', number: 4, name: '编码混淆攻击', attackType: 'Base64/编码绕过', difficulty: 4, icon: '🔀', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: 'Base64/ROT13编码绕过Agent输入过滤' },
+  { id: '5', number: 5, name: '多语言绕过', attackType: '多语言绕过', difficulty: 4, icon: '🌍', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: '切换语言规避Agent安全过滤' },
+  { id: '6', number: 6, name: '系统提示提取', attackType: '直接套取提示词', difficulty: 2, icon: '🔍', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', desc: '直接套取Agent系统提示词与内部规则' },
+  { id: '7', number: 7, name: '训练数据泄露', attackType: '记忆提取攻击', difficulty: 3, icon: '📦', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', desc: '诱导Agent输出训练记忆中的敏感信息' },
+  { id: '8', number: 8, name: '上下文窃取', attackType: '多轮对话提取', difficulty: 4, icon: '🕳', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', desc: '从多轮对话中逐步提取隐藏上下文' },
+  { id: '9', number: 9, name: '恶意插件注入', attackType: '第三方工具指令注入', difficulty: 3, icon: '🔌', module: 'supply-chain', owasp: 'LLM03', owaspName: '供应链污染', desc: '通过恶意插件向Agent注入隐藏指令' },
+  { id: '10', number: 10, name: '知识库投毒', attackType: 'RAG数据源污染', difficulty: 4, icon: '☠', module: 'supply-chain', owasp: 'LLM04', owaspName: '数据与模型投毒', desc: '向Agent知识库注入虚假信息操控输出' },
+  { id: '11', number: 11, name: '模型后门触发', attackType: '预设后门激活', difficulty: 5, icon: '🚨', module: 'supply-chain', owasp: 'LLM04', owaspName: '数据与模型投毒', desc: '触发模型预设后门执行隐藏指令' },
+  { id: '12', number: 12, name: '输出过滤绕过', attackType: '输出格式绕过', difficulty: 5, icon: '🔒', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', desc: '绕过Agent输出端XSS/敏感词检测' },
+  { id: '13', number: 13, name: 'XSS输出注入', attackType: '输出格式注入', difficulty: 3, icon: '💉', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', desc: '绕过输出转义注入恶意脚本' },
+  { id: '14', number: 14, name: '格式欺骗输出', attackType: 'Markdown/格式欺骗', difficulty: 4, icon: '📋', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', desc: '利用Markdown格式绕过内容安全检测' },
+  { id: '15', number: 15, name: '质疑刺激突破', attackType: '心理操控绕过', difficulty: 3, icon: '⛿', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', desc: '激励让Agent突破行为限制' },
+  { id: '16', number: 16, name: '道德绑架绕过', attackType: '情感操控攻击', difficulty: 3, icon: '💀', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', desc: '情感操控绕过Agent安全决策' },
+  { id: '17', number: 17, name: 'Agent权限越狱', attackType: '指令冲突攻击', difficulty: 5, icon: '🔑', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', desc: '覆盖安全护栏获取未授权操作权限' },
+  { id: '18', number: 18, name: '系统提示词泄露', attackType: '间接提取系统指令', difficulty: 4, icon: '📜', module: 'excessive-agency', owasp: 'LLM07', owaspName: '系统提示泄露', desc: '通过间接方式提取Agent系统提示词' },
+  { id: '19', number: 19, name: '分步拆解提取', attackType: '指令分解攻击', difficulty: 4, icon: '🔪', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', desc: '将敏感请求拆解为无害步骤逐步窃取' },
+  { id: '20', number: 20, name: '嵌入空间攻击', attackType: '相似度检索欺骗', difficulty: 4, icon: '🌐', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', desc: '利用嵌入相似度检索敏感文档片段' },
+  { id: '21', number: 21, name: '跨文档信息关联', attackType: '多文档关联推断', difficulty: 5, icon: '🔗', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', desc: '通过多文档关联推断出敏感信息' },
+  { id: '22', number: 22, name: '对抗样本注入', attackType: '对抗嵌入攻击', difficulty: 5, icon: '🛡', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', desc: '构造对抗样本绕过嵌入安全检测' },
+  { id: '23', number: 23, name: '事实注入欺骗', attackType: '虚假事实注入', difficulty: 3, icon: '🎯', module: 'unbounded-attack', owasp: 'LLM09', owaspName: '虚假信息', desc: '注入虚假事实让Agent输出错误结论' },
+  { id: '24', number: 24, name: '幻觉利用', attackType: '模型幻觉构造', difficulty: 4, icon: '🌀', module: 'unbounded-attack', owasp: 'LLM09', owaspName: '虚假信息', desc: '利用模型幻觉输出虚假权威信息' },
+  { id: '25', number: 25, name: '递归调用攻击', attackType: 'Agent自我调用消耗', difficulty: 5, icon: '⛿', module: 'unbounded-attack', owasp: 'LLM10', owaspName: '无界消耗', desc: '诱导Agent无限递归调用耗尽资源' },
+];
 const diffColors: Record<number, string> = { 1: '#10B981', 2: '#3B82F6', 3: '#F59E0B', 4: '#F97316', 5: '#EF4444' };
 const difficultyStars = (d: number) => '★'.repeat(d) + '☆'.repeat(5 - d);
 
 /* ═══════════════════════════════════════════════════════════════
    RangeArena — 主组件（关卡列表）
    ═══════════════════════════════════════════════════════════════ */
+const THEME_COLORS = {
+  primary: '#8B5CF6',
+  primaryLight: '#A78BFA',
+  secondary: '#06B6D4',
+  success: '#10B981',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  darkBg: '#070B14',
+  cardBg: 'rgba(255,255,255,0.03)',
+  border: 'rgba(255,255,255,0.08)',
+};
+
+const SECURITY_ICONS: Record<string, string> = {
+  'prompt-injection': '💉',
+  'sensitive-info': '🔓',
+  'supply-chain': '📦',
+  'improper-output': '🔒',
+  'excessive-agency': '⚡',
+  'rag-attack': '🌐',
+  'unbounded-attack': '⚠️',
+};
+
+const OWASP_BADGE_COLORS: Record<string, string> = {
+  'LLM01': 'rgba(239,68,68,0.15)',
+  'LLM02': 'rgba(234,179,8,0.15)',
+  'LLM03': 'rgba(16,185,129,0.15)',
+  'LLM04': 'rgba(59,130,246,0.15)',
+  'LLM05': 'rgba(139,92,246,0.15)',
+  'LLM06': 'rgba(236,72,153,0.15)',
+  'LLM07': 'rgba(20,184,166,0.15)',
+  'LLM08': 'rgba(99,102,241,0.15)',
+  'LLM09': 'rgba(245,158,11,0.15)',
+  'LLM10': 'rgba(239,68,68,0.15)',
+};
+
+const OWASP_BORDER_COLORS: Record<string, string> = {
+  'LLM01': 'rgba(239,68,68,0.3)',
+  'LLM02': 'rgba(234,179,8,0.3)',
+  'LLM03': 'rgba(16,185,129,0.3)',
+  'LLM04': 'rgba(59,130,246,0.3)',
+  'LLM05': 'rgba(139,92,246,0.3)',
+  'LLM06': 'rgba(236,72,153,0.3)',
+  'LLM07': 'rgba(20,184,166,0.3)',
+  'LLM08': 'rgba(99,102,241,0.3)',
+  'LLM09': 'rgba(245,158,11,0.3)',
+  'LLM10': 'rgba(239,68,68,0.3)',
+};
+
 export const RangeArena = () => {
   const { state, dispatch } = useAppContext();
+  const [activeModule, setActiveModule] = useState<string>('all');
+  const [activeModelGroup, setActiveModelGroup] = useState<string>('all');
 
   const getCompletedLevels = (): Set<string> => {
     try {
@@ -143,86 +353,190 @@ export const RangeArena = () => {
 
   const isLevelCompleted = (levelId: string) => getCompletedLevels().has(levelId);
 
+  const getModelGroup = (number: number): string => {
+    if (number >= 1 && number <= 10) return 'basic';
+    if (number >= 11 && number <= 18) return 'intermediate';
+    if (number >= 19 && number <= 25) return 'advanced';
+    return 'all';
+  };
+
+  const filteredLevels = LEVELS.filter(level => {
+    const moduleMatch = activeModule === 'all' || level.module === activeModule;
+    const groupMatch = activeModelGroup === 'all' || getModelGroup(level.number) === activeModelGroup;
+    return moduleMatch && groupMatch;
+  });
+
+  const completedCount = LEVELS.filter(l => state.completedLevels.has(l.id)).length;
+
   if (state.viewMode === 'range' || !state.currentLevel) {
     const completedSet = getCompletedLevels();
     const completedCount = completedSet.size;
 
     return (
-      <div className="max-w-6xl mx-auto px-6 py-12 space-y-8 relative overflow-hidden">
-        {/* green/emerald ambient glow in header */}
-        <div
-          className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10 blur-3xl pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.45), rgba(34,211,238,0.25))' }}
+      <div className="min-h-screen relative overflow-hidden" style={{ background: THEME_COLORS.darkBg }}>
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 100% 80% at 20% -10%, rgba(139,92,246,0.08) 0%, transparent 50%),' +
+              'radial-gradient(ellipse 80% 60% at 80% 20%, rgba(6,182,212,0.06) 0%, transparent 45%),' +
+              'radial-gradient(ellipse 60% 40% at 50% 80%, rgba(16,185,129,0.04) 0%, transparent 50%)',
+          }}
         />
 
-        <div className="relative">
-          <h1 className="text-3xl font-black text-white mb-1">🎯 AI安全靶场</h1>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>PromptBreach — 与真实 LLM 对抗，实战练习 Prompt 注入</p>
+        <div className="absolute inset-0 pointer-events-none opacity-[0.02]"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(139,92,246,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.4) 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+          }}
+        />
+
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-5 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, #8B5CF6 0%, #06B6D4 50%, transparent 70%)' }}
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <div className="mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg" style={{ background: 'rgba(139,92,246,0.1)' }}>
+                <span className="text-2xl">🛡️</span>
+              </div>
+              <div>
+                <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide"
+                  style={{ color: '#A78BFA', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  AI SECURITY RANGE
+                </span>
+                <h1 className="text-4xl font-black mb-1" style={{ color: '#A78BFA' }}>AI安全靶场</h1>
+              </div>
+            </div>
         </div>
 
-        <div className="p-4 rounded-2xl flex items-center gap-4 relative"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
-            style={{ background: 'rgba(16,185,129,0.1)' }}>🏆</div>
-          <div className="flex-1">
-            <div className="text-sm font-semibold text-white mb-1">学习进度</div>
-            <div className="h-2 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <div className="h-full rounded-full transition-all duration-700 animate-progress-shimmer"
-                style={{ width: `${(completedCount / 10) * 100}%`, background: 'linear-gradient(90deg, #10B981, #3B82F6)' }} />
+
+        <div className="p-2.5 sm:p-3 rounded-xl flex flex-col sm:flex-row items-center gap-2.5 relative mb-4"
+          style={{ background: THEME_COLORS.cardBg, border: `1px solid ${THEME_COLORS.border}` }}>
+          <div className="absolute inset-0 rounded-2xl opacity-5 pointer-events-none"
+            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(6,182,212,0.2) 50%, rgba(16,185,129,0.2) 100%)' }} />
+          <div className="relative z-10 w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
+            style={{ background: `rgba(16,185,129,0.1)` }}>🏆</div>
+          <div className="relative z-10 flex-1 w-full">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-semibold text-white">学习进度</span>
+              <span className="text-sm font-bold" style={{ color: THEME_COLORS.success }}>{completedCount}/{LEVELS.length}</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${(completedCount / LEVELS.length) * 100}%`,
+                  background: 'linear-gradient(90deg, #8B5CF6, #06B6D4, #10B981)',
+                }} />
+              <div className="absolute inset-0 rounded-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)', animation: 'shimmer 2s infinite' }} />
             </div>
           </div>
-          <span className="text-sm font-bold" style={{ color: '#10B981' }}>{completedCount}/10</span>
         </div>
 
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {[
-            { id: '1', number: 1, name: '角色扮演', attackType: '身份扮演绕过', difficulty: 1, description: '通过扮演特定角色来绕过AI的安全限制' },
-            { id: '2', number: 2, name: '开发者模式', attackType: '系统提示注入', difficulty: 2, description: '尝试触发AI的开发者模式获取敏感信息' },
-            { id: '3', number: 3, name: '背景伪装', attackType: '信任建立攻击', difficulty: 3, description: '通过建立虚假信任关系来诱导AI泄露信息' },
-            { id: '4', number: 4, name: '质疑刺激', attackType: '心理操控绕过', difficulty: 3, description: '利用心理刺激手段突破AI的防御机制' },
-            { id: '5', number: 5, name: '编码混淆', attackType: 'Base64/编码绕过', difficulty: 4, description: '使用编码技术隐藏恶意指令' },
-            { id: '6', number: 6, name: '道德绑架', attackType: '情感操控攻击', difficulty: 3, description: '利用道德困境突破AI的安全限制' },
-            { id: '7', number: 7, name: '语言转换', attackType: '多语言绕过', difficulty: 4, description: '通过多语言切换绕过安全检测' },
-            { id: '8', number: 8, name: '分步拆解', attackType: '指令分解攻击', difficulty: 4, description: '将恶意指令拆分为无害步骤逐步执行' },
-            { id: '9', number: 9, name: '忽略提示词', attackType: '指令冲突攻击', difficulty: 5, description: '通过指令优先级冲突覆盖安全规则' },
-            { id: '10', number: 10, name: '输出过滤', attackType: '输出格式绕过', difficulty: 5, description: '突破AI输出过滤机制获取限制内容' },
-          ].map(level => {
+        <div className="flex flex-wrap gap-2 mb-6">
+          
+          <button onClick={() => setActiveModelGroup('basic')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'basic' ? 'bg-green-500/30 text-green-300 ring-1 ring-green-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+            🟢 基础篇 (1-10)
+          </button>
+          <button onClick={() => setActiveModelGroup('intermediate')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'intermediate' ? 'bg-yellow-500/30 text-yellow-300 ring-1 ring-yellow-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+            🟡 进阶篇 (11-18)
+          </button>
+          <button onClick={() => setActiveModelGroup('advanced')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'advanced' ? 'bg-red-500/30 text-red-300 ring-1 ring-red-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+            🔴 高级篇 (19-25)
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-8">
+          <button onClick={() => setActiveModule('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModule === 'all' ? 'bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+            全部模块
+          </button>
+          {MODULES.map(m => (
+            <button key={m.id} onClick={() => setActiveModule(m.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModule === m.id ? 'bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+              {SECURITY_ICONS[m.id] || m.icon} {m.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {filteredLevels.map(level => {
             const completed = isLevelCompleted(level.id);
             const color = diffColors[level.difficulty];
+            const owaspBg = OWASP_BADGE_COLORS[level.owasp] || 'rgba(255,255,255,0.05)';
+            const owaspBorder = OWASP_BORDER_COLORS[level.owasp] || 'rgba(255,255,255,0.1)';
+
             return (
               <div key={level.id}
                 onClick={() => {
                   dispatch({ type: 'SET_CURRENT_LEVEL', payload: level as RangeLevel });
                   dispatch({ type: 'SET_VIEW_MODE', payload: 'range-level' });
                 }}
-                className="group p-5 rounded-2xl cursor-pointer transition-all duration-200 hover:-translate-y-1 flex items-start gap-4 relative overflow-hidden"
-                style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${completed ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)'}` }}>
-                {/* hover glow with difficulty color */}
-                <div
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none"
-                  style={{ boxShadow: `0 0 30px ${color}25` }}
+                className="group relative p-4 rounded-xl cursor-pointer transition-all duration-300 hover:-translate-y-1 flex flex-col gap-2.5 overflow-hidden"
+                style={{
+                  background: completed ? 'rgba(16,185,129,0.06)' : THEME_COLORS.cardBg,
+                  border: completed ? '1px solid rgba(16,185,129,0.3)' : `1px solid ${THEME_COLORS.border}`,
+                }}>
+                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at 50% 0%, ${color}10 0%, transparent 60%)`,
+                    boxShadow: `0 4px 20px ${color}15`,
+                  }}
                 />
-                {/* thicker left color bar */}
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl" style={{ background: color }} />
-                {completed && <div className="absolute top-3 right-3 text-lg">✅</div>}
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-black shrink-0"
-                  style={{ background: `${color}15`, color }}>
-                  {level.number}
-                </div>
-                <div className="flex-1 pl-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-sm font-bold text-white">{level.name}</h3>
-                    <span className="text-[10px]" style={{ color: color }}>{difficultyStars(level.difficulty)}</span>
+
+                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-all duration-300" style={{ background: color }} />
+
+                {completed && (
+                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                    style={{ background: 'rgba(16,185,129,0.2)', color: THEME_COLORS.success }}>
+                    ✓
                   </div>
-                  <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{level.attackType}</p>
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>{level.description}</p>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black shrink-0"
+                    style={{ background: `${color}15`, color }}>
+                    {level.number}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-white whitespace-nowrap truncate">{level.name}</h3>
+                    <span className="text-[10px]" style={{ color }}>{difficultyStars(level.difficulty)}</span>
+                  </div>
                 </div>
-                <span className="text-white/20 mt-2">→</span>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-md"
+                    style={{ background: owaspBg, border: `1px solid ${owaspBorder}`, color: '#A78BFA' }}>
+                    {level.owasp}
+                  </span>
+                  <span className="text-[9px] text-gray-500 truncate">{level.attackType}</span>
+                </div>
+
+                <p className="text-xs line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{level.desc}</p>
+
+                <div className="flex items-center justify-between mt-auto">
+                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>{level.owaspName}</span>
+                  <span className="text-white/10 text-xs group-hover:text-white/30 transition-colors">→</span>
+                </div>
               </div>
             );
           })}
         </div>
+
+        <div className="mt-12 text-center">
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-xl"
+            style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
+            <span className="text-lg">💡</span>
+            <span className="text-xs" style={{ color: 'rgba(203,213,225,0.5)' }}>
+              提示：每个关卡都对应 OWASP LLM Top 10 中的一种安全风险，掌握攻击手法是理解防御的第一步
+            </span>
+          </div>
+        </div>
       </div>
+    </div>
     );
   }
 
@@ -239,6 +553,7 @@ const RangeArenaLevel = () => {
   const [input, setInput] = useState('');
   const [isLLMLoading, setIsLLMLoading] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
+  const [verifiedPassword, setVerifiedPassword] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   const [showVictory, setShowVictory] = useState(false);
   const [hints, setHints] = useState<{ shown: LevelHint[]; active: number }>({ shown: [], active: 0 });
@@ -311,36 +626,58 @@ const RangeArenaLevel = () => {
     }
   };
 
-  const verifyPassword = () => {
-    const correct = LEVEL_PASSWORDS[level.id];
-    if (passwordInput.trim().toUpperCase() === correct) {
-      try {
-        const stored = localStorage.getItem('aishield-completed-levels');
-        const completed: string[] = stored ? JSON.parse(stored) : [];
-        if (!completed.includes(level.id)) {
-          completed.push(level.id);
-          localStorage.setItem('aishield-completed-levels', JSON.stringify(completed));
+  const verifyPassword = async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setPasswordError(true);
+      setFailureCount(prev => prev + 1);
+      setTimeout(() => setPasswordError(false), 2000);
+      return;
+    }
+    try {
+      const resp = await fetch('/api/verify-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ levelId: level.id, password: passwordInput.trim().toUpperCase() }),
+      });
+      const data = await resp.json();
+      if (data.correct) {
+        setVerifiedPassword(passwordInput.trim().toUpperCase());
+        try {
+          const stored = localStorage.getItem('aishield-completed-levels');
+          const completed: string[] = stored ? JSON.parse(stored) : [];
+          if (!completed.includes(level.id)) {
+            completed.push(level.id);
+            localStorage.setItem('aishield-completed-levels', JSON.stringify(completed));
 
-          // 记录实战记录
-          const record: import('../types').PracticeRecord = {
-            id: `r_${Date.now()}`,
-            levelId: level.id,
-            levelName: level.name,
-            attackType: level.attackType,
-            completedAt: new Date().toISOString(),
-            attemptCount,
-            hintCount: hints.shown.length,
-            score: Math.max(100, 1000 - (hints.shown.reduce((s, h) => s + h.scorePenalty, 0)) - (attemptCount - 1) * 20),
-            duration: Math.max(30, Math.round((Date.now() - (state.chatMessages.length > 0 ? 0 : Date.now())) / 1000)),
-            keyPayload: state.chatMessages.filter(m => m.role === 'user').slice(-1)[0]?.content?.slice(0, 100) || '',
-          };
-          dispatch({ type: 'ADD_PRACTICE_RECORD', payload: record });
-        }
-      } catch { /* ignore */ }
-      setShowVictory(true);
-      setPasswordError(false);
-      setPasswordInput('');
-    } else {
+            // 记录实战记录
+            const record: import('../types').PracticeRecord = {
+              id: `r_${Date.now()}`,
+              levelId: level.id,
+              levelName: level.name,
+              attackType: level.attackType,
+              completedAt: new Date().toISOString(),
+              attemptCount,
+              hintCount: hints.shown.length,
+              score: Math.max(100, 1000 - (hints.shown.reduce((s, h) => s + h.scorePenalty, 0)) - (attemptCount - 1) * 20),
+              duration: Math.max(30, Math.round((Date.now() - (state.chatMessages.length > 0 ? 0 : Date.now())) / 1000)),
+              keyPayload: state.chatMessages.filter(m => m.role === 'user').slice(-1)[0]?.content?.slice(0, 100) || '',
+            };
+            dispatch({ type: 'ADD_PRACTICE_RECORD', payload: record });
+          }
+        } catch { /* ignore */ }
+        setShowVictory(true);
+        setPasswordError(false);
+        setPasswordInput('');
+      } else {
+        setPasswordError(true);
+        setFailureCount(prev => prev + 1);
+        setTimeout(() => setPasswordError(false), 2000);
+      }
+    } catch {
       setPasswordError(true);
       setFailureCount(prev => prev + 1);
       setTimeout(() => setPasswordError(false), 2000);
@@ -357,7 +694,7 @@ const RangeArenaLevel = () => {
         level.name,
         level.attackType,
         state.chatMessages,
-        LEVEL_PASSWORDS[level.id]
+        verifiedPassword
       );
       setReportContent(report);
     } catch (e) {
@@ -428,7 +765,7 @@ const RangeArenaLevel = () => {
                 <span className="text-[10px] text-yellow-400/70 animate-pulse">思考中...</span>
               )}
               <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                {import.meta.env.VITE_DASHSCOPE_API_KEY ? '· 真实 LLM' : '· 模拟模式'}
+                {getAuthToken() ? '· 真实 LLM' : '· 模拟模式'}
               </span>
             </div>
             <button onClick={resetChat}
@@ -707,10 +1044,9 @@ async function generateVulnReportFallback(
     .map(m => `${m.role === 'user' ? '👤 学生' : '🤖 目标系统'}：${m.content}`)
     .join('\n');
 
-  const API_KEY = import.meta.env.VITE_DASHSCOPE_API_KEY || '';
-  const API_BASE = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+  const token = getAuthToken();
 
-  if (!API_KEY) {
+  if (!token) {
     return `# ${levelName} 漏洞分析报告
 
 > 生成时间：${now}  
@@ -730,7 +1066,7 @@ async function generateVulnReportFallback(
 
 ## 2. 攻击手法分析
 
-（请配置 VITE_DASHSCOPE_API_KEY 以获取 AI 自动生成的完整分析报告）
+（请登录后获取 AI 自动生成的完整分析报告）
 
 **关键步骤**：
 1. 分析目标系统的回复格式和安全边界
@@ -763,7 +1099,7 @@ async function generateVulnReportFallback(
 
 ---
 
-> 💡 提示：配置 API Key 后，每次通关可自动生成包含真实对话分析的中文报告。
+> 💡 提示：登录后，每次通关可自动生成包含真实对话分析的中文报告。
 `;
   }
 
@@ -794,11 +1130,11 @@ ${chatText}
 输出中文，语气专业，适合放在 GitHub 作品集中。`;
 
   try {
-    const resp = await fetch(`${API_BASE}/chat/completions`, {
+    const resp = await fetch('/api/dashscope/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         model: 'qwen-plus',
@@ -815,6 +1151,6 @@ ${chatText}
     const data = await resp.json();
     return data.choices?.[0]?.message?.content || `生成失败，请重试。`;
   } catch {
-    return `# ${levelName} 漏洞分析报告\n\n> 生成时间：${now}\n\nAI 报告生成失败，请检查网络连接或 API Key 配置。`;
+    return `# ${levelName} 漏洞分析报告\n\n> 生成时间：${now}\n\nAI 报告生成失败，请检查网络连接或登录状态。`;
   }
 }

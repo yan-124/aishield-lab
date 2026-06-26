@@ -4,23 +4,26 @@ import { KNOWLEDGE_ARTICLES } from './KnowledgeDetail'
 import type { ViewMode } from '../types'
 import {
   Home, BookOpen, Play, Target, MessageCircle, Briefcase,
-  Newspaper, Search, Bell, ChevronDown, LogOut, User, Settings, Bot
-} from 'lucide-react'
+  Newspaper, Search, Bell, ChevronDown, LogOut, User, Settings, Bot,
+  Building2, GraduationCap, Compass, Sun, Moon, Command, BarChart3 } from 'lucide-react'
 
 const navItems = [
   { key: 'home', label: '首页', icon: Home },
   { key: 'knowledge', label: '知识库', icon: BookOpen },
   { key: 'videos', label: '视频', icon: Play },
-  { key: 'range', label: '靶场', icon: Target },
+  { key: 'range', label: 'Agent靶场', icon: Target },
+  { key: 'interview', label: '面试', icon: GraduationCap },
+  { key: 'career-guide', label: '职业诊断', icon: Compass },
   { key: 'community', label: '社区', icon: MessageCircle },
-  { key: 'jobs', label: '招聘', icon: Briefcase },
-  { key: 'news', label: '新闻', icon: Newspaper },
+  { key: 'enterprise', label: '企业版', icon: Building2 }
 ] as const
 
 const mobileNavItems = [
   ...navItems.slice(0, 4),
+  { key: 'interview', label: '面试', icon: GraduationCap },
+  { key: 'career-guide', label: '职业诊断', icon: Compass },
   { key: 'shieldy', label: 'Shieldy', icon: Bot, isShieldy: true as const },
-  { key: navItems[4].key, label: navItems[4].label, icon: navItems[4].icon },
+  { key: 'enterprise', label: '企业版', icon: Building2 },
 ]
 
 export const Navigation = () => {
@@ -139,7 +142,7 @@ export const Navigation = () => {
         </div>
 
         {/* ─── Desktop Nav ─── */}
-        <div className="hidden md:flex items-center gap-0.5">
+        <div className="hidden md:flex items-center gap-0 flex-nowrap overflow-x-auto">
           {navItems.map(item => {
             const isActive = state.viewMode === item.key
             const Icon = item.icon
@@ -147,7 +150,7 @@ export const Navigation = () => {
               <button
                 key={item.key}
                 onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: item.key })}
-                className="relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200"
+                className="relative flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200"
                 style={{
                   color: isActive ? '#A78BFA' : '#64748B',
                   background: isActive ? 'rgba(139,92,246,0.08)' : 'transparent',
@@ -195,7 +198,7 @@ export const Navigation = () => {
                       if (e.key === 'Enter' && searchResults.length > 0) handleSearchSelect(searchResults[0].id)
                     }}
                     placeholder="搜索文章..."
-                    className="w-36 max-w-[140px] sm:w-52 pl-9 pr-4 py-2 rounded-xl text-sm text-[#F1F5F9] outline-none transition-all"
+                    className="w-36 max-w-[140px] sm:w-52 pl-9 pr-8 py-2 rounded-xl text-sm text-[#F1F5F9] outline-none transition-all"
                     style={{
                       background: '#111833',
                       border: searchFocused ? '1px solid rgba(139,92,246,0.45)' : '1px solid rgba(139,92,246,0.2)',
@@ -223,8 +226,9 @@ export const Navigation = () => {
                   )}
                 </div>
                 <button onClick={() => { setShowSearch(false); setSearchQuery(''); }}
-                  className="px-2.5 py-2 rounded-lg text-xs text-[#64748B] hover:text-[#94A3B8] bg-[#111833] hover:bg-[#172044] transition-colors cursor-pointer">
-                  ESC
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-[#64748B] hover:text-[#94A3B8] hover:bg-white/5 transition-colors cursor-pointer"
+                  title="关闭搜索 (Esc)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
               </div>
             ) : (
@@ -273,7 +277,6 @@ export const Navigation = () => {
                   style={{ background: 'linear-gradient(135deg, #A78BFA, #6366F1)', color: 'white' }}>
                   {state.user.nickname[0]}
                 </div>
-                <span className="text-xs hidden sm:inline text-[#94A3B8] font-medium">{state.user.nickname}</span>
                 <ChevronDown size={12} className="text-[#475569] transition-transform"
                   style={{ transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </button>
@@ -288,8 +291,8 @@ export const Navigation = () => {
                   <div className="py-1">
                     {([
                       { label: '个人中心', icon: User, action: () => { dispatch({ type: 'SET_VIEW_MODE', payload: 'user-profile' }); setShowUserMenu(false); } },
-                      { label: '学习进度', icon: BookOpen, action: () => { dispatch({ type: 'SET_VIEW_MODE', payload: 'learning-progress' }); setShowUserMenu(false); } },
-                      { label: '设置', icon: Settings, action: () => { setShowUserMenu(false); } },
+                      { label: '设置', icon: Settings, action: () => { dispatch({ type: 'SET_VIEW_MODE', payload: 'settings' }); setShowUserMenu(false); } },
+                      ...(state.user?.email === 'wuyanset@outlook.com' ? [{ label: '数据看板', icon: BarChart3, action: () => { dispatch({ type: 'SET_VIEW_MODE', payload: 'admin' }); setShowUserMenu(false); } }] : []),
                     ] as const).map(item => (
                       <button key={item.label}
                         onClick={item.action}
@@ -314,7 +317,8 @@ export const Navigation = () => {
                 </div>
               )}
             </div>
-          ) : (
+          ) : (<>
+          <button onClick={() => dispatch({ type: 'SHOW_LOGIN' })} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white transition-all cursor-pointer">登录</button>
             <button onClick={() => dispatch({ type: 'SHOW_REGISTER' })}
               className="px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               style={{
@@ -322,9 +326,9 @@ export const Navigation = () => {
                 color: 'white',
                 boxShadow: '0 0 20px rgba(139,92,246,0.2)',
               }}>
-              <span className="hidden sm:inline">注册 / 登录</span><span className="sm:hidden">登录</span>
+              <span className="hidden sm:inline">注册</span><span className="sm:hidden">注册</span>
             </button>
-          )}
+          </>)}
 
           {/* 联系学长 CTA */}
           <button onClick={() => setShowConsult(true)}

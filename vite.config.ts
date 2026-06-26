@@ -10,14 +10,44 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api/coze': {
-        target: 'https://api.coze.cn',
+        target: 'https://092ba516.aishield-lab.pages.dev',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/coze/, ''),
+        secure: true,
+      },
+      '/api/dashscope': {
+        target: 'https://092ba516.aishield-lab.pages.dev',
+        changeOrigin: true,
+        secure: true,
       },
     },
   },
   build: {
     outDir: 'dist3',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('three') || id.includes('@react-three')) {
+              return 'three';
+            }
+            if (id.includes('pdfjs-dist')) {
+              return 'pdf';
+            }
+            if (id.includes('@coze')) {
+              return 'api';
+            }
+            if (id.includes('framer-motion')) {
+              return 'motion';
+            }
+            return 'vendor';
+          }
+        },
+      },
+    },
+    minify: 'terser',
+    sourcemap: false,
+    assetsInlineLimit: 4096,
+    chunkSizeWarningLimit: 1000,
   },
 })

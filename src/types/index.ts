@@ -1,24 +1,30 @@
-// AI安全学习平台 - AIShield Lab
+// AI Agent安全实战平台 - AIShield Lab
 
 export type ViewMode =
   | 'home'
   | 'knowledge'
   | 'knowledge-detail'
   | 'videos'
+  | 'interview'
   | 'range'
   | 'range-level'
   | 'community'
-  | 'jobs'
+  | 'enterprise'
   | 'news'
+  | 'news-detail'
   | 'settings'
   | 'my'
   | 'learning-progress'
   | 'learning-path'
   | 'practice-records'
   | 'leaderboard'
-  | 'user-profile';
+  | 'user-profile'
+  | 'career-guide'
+  | 'pricing'
+  | 'credits'
+  | 'admin';
 
-export type ThemeMode = 'dark';
+export type ThemeMode = 'dark' | 'light';
 
 export interface UserInfo {
   id: string;
@@ -27,6 +33,8 @@ export interface UserInfo {
   avatar?: string;
   identity?: 'student' | 'professional' | 'career_change';
   goals?: string[];
+  mfaEnabled?: boolean;
+  isLoggedIn?: boolean;
   painPoints?: string[];
 }
 
@@ -87,6 +95,8 @@ export interface VideoItem {
   duration: string;
   views: number;
   category: string;
+  url?: string;       // 视频原始链接
+  sourceName?: string; // 来源平台名（B站/YouTube等）
 }
 
 export interface RangeLevel {
@@ -97,6 +107,9 @@ export interface RangeLevel {
   difficulty: number;
   description: string;
   completed?: boolean;
+  module: string;       // 所属模块ID，如 'prompt-injection', 'system-prompt-leak'
+  owasp: string;        // OWASP LLM Top 10 编号，如 'LLM01', 'LLM07'
+  owaspName: string;    // OWASP 风险中文名，如 '提示词注入'
 }
 
 export interface ChatMessage {
@@ -124,6 +137,8 @@ export interface JobItem {
   salary: string;
   tags: string[];
   postedAt: string;
+  sourceUrl?: string;    // 原始招聘链接
+  sourceName?: string;   // 来源平台名（猎聘/Boss直聘等）
 }
 
 export interface NewsItem {
@@ -146,12 +161,14 @@ export interface AppState {
   theme: ThemeMode;
   user: UserInfo | null;
   showRegister: boolean;
+  showLogin: boolean;
   registerStep: number;
   searchQuery: string;
   showSearch: boolean;
   gameProfile: GameProfile;
   showLevelUp: { newLevel: number; albumName: string } | null;
   practiceRecords: PracticeRecord[];
+  completedLevels: Set<string>;
 }
 
 export type AppAction =
@@ -165,13 +182,17 @@ export type AppAction =
   | { type: 'SET_USER'; payload: UserInfo | null }
   | { type: 'SHOW_REGISTER' }
   | { type: 'HIDE_REGISTER' }
+  | { type: 'SHOW_LOGIN' }
+  | { type: 'HIDE_LOGIN' }
   | { type: 'SET_REGISTER_STEP'; payload: number }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'TOGGLE_SEARCH'; payload?: string }
   | { type: 'SET_GAME_PROFILE'; payload: Partial<GameProfile> }
   | { type: 'SHOW_LEVEL_UP'; payload: { newLevel: number; albumName: string } }
   | { type: 'ADD_PRACTICE_RECORD'; payload: PracticeRecord }
-  | { type: 'SET_PRACTICE_RECORDS'; payload: PracticeRecord[] };
+  | { type: 'SET_PRACTICE_RECORDS'; payload: PracticeRecord[] }
+  | { type: 'TOGGLE_THEME' }
+  | { type: 'LOGOUT' };
 
 export interface Template {
   id: string;

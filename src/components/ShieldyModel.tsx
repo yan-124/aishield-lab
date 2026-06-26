@@ -1,56 +1,44 @@
-﻿import { useRef, useEffect, useState, useMemo } from 'react'
+import React, { useRef, useEffect, useState, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 /* ============================================================
-   AIShield Lab — ShieldyModel Component
-   Supports multiple GLB variants with material enhancement
+   AIShield Lab — ShieldyModel Component (v5 rewrite)
+   - 修复鬼影问题：使用条件渲染替代透明度过渡
+   - 修复遮挡问题：调整模型位置避免脚部被截断
+   - 模型2体积减小5%
+   - GLB加载失败时降级显示CSS盾牌
    ============================================================ */
 
-/* ── GLB Loader ── */
-function loadGLB(url: string): Promise<THREE.Group> {
+/* ── GLB Loader (simplified) ── */
+function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Group> {
   return new Promise((resolve, reject) => {
     import('three/examples/jsm/loaders/GLTFLoader.js').then(({ GLTFLoader }) => {
       const loader = new GLTFLoader()
       loader.load(
         url,
         (gltf) => {
-          const scene = gltf.scene.clone(true)
-          scene.traverse((child: any) => {
-            if (child.isMesh && child.material) {
-              const mats = Array.isArray(child.material) ? child.material : [child.material]
-              mats.forEach((mat: any) => {
-                if (mat.isMeshStandardMaterial || mat.isMeshPhongMaterial) {
-                  mat.roughness = Math.max(0.15, (mat.roughness ?? 0.7) - 0.25)
-                  mat.metalness = Math.min(0.55, (mat.metalness ?? 0.1) + 0.2)
-                  if (mat.color) {
-                    const c = mat.color
-                    const boost = 1.15
-                    c.r = Math.min(1, c.r * boost)
-                    c.g = Math.min(1, c.g * boost)
-                    c.b = Math.min(1, c.b * boost)
-                  }
-                }
-              })
-            }
-          })
+          const scene = gltf.scene
+          // Auto-center & scale (应用额外的缩放因子)
           const box = new THREE.Box3().setFromObject(scene)
           const size = box.getSize(new THREE.Vector3())
           const maxDim = Math.max(size.x, size.y, size.z) || 1
-          scene.scale.setScalar(1.45 / maxDim)
+          const baseScale = 1.45 / maxDim
+          scene.scale.setScalar(baseScale * scaleMultiplier)
           const box2 = new THREE.Box3().setFromObject(scene)
           const center = box2.getCenter(new THREE.Vector3())
-          scene.position.set(-center.x, -center.y - 0.12, -center.z)
+          // 向上偏移0.25，避免脚部被底部遮挡
+          scene.position.set(-center.x, -center.y - 0.42 + 0.25, -center.z)
           resolve(scene)
         },
         undefined,
-        () => reject(new Error(`GLB load failed: ${url}`))
+        () => reject(new Error('GLB load failed: ' + url))
       )
     }).catch(reject)
   })
 }
 
-/* ── Idle animation ── */
+/* ── Model with idle animation ── */
 function AnimatedModel({ model }: { model: THREE.Group }) {
   const groupRef = useRef<THREE.Group>(null!)
   const tRef = useRef(0)
@@ -63,23 +51,60 @@ function AnimatedModel({ model }: { model: THREE.Group }) {
   return <group ref={groupRef}><primitive object={model} /></group>
 }
 
-/* ── Scene decorations ── */
-function GlowRing() {
-  const ref = useRef<THREE.Mesh>(null!)
-  useFrame((_, d) => { if (ref.current) { ref.current.rotation.z += d * 0.2; ref.current.rotation.x += d * 0.1 } })
-  return (
-    <mesh ref={ref} position={[0, -0.2, -0.4]}>
-      <torusGeometry args={[0.7, 0.006, 16, 64]} />
-      <meshStandardMaterial color="#38BDF8" emissive="#38BDF8" emissiveIntensity={0.5} transparent opacity={0.18} depthWrite={false} />
-    </mesh>
-  )
+/* ── Single model with smooth fade-in animation ── */
+function SingleModel({ model }: { model: THREE.Group }) {
+  const groupRef = useRef<THREE.Group>(null!)
+  const tRef = useRef(0)
+  const opacityRef = useRef(0)
+  
+  useFrame((_, delta) => {
+    if (!groupRef.current) return
+    
+    // Always lerp toward fully visible
+    opacityRef.current = THREE.MathUtils.lerp(opacityRef.current, 1, 0.08)
+    
+    groupRef.current.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material) {
+        const mat = child.material as THREE.MeshStandardMaterial
+        if (mat.opacity !== undefined) {
+          mat.transparent = true
+          mat.opacity = opacityRef.current * (mat.userData?.originalOpacity || 1)
+          mat.needsUpdate = true
+        }
+      }
+    })
+    
+    tRef.current += delta * 0.5
+    groupRef.current.rotation.y = Math.sin(tRef.current) * 0.25
+    groupRef.current.position.y = Math.sin(tRef.current * 1.5) * 0.04
+  })
+  
+  // Reset opacity when model changes (for fade-in effect)
+  useEffect(() => {
+    opacityRef.current = 0
+    if (model) {
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material) {
+          const mat = child.material as THREE.MeshStandardMaterial
+          mat.userData.originalOpacity = mat.opacity || 1
+        }
+      })
+    }
+  }, [model])
+  
+  return <group ref={groupRef}><primitive object={model} /></group>
 }
 
-function Particles({ count = 35 }: { count?: number }) {
+/* ── Floating particles ── */
+function Particles({ count = 30 }: { count?: number }) {
   const mesh = useRef<THREE.InstancedMesh>(null!)
   const positions = useMemo(() => {
     const a = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) { a[i*3] = (Math.random()-0.5)*2.5; a[i*3+1] = Math.random()*2.5-0.5; a[i*3+2] = (Math.random()-0.5)*2 }
+    for (let i = 0; i < count; i++) {
+      a[i * 3] = (Math.random() - 0.5) * 2.5
+      a[i * 3 + 1] = Math.random() * 2.5 - 0.5
+      a[i * 3 + 2] = (Math.random() - 0.5) * 2
+    }
     return a
   }, [count])
 
@@ -88,31 +113,27 @@ function Particles({ count = 35 }: { count?: number }) {
     const dummy = new THREE.Object3D()
     const t = clock.elapsedTime
     for (let i = 0; i < count; i++) {
-      dummy.position.set(positions[i*3]+Math.sin(t*0.3+i)*0.04, positions[i*3+1]+((t*(0.15+i%3*0.1)+i)%2.5)-0.8, positions[i*3+2]+Math.cos(t*0.2+i)*0.04)
-      dummy.scale.setScalar(0.016 + Math.sin(t*2+i)*0.007)
+      dummy.position.set(
+        positions[i * 3] + Math.sin(t * 0.3 + i) * 0.04,
+        positions[i * 3 + 1] + ((t * (0.15 + i % 3 * 0.1) + i) % 2.5) - 0.8,
+        positions[i * 3 + 2] + Math.cos(t * 0.2 + i) * 0.04
+      )
+      dummy.scale.setScalar(0.016 + Math.sin(t * 2 + i) * 0.007)
       dummy.updateMatrix()
       mesh.current.setMatrixAt(i, dummy.matrix)
     }
     mesh.current.instanceMatrix.needsUpdate = true
   })
 
-  return <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
-    <sphereGeometry args={[1,6,6]} />
-    <meshBasicMaterial color="#38BDF8" transparent opacity={0.3} depthWrite={false} />
-  </instancedMesh>
-}
-
-function LoadingSpinner() {
-  const ref = useRef<THREE.Mesh>(null!)
-  useFrame(() => { if (ref.current) ref.current.rotation.z -= 0.04 })
   return (
-    <mesh ref={ref}>
-      <torusGeometry args={[0.3, 0.035, 16, 48]} />
-      <meshStandardMaterial color="#38BDF8" emissive="#38BDF8" emissiveIntensity={0.5} transparent opacity={0.35} />
-    </mesh>
+    <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
+      <sphereGeometry args={[1, 6, 6]} />
+      <meshBasicMaterial color="#38BDF8" transparent opacity={0.3} depthWrite={false} />
+    </instancedMesh>
   )
 }
 
+/* ── Scene lighting ── */
 export function SceneLighting() {
   return (
     <>
@@ -128,9 +149,28 @@ export function SceneLighting() {
   )
 }
 
-/* ── Camera + GL options (reusable) ── */
-export const CAM = { position: [0, 0.2, 2.8] as [number, number, number], fov: 46 }
+/* ── Camera + GL options ── */
+export const CAM = { position: [0, 0.38, 2.8] as [number, number, number], fov: 46 }
 export const GL_OPTS = { antialias: true, alpha: true, toneMapping: 4, outputColorSpace: 'srgb' as const }
+
+/* ── CSS盾牌降级组件 ── */
+function FallbackShield({ className }: { className?: string }) {
+  return (
+    <div className={`flex items-center justify-center ${className ?? ''}`} style={{ width: '100%', height: '100%' }}>
+      <div style={{
+        width: '120px', height: '144px',
+        background: 'linear-gradient(135deg, #A78BFA 0%, #60A5FA 50%, #22D3EE 100%)',
+        clipPath: 'polygon(50% 0%, 100% 25%, 100% 70%, 50% 100%, 0% 70%, 0% 25%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        filter: 'drop-shadow(0 0 30px rgba(139,92,246,0.4))',
+      }}>
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+      </div>
+    </div>
+  )
+}
 
 /* ── Standalone card — used by HeroSection ── */
 export function ShieldyModelCard({
@@ -141,84 +181,156 @@ export function ShieldyModelCard({
   className?: string
 }) {
   const [model, setModel] = useState<THREE.Group | null>(null)
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     setError(false)
+    setModel(null)
     loadGLB(modelUrl).then(m => {
-      if (!cancelled) { setModel(m); setLoading(false) }
+      if (!cancelled) setModel(m)
     }).catch(() => {
-      if (!cancelled) { setError(true); setLoading(false) }
+      if (!cancelled) setError(true)
     })
     return () => { cancelled = true }
   }, [modelUrl])
 
-  // 模型加载失败时返回null，不渲染残环
-  if (error) return null
+  if (error) return <FallbackShield className={className} />
 
   return (
     <Canvas camera={CAM} gl={GL_OPTS} dpr={[1, 2]} className={className}
-      style={{ background: 'transparent', width: '100%', height: '100%' }}>
+      style={{ width: '100%', height: '100%', outline: 'none', border: 'none', display: 'block', mixBlendMode: 'normal', transition: 'opacity 0.5s ease' }}
+      onCreated={(state) => {
+        state.gl.setClearColor(0x000000, 0)
+        const cvs = state.gl.domElement
+        if (cvs) {
+          cvs.style.background = 'transparent'
+          cvs.style.mixBlendMode = 'screen'
+        }
+      }}>
       <SceneLighting />
-      {loading ? <LoadingSpinner /> : <><GlowRing /><Particles count={35} /><AnimatedModel model={model!} /></>}
+      {model && <><SingleModel model={model} /><Particles count={25} /></>}
     </Canvas>
   )
 }
 
-/* ── Main multi-variant component (renders inside parent Canvas) ── */
-const MODEL_URLS = ['https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-b.glb', 'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb']
+/* ── Main multi-variant component (standalone with Canvas) ── */
+const MODEL_URLS = [
+  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb',
+  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-e.glb',
+  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-f.glb',
+]
 
-export default function ShieldyModel() {
-  const [models, setModels] = useState<THREE.Group[]>([])
-  const [loading, setLoading] = useState(true)
-  const [activeIndex, setActiveIndex] = useState(0)
+// 模型缩放配置：第二个模型减小5%
+const MODEL_SCALE_MULTIPLIERS = [1.0, 0.95, 1.0]
+
+function ShieldyScene() {
+  const [model, setModel] = useState<THREE.Group | null>(null)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
-    setLoading(true)
-    Promise.all(MODEL_URLS.map(loadGLB)).then(loaded => {
-      setModels(loaded)
-      setLoading(false)
-    }).catch(() => setLoading(false))
+    const timeoutId = setTimeout(() => setHasError(true), 15000)
+    loadGLB(MODEL_URLS[0], MODEL_SCALE_MULTIPLIERS[0]).then(m => {
+      clearTimeout(timeoutId)
+      setModel(m)
+    }).catch(() => {
+      clearTimeout(timeoutId)
+      setHasError(true)
+    })
   }, [])
 
-  // Auto-switch every 5 seconds
+  if (hasError) return <FallbackShield />
+  if (!model) return <><SceneLighting /></>
+
+  return (
+    <group>
+      <SingleModel model={model} />
+      <Particles count={30} />
+    </group>
+  )
+}
+
+/* ── Multi-model switching component with preloading ── */
+function MultiModelSwitcher() {
+  const [models, setModels] = useState<(THREE.Group | null)[]>([])
+  const [currentIdx, setCurrentIdx] = useState(0)
+  // transition state removed
+
   useEffect(() => {
-    if (models.length < 2) return
+    MODEL_URLS.forEach((url, idx) => {
+      loadGLB(url, MODEL_SCALE_MULTIPLIERS[idx]).then(m => {
+        setModels(prev => {
+          const next = [...prev]
+          next[idx] = m
+          return next
+        })
+      }).catch(() => {
+        setModels(prev => {
+          const next = [...prev]
+          next[idx] = null
+          return next
+        })
+      })
+    })
+  }, [])
+
+  useEffect(() => {
     const timer = setInterval(() => {
-      setActiveIndex(prev => (prev + 1) % models.length)
-    }, 5000)
+      setCurrentIdx(prev => (prev + 1) % MODEL_URLS.length)
+    }, 8000)
     return () => clearInterval(timer)
-  }, [models.length])
+  }, [])
 
-  if (loading || models.length === 0) {
-    return <><SceneLighting /><GlowRing /><Particles count={40} /><LoadingSpinner /></>
+  const currentModel = models[currentIdx]
+  if (!currentModel) return <><SceneLighting /></>
+
+  return (
+    <group>
+      <SingleModel model={currentModel} />
+      <Particles count={30} />
+    </group>
+  )
+}
+
+/* ── Error Boundary ── */
+class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallback: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
   }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.warn('ShieldyModel error:', error, info)
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback as React.ReactElement
+    return this.props.children as React.ReactElement
+  }
+}
 
-  const model = models[activeIndex]
-
-  if (!model) {
-    return (
-      <>
-        <SceneLighting />
-        <GlowRing />
-        <Particles count={20} />
-        <mesh position={[0, 0, 0]}>
-          <torusGeometry args={[0.4, 0.045, 16, 48]} />
-          <meshStandardMaterial color="#38BDF8" emissive="#38BDF8" emissiveIntensity={0.8} transparent opacity={0.5} />
-        </mesh>
-      </>
-    )
+/* ── Default export for React.lazy ── */
+export default function ShieldyModel({ modelUrl, className }: { modelUrl?: string; className?: string } = {}) {
+  if (modelUrl) {
+    return <ShieldyModelCard modelUrl={modelUrl} className={className} />
   }
 
   return (
-    <>
+    <Canvas camera={CAM} gl={GL_OPTS} dpr={[1, 2]} className={className}
+      style={{ width: '100%', height: '100%', outline: 'none', border: 'none', display: 'block', mixBlendMode: 'normal', transition: 'opacity 0.5s ease' }}
+      onCreated={(state) => {
+        state.gl.setClearColor(0x000000, 0)
+        const cvs = state.gl.domElement
+        if (cvs) {
+          cvs.style.background = 'transparent'
+          cvs.style.mixBlendMode = 'screen'
+        }
+      }}>
       <SceneLighting />
-      <GlowRing />
-      <Particles count={35} />
-      <AnimatedModel key={`model-${activeIndex}`} model={model} />
-    </>
+      <ErrorBoundary fallback={<FallbackShield />}>
+        <MultiModelSwitcher />
+      </ErrorBoundary>
+    </Canvas>
   )
 }

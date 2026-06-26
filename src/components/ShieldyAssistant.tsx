@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { MessageCircle, X, Send, Minimize2, Bot, Sparkles, Shield } from 'lucide-react'
+﻿import { useState, useEffect, useRef } from 'react'
+import { MessageCircle, X, Send, Minimize2, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { chatWithTeachingAssistant } from '../services/dashscope'
 
@@ -10,11 +10,14 @@ import { chatWithTeachingAssistant } from '../services/dashscope'
    - 更精致的聊天面板 UI
    ═══════════════════════════════════════════════════════════════ */
 
-const WELCOME_MSG = '你好！我是 Shieldy，你的 AI 安全学习助手 🛡️ 有什么可以帮你的？无论是学习问题、靶场攻略还是面试准备，随时问我～'
+const WELCOME_MSG = '你好！我是 Shieldy，你的 AI Agent 安全实战助手 🛡️ 有什么可以帮你的？无论是学习问题、靶场攻略还是面试准备，随时问我～'
 
 const QUICK_QUESTIONS = [
-  { label: '🎯 什么是 Prompt 注入？', answer: 'Prompt 注入是一种通过在用户输入中植入恶意指令，绕过 AI 系统安全过滤的技术。常见手法包括角色扮演注入（如 DAN 攻击）、编码绕过（如 Base64）、以及利用多轮对话上下文的上下文注入。防御方法包括输入过滤、输出检测和对抗训练。' },
-  { label: '🎮 靶场怎么玩？', answer: '点击导航栏的「靶场」即可进入！目前有 50+ 实战关卡，覆盖 Prompt 注入、对抗攻击、数据泄露等多个方向。浏览器直接开练，不用装任何环境～' },
+      { label: '📊 职业评估怎么用？', answer: '有快速版（5题免费）和完整版（22题深度分析）。快速版给基础方向建议，完整版含能力画像+岗位匹配+学习路线。评估完还能直接跳视频频道学习！' },
+      { label: '🏢 企业版有什么？', answer: '企业版提供：定制化安全评估、团队靶场管理、员工能力培训工具。点击导航栏“企业版”可查看详情并提交咨询。' },
+      { label: '🚀 零基础能做什么？', answer: '可以从“AI安全测试员”或“合规助理”入门！0经验也能做prompt评测、内容审核、等保材料准备等工作。先去靶场练前3关，再看“转型入门”视频频道！' },
+  { label: '🎯 什么是 Agent 提示词注入？', answer: 'Prompt 注入是一种通过在用户输入中植入恶意指令，绕过 AI 系统安全过滤的技术。常见手法包括角色扮演注入（如 DAN 攻击）、编码绕过（如 Base64）、以及利用多轮对话上下文的上下文注入。防御方法包括输入过滤、输出检测和对抗训练。' },
+  { label: '🎮 靶场怎么玩？', answer: '点击导航栏的「靶场」即可进入！目前有 25+ 实战关卡，覆盖 Prompt 注入、对抗攻击、数据泄露等多个方向。浏览器直接开练，不用装任何环境～' },
   { label: '📚 从哪开始学？', answer: '推荐路径：先去「知识库」系统化学习基础理论 → 再进「靶场」边玩边练 → 最后用「AI 面试训练场」模拟真实面试。如果零基础也不用担心，平台专门为在校生设计！' },
   { label: '💡 Shieldy 是谁？', answer: '我是 AIShield Lab 的 AI 助教 Shieldy 🤖 专门帮你解答 AI 安全学习中的各种问题。学习问题问我，职业规划找学长 → 点击导航栏「联系学长」可以预约 1 对 1 咨询哦！' },
 ]
@@ -114,6 +117,13 @@ export function ShieldyAssistant() {
     }
   }, [panelOpen])
 
+  // Listen for open-shieldy event from navigation
+  useEffect(() => {
+    const handler = () => setPanelOpen(true)
+    window.addEventListener('open-shieldy', handler)
+    return () => window.removeEventListener('open-shieldy', handler)
+  }, [])
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -128,6 +138,7 @@ export function ShieldyAssistant() {
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return
     const question = inputValue.trim()
+    fetch('/api/auth/stats/track', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'chat_message', meta:{ question: question.slice(0,200) } }) }).catch(() => {})
     setMessages(prev => [...prev, { role: 'user', text: question }])
     setInputValue('')
     setIsLoading(true)
@@ -155,7 +166,7 @@ export function ShieldyAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-0 right-0 left-0 sm:bottom-6 sm:left-auto sm:z-[60] sm:w-[340px] sm:right-6 sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl flex flex-col sm:h-[560px] sm:max-h-[85vh] max-h-[75vh] h-[75vh]"
+            className="fixed bottom-0 right-0 left-0 z-[70] sm:bottom-6 sm:left-auto sm:z-[60] sm:w-[340px] sm:right-6 sm:rounded-2xl rounded-t-2xl overflow-hidden shadow-2xl flex flex-col sm:h-[440px] sm:max-h-[75vh] max-h-[50vh] h-[50vh]"
             style={{
               background: 'linear-gradient(165deg, #0E1530 0%, #0C1027 60%, #0A0E1F 100%)',
               border: '1px solid rgba(139,92,246,0.18)',
@@ -294,7 +305,7 @@ export function ShieldyAssistant() {
             onClick={() => setPanelOpen(true)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            className="fixed bottom-6 right-6 z-[60] cursor-pointer"
+            className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[60] cursor-pointer"
             aria-label="打开 Shieldy AI 助教"
           >
             <motion.div

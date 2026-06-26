@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { useAppContext } from '../context/AppContext';
 import type { KnowledgeArticle, ArticleProgress } from '../types';
 
@@ -483,7 +484,10 @@ export const KnowledgeDetail = ({ articleId }: { articleId?: string }) => {
   const diff = DIFF_COLOR[article.difficulty];
   const catColor = CATEGORY_COLOR[article.categoryId] || '#10B981';
   const toc = extractToc(article.body);
-  const html = renderMarkdown(article.body);
+  const html = DOMPurify.sanitize(renderMarkdown(article.body), {
+    ALLOWED_TAGS: ['h1', 'h2', 'h3', 'p', 'strong', 'code', 'pre', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'hr', 'li', 'ul', 'ol', 'span', 'a'],
+    ALLOWED_ATTR: ['class', 'data-lang', 'href', 'style'],
+  });
 
   // 相关文章
   const relatedArticles = (article.related || [])

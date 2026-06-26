@@ -1,174 +1,158 @@
-import type { VideoItem } from '../types';
-import { Play, Eye, Clock, Film } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Sword, Building, FileCheck, Settings, GraduationCap, ChevronRight, Lock } from 'lucide-react';
 
-const videos: VideoItem[] = [
-  { id: '1', title: 'Prompt注入攻击实战演示', description: '用真实案例演示如何进行Prompt注入攻击以及防御方法', thumbnail: '', duration: '12:30', views: 2340, category: 'Prompt注入' },
-  { id: '5', title: '高级越狱技术：DAN、角色扮演与编码绕过', description: '深入解析DAN攻击、角色扮演注入和Base64编码三种越狱手法', thumbnail: '', duration: '22:15', views: 3120, category: 'Prompt注入' },
-  { id: '7', title: 'Prompt注入防御全攻略：输入过滤与输出检测', description: '从输入清洗到输出监控，体系化构建Prompt注入防御方案', thumbnail: '', duration: '18:40', views: 1890, category: 'Prompt注入' },
-  { id: '2', title: '对抗攻击入门：让AI看错图像', description: '从零开始学习对抗样本的生成原理和实际影响', thumbnail: '', duration: '18:45', views: 1890, category: '对抗攻击' },
-  { id: '8', title: '对抗防御方法对比：对抗训练与输入变换', description: '横向对比对抗训练、特征去噪、JPEG压缩等主流防御手段的效果', thumbnail: '', duration: '20:30', views: 1450, category: '对抗攻击' },
-  { id: '3', title: 'ChatGPT安全机制深度解析', description: '拆解OpenAI的安全对齐技术栈', thumbnail: '', duration: '25:10', views: 4560, category: '模型安全' },
-  { id: '9', title: '开源大模型安全评估：Llama、Mistral、Qwen对比', description: '针对主流开源模型进行红队测试，横向对比安全防护能力差异', thumbnail: '', duration: '28:00', views: 2230, category: '模型安全' },
-  { id: '10', title: 'AI安全评估工具链搭建：从入门到自动化', description: '手把手搭建Garak+Giskard+PyRIT的集成红队评估流水线', thumbnail: '', duration: '26:20', views: 1670, category: '工具教程' },
-  { id: '11', title: '自动化安全检测工具：LLM Guard使用详解', description: 'Protect AI的LLM Guard工具安装配置与自定义规则编写实战', thumbnail: '', duration: '15:50', views: 1210, category: '工具教程' },
-  { id: '4', title: 'AI安全工程师的一天', description: '真实的AI安全岗位工作内容和职业发展路径', thumbnail: '', duration: '15:20', views: 3200, category: '职业发展' },
-  { id: '12', title: 'AI安全行业薪资与技能要求全景图', description: '2026年AI安全各细分方向的薪资分布与必备技能矩阵', thumbnail: '', duration: '19:45', views: 2780, category: '职业发展' },
-  { id: '6', title: '2025年重大AI安全事故复盘：从越狱到数据泄露', description: '回顾年度最具影响力的AI安全事故及行业应对策略', thumbnail: '', duration: '30:00', views: 5340, category: '前沿动态' },
+// 5大方向分类，与职业评估10岗位一一对应
+const VIDEO_CATEGORIES = [
+  {
+    id: 'offense',
+    icon: Sword,
+    color: '#EF4444',
+    gradient: 'from-red-500/20 to-red-900/20',
+    title: '攻防实战',
+    tags: ['Prompt注入', '越狱', '红队'],
+    jobs: ['AI安全测试员', 'AI安全攻防工程师', 'LLM安全研究员']
+  },
+  {
+    id: 'architecture',
+    icon: Building,
+    color: '#3B82F6',
+    gradient: 'from-blue-500/20 to-blue-900/20',
+    title: '安全架构',
+    subtitle: '安全设计评审员 → 安全架构师 → 产品经理',
+    tags: ['体系搭建', '威胁建模', '设计评审'],
+    jobs: ['安全设计评审员', 'AI安全体系架构师', 'AI安全产品经理']
+  },
+  {
+    id: 'compliance',
+    icon: FileCheck,
+    color: '#10B981',
+    gradient: 'from-emerald-500/20 to-emerald-900/20',
+    title: '合规治理',
+    subtitle: '合规助理 → 合规专家 → 审计师/顾问',
+    tags: ['等保', 'ISO', '审计', '监管'],
+    jobs: ['合规助理', 'AI安全合规专家', 'AI安全审计师', 'AI安全顾问']
+  },
+  {
+    id: 'operations',
+    icon: Settings,
+    color: '#F59E0B',
+    gradient: 'from-amber-500/20 to-amber-900/20',
+    title: '安全运营',
+    subtitle: '安全运维 → 运营工程师 → 数据安全工程师',
+    tags: ['DevSecOps', '监控', '应急'],
+    jobs: ['安全运维', 'AI安全运营工程师', 'AI数据安全工程师']
+  },
+  {
+    id: 'entry',
+    icon: GraduationCap,
+    color: '#8B5CF6',
+    gradient: 'from-violet-500/20 to-violet-900/20',
+    title: '转型入门',
+    subtitle: '零基础入门 → 岗位选择 → 面试通关',
+    tags: ['转型路径', '方向选择', '面试'],
+    jobs: ['零基础入门', '岗位选择', '面试准备']
+  }
 ];
 
-const catColors: Record<string, string> = {
-  'Prompt注入': '#EF4444',
-  '对抗攻击': '#F59E0B',
-  '模型安全': '#3B82F6',
-  '工具教程': '#10B981',
-  '职业发展': '#8B5CF6',
-  '前沿动态': '#EC4899',
-};
-
-const gradients = [
-  'linear-gradient(135deg, #EF4444, #F59E0B)',
-  'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-  'linear-gradient(135deg, #10B981, #059669)',
-  'linear-gradient(135deg, #EC4899, #F43F5E)',
-  'linear-gradient(135deg, #F59E0B, #EF4444)',
-  'linear-gradient(135deg, #8B5CF6, #3B82F6)',
-  'linear-gradient(135deg, #EF4444, #F59E0B)',
-  'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-  'linear-gradient(135deg, #10B981, #059669)',
-  'linear-gradient(135deg, #EC4899, #F43F5E)',
-  'linear-gradient(135deg, #F59E0B, #EF4444)',
-  'linear-gradient(135deg, #8B5CF6, #3B82F6)',
+// 视频数据（后续接入真实视频源）
+const SAMPLE_VIDEOS = [
+  { cat: 'offense', title: 'Prompt注入入门：5分钟理解攻击原理', duration: '5:30', level: '入门' },
+  { cat: 'offense', title: 'DAN攻击实战：绕过ChatGPT安全过滤', duration: '12:45', level: '进阶' },
+  { cat: 'offense', title: '多轮越狱：上下文注入深度解析', duration: '18:20', level: '高级' },
+  { cat: 'architecture', title: 'AI安全体系从0到1：架构师必修课', duration: '22:10', level: '进阶' },
+  { cat: 'architecture', title: '威胁建模实战：STRIDE方法在LLM场景的应用', duration: '15:30', level: '高级' },
+  { cat: 'compliance', title: '等保2.0新增AI安全要求解读', duration: '8:45', level: '入门' },
+  { cat: 'compliance', title: 'ISO 42001 AI管理体系认证实战', duration: '20:00', level: '进阶' },
+  { cat: 'operations', title: 'DevSecOps落地：从代码扫描到AI安全门禁', duration: '16:30', level: '进阶' },
+  { cat: 'operations', title: 'AI安全运营7×24：监控与应急响应', duration: '14:15', level: '高级' },
+  { cat: 'entry', title: '安全人转型AI安全：3个月路线图', duration: '10:00', level: '入门' },
+  { cat: 'entry', title: 'AI安全面试高频20题精讲', duration: '25:00', level: '进阶' },
+  { cat: 'entry', title: '从合规到AI安全：我的转型故事', duration: '18:00', level: '入门' },
 ];
 
 export const VideoSection = ({ compact = false }: { compact?: boolean }) => {
-  const VideoGrid = ({ limit }: { limit: number }) => (
-    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-      {videos.slice(0, limit).map((video, i) => {
-        const color = catColors[video.category] || '#38BDF8';
-        return (
-          <div
-            key={video.id}
-            className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(12px)',
-            }}
-          >
-            {/* hover glow with category color */}
-            <div
-              className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-10"
-              style={{ boxShadow: `0 0 30px ${color}25` }}
-            />
+  const [activeCategory, setActiveCategory] = useState('offense');
 
-            {/* top accent line on hover */}
-            <div
-              className="absolute top-0 left-4 right-4 h-[2px] rounded-b opacity-0 group-hover:opacity-100 transition-all duration-300 z-10"
-              style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
-            />
+  const activeCat = VIDEO_CATEGORIES.find(c => c.id === activeCategory) || VIDEO_CATEGORIES[0];
+  const filteredVideos = SAMPLE_VIDEOS.filter(v => v.cat === activeCategory);
 
-            {/* thumbnail */}
-            <div
-              className="relative aspect-video flex items-center justify-center overflow-hidden"
-              style={{ background: gradients[i % gradients.length] }}
-            >
-              {/* subtle shimmer overlay on hover */}
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
-                style={{
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 2s infinite linear',
-                }}
-              />
-              {/* subtle overlay pattern */}
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.4) 0px, transparent 1px)',
-                  backgroundSize: '24px 24px',
-                }}
-              />
-
-              {/* play button */}
-              <div
-                className="relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)' }}
-              >
-                <Play size={18} className="text-white ml-0.5" fill="white" />
-              </div>
-
-              {/* duration badge */}
-              <span
-                className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-medium flex items-center gap-1"
-                style={{ background: 'rgba(0,0,0,0.55)', color: 'white', backdropFilter: 'blur(4px)' }}
-              >
-                <Clock size={9} />
-                {video.duration}
-              </span>
+  return (
+    <div className="min-h-screen bg-[#0a0a1a] text-white p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.1)' }}>
+              <Play size={24} className="text-violet-400" />
             </div>
-
-            {/* info */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-white mb-1.5 group-hover:text-sky-200 transition-colors duration-200 line-clamp-2">
-                {video.title}
-              </h3>
-              <p className="text-[12px] mb-3 line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                {video.description}
-              </p>
-              <div className="flex items-center justify-between">
-                <span
-                  className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{
-                    background: `${color}15`,
-                    color: color,
-                    border: `1px solid ${color}25`,
-                  }}
-                >
-                  {video.category}
-                </span>
-                <span className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                  <Eye size={11} />
-                  {video.views.toLocaleString()}
-                </span>
-              </div>
+            <div>
+              <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide"
+                style={{ color: '#A78BFA', background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                VIDEO TUTORIALS
+              </span>
+              <h1 className="text-4xl font-black  mb-1" style={{ color: '#A78BFA' }}>视频教程</h1>
             </div>
           </div>
-        );
-      })}
-    </div>
-  );
-
-  // ── Compact (HomePage) ──
-  if (compact) {
-    return <VideoGrid limit={3} />;
-  }
-
-  // ── Full page ──
-  return (
-    <div className="max-w-6xl mx-auto px-6 py-12 space-y-8 relative overflow-hidden">
-      {/* amber/orange ambient glow in header */}
-      <div
-        className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.45), rgba(249,115,22,0.25))' }}
-      />
-
-      <div className="relative">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide"
-            style={{ background: 'rgba(245,158,11,0.12)', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.2)' }}>
-            VIDEO TUTORIALS
-          </span>
         </div>
-        <h1 className="text-3xl font-black text-white flex items-center gap-3">
-          <Film size={28} className="text-amber-400" />
-          <span className="text-gradient" style={{ backgroundImage: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #F97316 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>视频教程</span>
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          AI安全知识点视频讲解，实战演示 · 共 {videos.length} 个视频
-        </p>
+
+        {/* Category tabs - compact */}
+        <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+          {VIDEO_CATEGORIES.map(cat => {
+            const Icon = cat.icon;
+            const isActive = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                  isActive ? '' : 'hover:bg-white/5'
+                }`}
+                style={{
+                  background: isActive ? (cat.color + '18') : 'rgba(255,255,255,0.03)',
+                  color: isActive ? cat.color : 'rgba(255,255,255,0.5)',
+                  border: isActive ? ('1px solid ' + cat.color + '40') : '1px solid rgba(255,255,255,0.06)',
+                }}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{cat.title}</span>
+                <span className="text-[10px] opacity-60">({cat.tags.length})</span>
+              </button>
+            );
+          })}
+          <div className="flex-1 flex items-center justify-end">
+            <span className="text-[11px] whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              共 {filteredVideos.length} 个视频
+            </span>
+          </div>
+        </div>
+
+        {/* Video grid */}
+        <div className={`grid gap-4 ${compact ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+          {filteredVideos.map((video, i) => (
+            <div key={i} className="group bg-white/[0.03] rounded-xl border border-white/5 overflow-hidden hover:border-white/10 transition-colors">
+              {/* Thumbnail placeholder */}
+              <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <Play className="w-10 h-10 text-white/30 group-hover:text-white/50 transition-colors" />
+                <span className="absolute bottom-2 right-2 text-[10px] bg-black/60 px-1.5 py-0.5 rounded text-gray-300">
+                  {video.duration}
+                </span>
+                <span className="absolute top-2 left-2 text-[10px] px-1.5 py-0.5 rounded" style={{ color: activeCat.color, backgroundColor: activeCat.color + '20' }}>
+                  {video.level}
+                </span>
+              </div>
+              {/* Info */}
+              <div className="p-3">
+                <h3 className="text-sm font-medium leading-snug line-clamp-2">{video.title}</h3>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Coming soon hint */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-gray-600">更多视频持续更新中 · 每周新增3-5个实战教程</p>
+        </div>
       </div>
-      <VideoGrid limit={12} />
     </div>
   );
 };

@@ -169,6 +169,141 @@
   --z-toast:   500;
 }
 
+/* ─── Light Theme ───────────────────────────────────────── */
+[data-theme="light"] {
+  --color-bg-root:       #F8FAFC;
+  --color-bg-primary:    #FFFFFF;
+  --color-bg-secondary:  #F1F5F9;
+  --color-bg-tertiary:   #E2E8F0;
+  --color-bg-card:       #FFFFFF;
+  --color-bg-hover:      rgba(99, 102, 241, 0.06);
+  --color-bg-active:     rgba(99, 102, 241, 0.10);
+
+  --color-text-primary:   #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-tertiary:  #64748B;
+  --color-text-disabled:  #94A3B8;
+
+  --color-border-primary:   rgba(99, 102, 241, 0.18);
+  --color-border-secondary: rgba(15, 23, 42, 0.08);
+  --color-border-tertiary:  rgba(15, 23, 42, 0.04);
+
+  --shadow-sm:  0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg:  0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-glow-primary: 0 0 20px rgba(99, 102, 241, 0.08);
+  --shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.08);
+  --shadow-glow-accent:  0 0 20px rgba(139, 92, 246, 0.08);
+}
+
+[data-theme="light"] body,
+[data-theme="light"] {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-root);
+}
+
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 120% 100% at 50% -15%, rgba(139,92,246,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 900px 500px at 80% 55%, rgba(59,130,246,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 700px 450px at 12% 65%, rgba(139,92,246,0.03) 0%, transparent 50%);
+}
+
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] p {
+  color: var(--color-text-secondary);
+}
+
+/* Light theme glass */
+[data-theme="light"] .glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Light theme card */
+[data-theme="light"] .card {
+  background: linear-gradient(168deg, #FFFFFF 0%, rgba(248,250,252,0.98) 100%);
+  border: 1px solid var(--color-border-secondary);
+}
+[data-theme="light"] .card:hover {
+  border-color: rgba(99,102,241,0.20);
+  background: linear-gradient(168deg, #FFFFFF 0%, rgba(241,245,249,0.98) 100%);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+}
+[data-theme="light"] .card::before {
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(99,102,241,0.04), transparent 60%);
+}
+
+/* Light theme badge */
+[data-theme="light"] .badge-primary {
+  background: linear-gradient(135deg, rgba(99,102,241,0.10), rgba(99,102,241,0.05));
+  color: #4F46E5;
+  border-color: rgba(99,102,241,0.20);
+}
+[data-theme="light"] .badge-accent {
+  background: linear-gradient(135deg, rgba(139,92,246,0.10), rgba(139,92,246,0.05));
+  color: #7C3AED;
+  border-color: rgba(139,92,246,0.20);
+}
+[data-theme="light"] .badge-success {
+  background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.05));
+  color: #059669;
+  border-color: rgba(16,185,129,0.20);
+}
+
+/* Light theme buttons */
+[data-theme="light"] .btn-premium,
+[data-theme="light"] .btn-primary {
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 50%, #4338CA 100%);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 4px 12px rgba(99,102,241,0.2);
+}
+[data-theme="light"] .btn-premium:hover,
+[data-theme="light"] .btn-primary:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12), 0 8px 24px rgba(99,102,241,0.25);
+}
+
+/* Light theme skeleton */
+[data-theme="light"] .skeleton {
+  background: linear-gradient(90deg, #E2E8F0 0%, #F1F5F9 40%, #E2E8F0 70%);
+  background-size: 200% 100%;
+}
+
+/* Light theme scrollbar */
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.12);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.24);
+}
+[data-theme="light"] * {
+  scrollbar-color: rgba(15, 23, 42, 0.12) transparent;
+}
+
+/* Light theme selection */
+[data-theme="light"] ::selection {
+  background: rgba(99, 102, 241, 0.20);
+  color: var(--color-text-primary);
+}
+
+/* Light theme divider premium */
+[data-theme="light"] .divider-premium {
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.08) 20%, rgba(99,102,241,0.12) 50%, rgba(99,102,241,0.08) 80%, transparent);
+}
+
+/* Light theme focus ring */
+[data-theme="light"] *:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-bg-root), 0 0 0 4px var(--color-primary-500);
+}
+
 /* ─── Global Reset ──────────────────────────────────────── */
 *,
 *::before,

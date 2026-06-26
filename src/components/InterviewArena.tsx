@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, RotateCcw, User, Bot, MessageCircle, Lightbulb, Loader2, FileText, Upload, X, Sparkles, Mic, ChevronDown } from 'lucide-react'
+import { Send, RotateCcw, User, Bot, MessageCircle, Lightbulb, Loader2, FileText, Upload, X, Sparkles } from 'lucide-react'
 
 /* ═══════════════════════════════════════════════════════════════
    AIShield Lab — 双AI面试训练场 v4
@@ -10,10 +10,10 @@ import { Send, RotateCcw, User, Bot, MessageCircle, Lightbulb, Loader2, FileText
    Token 存储在 Workers 环境变量中，前端不可见
    ═══════════════════════════════════════════════════════════════ */
 
-const PROXY_URL = '/api/coze/chat'  // Cloudflare Worker 代理路径
+const PROXY_URL = '/api/coze/chat'  // Cloudflare Pages Functions 代理路径
 
-const INTERVIEWER_BOT_ID = '7642509976887574571'
-const COACH_BOT_ID = '7642645272891523118'
+const INTERVIEWER_BOT_ID = '7642500988464971827'
+const COACH_BOT_ID = '7642644646338215988'
 
 interface Message {
   role: 'user' | 'assistant' | 'system'
@@ -43,6 +43,8 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
     input: '',
   })
   const streamRef = useRef<AsyncIterable<unknown> | null>(null)
+  // 会话级 user_id，避免每条消息生成新 ID 导致多轮上下文断裂
+  const userIdRef = useRef<string>(`aishield_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`)
 
   const buildContextPrompt = useCallback((filterType?: 'jd' | 'resume'): string => {
     const files = filterType ? contextFiles.filter(f => f.type === filterType) : contextFiles
@@ -69,12 +71,15 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
       isLoading: true,
     }))
 
-    const contextPrompt = buildContextPrompt(filterType)
     const msgs: Array<{ role: string; content: string; content_type?: string }> = []
 
-    if (contextPrompt) {
-      msgs.push({ role: 'user', content: contextPrompt, content_type: 'text' })
-      msgs.push({ role: 'assistant', content: '收到，我将基于提供的JD/简历信息进行针对性面试。', content_type: 'text' })
+    // Only send context on first message (no existing conversation)
+    if (!session.conversationId) {
+      const contextPrompt = buildContextPrompt(filterType)
+      if (contextPrompt) {
+        msgs.push({ role: 'user', content: contextPrompt, content_type: 'text' })
+        msgs.push({ role: 'assistant', content: '收到，我将基于提供的JD/简历信息进行针对性面试。', content_type: 'text' })
+      }
     }
     msgs.push({ role: 'user', content: text.trim(), content_type: 'text' })
 
@@ -88,7 +93,7 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bot_id: botId,
-          user_id: `aishield_user_${Date.now()}`,
+          user_id: userIdRef.current,
           auto_save_history: true,
           ...(session.conversationId ? { conversation_id: session.conversationId } : {}),
           additional_messages: msgs.map(m => ({
@@ -100,7 +105,16 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
       })
 
       if (!response.ok || !response.body) {
-        throw new Error(`HTTP ${response.status}`)
+        // Try to read the error body for more details
+        let errDetail = ''
+        try { errDetail = await response.text() } catch {}
+        throw new Error('HTTP ' + response.status + (errDetail ? ': ' + errDetail.slice(0, 200) : ''))
+      }
+      // Check if response is JSON error instead of SSE stream
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const errBody = await response.json()
+        throw new Error(errBody.error || errBody.detail || JSON.stringify(errBody).slice(0, 200))
       }
 
       // 手动解析 SSE 流
@@ -116,15 +130,28 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
         const lines = buffer.split('\n')
         buffer = lines.pop() || ''
 
+        let currentEventType = ''
         for (const line of lines) {
+          // 解析 SSE event: 行
+          if (line.startsWith('event:')) {
+            currentEventType = line.slice(6).trim()
+            continue
+          }
           if (!line.startsWith('data:')) continue
           const data = line.slice(5).trim()
           if (!data || data === '[DONE]') continue
 
           try {
-            const event = JSON.parse(data)
-            if (event.event === 'conversation.message.delta') {
-              assistantContent += event.message?.content ?? ''
+            const evt = JSON.parse(data)
+            
+            // 提取 conversation_id（从 created/in_progress/completed 事件）
+            if (evt.conversation_id) {
+              convId = evt.conversation_id
+            }
+
+            // 流式增量内容 - 支持多种事件类型
+            if ((currentEventType === 'conversation.message.delta' || currentEventType === '') && evt.type === 'answer') {
+              assistantContent += evt.content ?? ''
               setSession(prev => {
                 const ms = [...prev.messages]
                 const last = ms[ms.length - 1]
@@ -135,14 +162,75 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
                 }
                 return { ...prev, messages: ms }
               })
-            } else if (event.event === 'conversation.message.completed' || event.event === 'conversation.chat.started') {
-              convId = event.conversation_id || event.data?.conversation_id || convId
-            } else if (event.event === 'error') {
-              throw new Error(event.msg || event.error?.msg || 'Coze API error')
+            }
+
+            // 直接内容事件
+            if (evt.type === 'answer' && evt.content && !currentEventType) {
+              assistantContent += evt.content
+              setSession(prev => {
+                const ms = [...prev.messages]
+                const last = ms[ms.length - 1]
+                if (last?.role === 'assistant') {
+                  ms[ms.length - 1] = { ...last, content: assistantContent }
+                } else {
+                  ms.push({ role: 'assistant', content: assistantContent, timestamp: Date.now() })
+                }
+                return { ...prev, messages: ms }
+              })
+            }
+
+            // 错误事件
+            if (currentEventType === 'error' || currentEventType === 'conversation.chat.failed' || (evt.last_error && evt.last_error.code !== 0)) {
+              const errMsg = evt.last_error?.msg || evt.msg || evt.detail || 'Coze API error'
+              if (errMsg && currentEventType !== 'conversation.chat.created' && currentEventType !== 'conversation.chat.in_progress') {
+                throw new Error(errMsg)
+              }
+            }
+            // Handle completed event with no answer content
+            if (currentEventType === 'conversation.chat.completed' && !assistantContent) {
+              // Chat completed but no answer - might be an error
+              if (evt.usage === undefined && evt.status === 'failed') {
+                throw new Error('Chat failed: ' + (evt.last_error?.msg || 'unknown error'))
+              }
+            }
+            
+            // 处理直接返回消息的情况
+            if (evt.message && evt.message.content) {
+              const content = evt.message.content
+              if (typeof content === 'string') {
+                assistantContent += content
+                setSession(prev => {
+                  const ms = [...prev.messages]
+                  const last = ms[ms.length - 1]
+                  if (last?.role === 'assistant') {
+                    ms[ms.length - 1] = { ...last, content: assistantContent }
+                  } else {
+                    ms.push({ role: 'assistant', content: assistantContent, timestamp: Date.now() })
+                  }
+                  return { ...prev, messages: ms }
+                })
+              } else if (Array.isArray(content)) {
+                for (const item of content) {
+                  if (item.type === 'text' && item.text) {
+                    assistantContent += item.text
+                    setSession(prev => {
+                      const ms = [...prev.messages]
+                      const last = ms[ms.length - 1]
+                      if (last?.role === 'assistant') {
+                        ms[ms.length - 1] = { ...last, content: assistantContent }
+                      } else {
+                        ms.push({ role: 'assistant', content: assistantContent, timestamp: Date.now() })
+                      }
+                      return { ...prev, messages: ms }
+                    })
+                  }
+                }
+              }
             }
           } catch (e) {
-            // 非JSON行，忽略
+            if (e instanceof Error && e.message !== 'Coze API error' && !e.message.startsWith('❌')) throw e
           }
+          currentEventType = ''  // 重置，等待下一个 event: 行
         }
       }
 
@@ -150,10 +238,7 @@ function useCozeChat(botId: string, contextFiles: UploadedFile[], filterType?: '
     } catch (err: unknown) {
       const errMsg = (err as Error).message || ''
       console.error('Chat error:', err)
-      let displayErr = `❌ 连接失败: ${errMsg}`
-      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('Load failed') || errMsg.includes('CORS') || errMsg.includes('404') || errMsg.includes('502')) {
-        displayErr = '⚠️ 面试训练场正在升级中，暂时无法连接 AI 面试官。请稍后再试，或先去靶场练练手～'
-      }
+      const displayErr = `❌ 连接失败: ${errMsg}. 请检查网络或刷新页面重试。`
       setSession(prev => ({
         ...prev,
         messages: [...prev.messages, { role: 'system', content: displayErr, timestamp: Date.now() }],
@@ -183,8 +268,39 @@ function FileUploadBar({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
 
-  const handleFile = (file: File) => {
-    if (!file.name.match(/\.(txt|pdf|md|docx?)$/i)) return
+  const handleFile = async (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    
+    // DOCX 暂不支持前端解析，提示用户转格式
+    if (ext === 'docx' || ext === 'doc') {
+      alert('暂不支持 .docx/.doc 格式，请将内容复制到 .txt 或 .md 文件后上传')
+      return
+    }
+    if (!ext || !['txt', 'pdf', 'md'].includes(ext)) return
+
+    // PDF 使用 pdf.js 解析
+    if (ext === 'pdf') {
+      try {
+        const pdfjsLib = await import('pdfjs-dist')
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+        const arrayBuffer = await file.arrayBuffer()
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+        let text = ''
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const content = await page.getTextContent()
+          text += content.items.map((item: any) => item.str).join(' ') + '\n'
+        }
+        const isJD = /jd|职位|岗位|招聘|job.*description/i.test(file.name)
+        onUpload({ name: file.name, content: text.slice(0, 8000), type: isJD ? 'jd' : 'resume' })
+      } catch (e) {
+        console.error('PDF parse error:', e)
+        alert('PDF 解析失败，请将内容复制到 .txt 文件后上传')
+      }
+      return
+    }
+
+    // txt/md 直接读取
     const reader = new FileReader()
     reader.onload = () => {
       const content = reader.result as string
@@ -220,12 +336,12 @@ function FileUploadBar({
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[12.5px] text-white/70 font-medium">上传 JD / 简历</div>
-          <div className="text-[10px] text-white/25 hidden sm:block">支持 .txt .pdf .md .docx · 面试官参考 JD+简历 · 教练参考简历</div>
+          <div className="text-[10px] text-white/25 hidden sm:block">支持 .txt .pdf .md · 面试官参考 JD+简历 · 教练参考简历</div>
         </div>
         <input
           ref={fileInputRef}
           type="file"
-          accept=".txt,.pdf,.md,.doc,.docx"
+          accept=".txt,.pdf,.md"
           className="hidden"
           onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }}
         />
@@ -344,9 +460,7 @@ function ChatPanel({
   }, [session.messages.length, session.isLoading])
 
   return (
-    <div className="flex flex-col h-full rounded-2xl overflow-hidden"
-      style={{
-        background: 'linear-gradient(165deg, rgba(13,16,35,0.95) 0%, rgba(8,11,28,0.98) 100%)',
+    <div className="flex flex-col h-full rounded-2xl overflow-hidden" style={{ maxHeight: '100%', background: 'linear-gradient(165deg, rgba(13,16,35,0.95) 0%, rgba(8,11,28,0.98) 100%)',
         border: `1px solid rgba(255,255,255,0.07)`,
         boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 80px ${gradientFrom}08, inset 0 1px 0 rgba(255,255,255,0.03)`,
       }}
@@ -383,10 +497,9 @@ function ChatPanel({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1"
-        style={{ scrollbarWidth: 'thin', scrollbarColor: `${accentColor}25 transparent` }}>
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1" style={{ maxHeight: 'calc(100% - 120px)', scrollbarWidth: 'thin', scrollbarColor: `${accentColor}25 transparent` }}>
         {session.messages.length === 0 && !session.isLoading && (
-          <div className="flex flex-col items-center justify-center h-full gap-3 opacity-30">
+        <div className="flex flex-col items-center justify-center h-full gap-3 opacity-30">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
               style={{
                 background: `linear-gradient(135deg, ${gradientFrom}15, ${gradientTo}10)`,
@@ -460,6 +573,11 @@ export function InterviewArena() {
   const [contextFiles, setContextFiles] = useState<UploadedFile[]>([])
   const [showCoach, setShowCoach] = useState(true)
 
+  // 组件挂载时立即滚动到顶部
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as const })
+  }, [])
+
   const interviewer = useCozeChat(INTERVIEWER_BOT_ID, contextFiles, undefined)
   const coach = useCozeChat(COACH_BOT_ID, contextFiles, 'resume')
 
@@ -473,13 +591,10 @@ export function InterviewArena() {
 
   const handleInterviewerSend = (text: string) => {
     interviewer.sendMessage(text)
-    if (coach.session.conversationId || coach.session.messages.length > 0) {
-      coach.sendMessage(text)
-    }
   }
 
   return (
-    <section id="interview" className="relative py-8 lg:py-10">
+    <section id="interview-arena" className="relative py-8 lg:py-10">
       {/* 背景装饰 */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] opacity-[0.06]"
@@ -490,23 +605,20 @@ export function InterviewArena() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10">
 
-        {/* 标题区 — 蓝色渐变 */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-3"
-            style={{
-              background: 'linear-gradient(90deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))',
-              border: '1px solid rgba(59,130,246,0.15)',
-              color: '#60A5FA',
-            }}>
-            <Sparkles size={13} style={{ color: '#A78BFA' }} />
-            双AI陪练 · 真实面试预演
+        {/* 标题区 — 左对齐 */}
+        <div className="mb-8 lg:mb-10">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg" style={{ background: 'rgba(244,114,182,0.1)' }}>
+              <Sparkles size={24} className="text-pink-400" />
+            </div>
+            <div>
+              <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide"
+                style={{ color: '#F472B6', background: 'rgba(244,114,182,0.1)', border: '1px solid rgba(244,114,182,0.2)' }}>
+                MOCK INTERVIEW
+              </span>
+              <h1 className="text-4xl font-black  mb-1" style={{ color: '#F472B6' }}>模拟面试训练场</h1>
+            </div>
           </div>
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white/95 tracking-tight">
-            模拟面试训练场
-          </h2>
-          <p className="text-xs text-white/30 mt-1.5 max-w-md mx-auto">
-            面试官追问 + 教练给参考回答，双AI陪你练
-          </p>
         </div>
 
         {/* 文件上传区 — 靠左 */}
@@ -532,7 +644,7 @@ export function InterviewArena() {
         </div>
 
         {/* 双栏聊天 — 窄高长形 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5" style={{ height: 'auto', minHeight: '380px', maxHeight: '600px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 h-[500px]">
           <ChatPanel
             title="🎯 面试官"
             subtitle="IT面试助手 · 真实追问"
@@ -558,7 +670,7 @@ export function InterviewArena() {
               onSend={(t) => coach.sendMessage(t)}
               onReset={coach.reset}
               onInputChange={v => coach.setSession(s => ({ ...s, input: v }))}
-              placeholder="同步接收面试问题..."
+              placeholder="向教练提问，获取参考回答..."
             />
           )}
         </div>
