@@ -162,19 +162,19 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
 
       </div>
 
-      {/* search + filter in one row — 紧凑版 */}
-      <div className="flex items-center gap-2">
-      <div className="relative flex-shrink-0 flex-1 max-w-xs sm:w-56 lg:w-64">
+      {/* search + filter in one row — 超紧凑版 */}
+      <div className="flex items-center gap-1.5">
+      <div className="relative flex-shrink-0 flex-1 max-w-[200px] sm:max-w-xs">
         <Search
-          size={13}
-          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          size={12}
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
           style={{ color: 'rgba(255,255,255,0.25)' }}
         />
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="搜索知识点或标签..."
-          className="w-full pl-8 pr-3 py-[6px] rounded-lg text-xs text-white outline-none transition-all duration-200 focus:border-sky-400/40 focus:shadow-[0_0_0_2px_rgba(56,189,248,0.08)]"
+          className="w-full pl-7 pr-2.5 py-[5px] rounded-md text-xs text-white outline-none transition-all duration-200 focus:border-sky-400/40"
           style={{
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.06)',
@@ -183,14 +183,14 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
         />
       </div>
 
-      {/* category filter pills */}
+      {/* category filter pills — 更紧凑 */}
       <div className="flex gap-1 overflow-x-auto whitespace-nowrap flex-1">
         <button
           onClick={() => setSelectedCat(null)}
-          className="px-2 py-[5px] rounded-md text-[10px] font-medium cursor-pointer transition-all duration-200 whitespace-nowrap"
+          className="px-1.5 py-[4px] rounded text-[9px] font-medium cursor-pointer transition-all duration-200 whitespace-nowrap"
           style={{
             background: !selectedCat ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)',
-            color: !selectedCat ? '#38BDF8' : 'rgba(255,255,255,0.5)',
+            color: !selectedCat ? '#38BDF8' : 'rgba(255,255,255,0.45)',
             border: !selectedCat ? '1px solid rgba(56,189,248,0.3)' : '1px solid rgba(255,255,255,0.06)',
           }}
         >
@@ -200,10 +200,10 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
           <button
             key={cat.id}
             onClick={() => setSelectedCat(cat.id)}
-            className="flex items-center gap-1 px-2 py-[5px] rounded-md text-[10px] font-medium cursor-pointer transition-all duration-200 whitespace-nowrap"
+            className="flex items-center gap-0.5 px-1.5 py-[4px] rounded text-[9px] font-medium cursor-pointer transition-all duration-200 whitespace-nowrap"
             style={{
               background: selectedCat === cat.id ? `${cat.color}15` : 'rgba(255,255,255,0.04)',
-              color: selectedCat === cat.id ? cat.color : 'rgba(255,255,255,0.5)',
+              color: selectedCat === cat.id ? cat.color : 'rgba(255,255,255,0.45)',
               border: selectedCat === cat.id ? `1px solid ${cat.color}40` : '1px solid rgba(255,255,255,0.06)',
             }}
           >
@@ -214,8 +214,8 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
       </div>
       </div>
 
-      {/* spacing */}
-      <div className="h-2" />
+      {/* minimal spacing */}
+      <div className="h-1" />
 
       {/* article list */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
