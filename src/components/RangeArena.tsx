@@ -411,7 +411,10 @@ export const RangeArena = () => {
         </div>
 
 
-        <div className="p-2.5 sm:p-3 rounded-xl flex flex-col sm:flex-row items-center gap-2.5 relative mb-4"
+        </div>
+
+        {/* 学习进度 — 移到高级篇后面 */}
+        <div className="p-2.5 sm:p-3 rounded-xl flex flex-col sm:flex-row items-center gap-2.5 relative mb-6"
           style={{ background: THEME_COLORS.cardBg, border: `1px solid ${THEME_COLORS.border}` }}>
           <div className="absolute inset-0 rounded-2xl opacity-5 pointer-events-none"
             style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(6,182,212,0.2) 50%, rgba(16,185,129,0.2) 100%)' }} />
@@ -434,7 +437,6 @@ export const RangeArena = () => {
         </div>
 
         <div className="flex flex-wrap gap-2 mb-6">
-          
           <button onClick={() => setActiveModelGroup('basic')}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'basic' ? 'bg-green-500/30 text-green-300 ring-1 ring-green-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
             🟢 基础篇 (1-10)
