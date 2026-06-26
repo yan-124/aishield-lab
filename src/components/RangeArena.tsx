@@ -411,8 +411,6 @@ export const RangeArena = () => {
         </div>
 
 
-        </div>
-
         <div className="flex flex-wrap gap-2 mb-6">
           <button onClick={() => setActiveModelGroup('basic')}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'basic' ? 'bg-green-500/30 text-green-300 ring-1 ring-green-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
