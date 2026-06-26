@@ -217,8 +217,8 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
       {/* minimal spacing */}
       <div className="h-1" />
 
-      {/* article list */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      {/* article list — 更紧凑 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
         {filtered.map(article => {
           const cat = categories.find(c => c.id === article.categoryId)!;
           return (
@@ -228,7 +228,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
                 dispatch({ type: 'SET_CURRENT_ARTICLE', payload: article.id });
                 dispatch({ type: 'SET_VIEW_MODE', payload: 'knowledge-detail' });
               }}
-              className="group relative p-4 rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
+              className="group relative p-3 rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
               style={{
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.06)',
@@ -255,12 +255,12 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
                   </div>
 
                   {/* summary */}
-                  <p className="text-[12px] mb-2.5 line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  <p className="text-[12px] mb-2 line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
                     {article.summary}
                   </p>
 
-                  {/* tags row */}
-                  <div className="flex flex-wrap items-center gap-1.5">
+                    {/* tags row */}
+                    <div className="flex flex-wrap items-center gap-1">
                     {/* category tag */}
                     <span
                       className="text-[10px] px-2 py-0.5 rounded-full font-medium"

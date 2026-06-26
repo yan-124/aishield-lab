@@ -426,14 +426,17 @@ export const RangeArena = () => {
           </button>
         </div>
 
-        {/* 学习进度 — 紧凑版，紧跟在基础/进阶/高级后面 */}
-        <div className="px-3 py-2 rounded-lg flex items-center gap-3 relative mb-5"
-          style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(6,182,212,0.04) 50%, rgba(16,185,129,0.04) 100%)', border: `1px solid ${THEME_COLORS.border}` }}>
-          <span className="text-sm shrink-0">🏆</span>
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-semibold text-white/90">学习进度</span>
-              <span className="text-[11px] font-bold" style={{ color: THEME_COLORS.success }}>{completedCount}/{LEVELS.length}</span>
+        {/* 学习进度 — 制式不变，更紧凑 */}
+        <div className="p-2 sm:p-2.5 rounded-xl flex flex-col sm:flex-row items-center gap-2 relative mb-4"
+          style={{ background: THEME_COLORS.cardBg, border: `1px solid ${THEME_COLORS.border}` }}>
+          <div className="absolute inset-0 rounded-2xl opacity-5 pointer-events-none"
+            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.15) 50%, rgba(16,185,129,0.15) 100%)' }} />
+          <div className="relative z-10 w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
+            style={{ background: `rgba(16,185,129,0.1)` }}>🏆</div>
+          <div className="relative z-10 flex-1 w-full">
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-xs font-semibold text-white">学习进度</span>
+              <span className="text-xs font-bold" style={{ color: THEME_COLORS.success }}>{completedCount}/{LEVELS.length}</span>
             </div>
             <div className="h-1.5 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
               <div className="h-full rounded-full transition-all duration-700"
