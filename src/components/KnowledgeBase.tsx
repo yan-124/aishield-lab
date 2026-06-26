@@ -138,7 +138,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
 
   // ── Full page mode ──
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8 relative overflow-hidden">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 relative overflow-hidden">
       {/* sky/cyan ambient glow in header */}
       <div
         className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10 blur-3xl pointer-events-none"
@@ -162,9 +162,9 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
 
       </div>
 
-      {/* search + filter in one row — 超紧凑版 */}
-      <div className="flex items-center gap-1.5">
-      <div className="relative flex-shrink-0 flex-1 max-w-[200px] sm:max-w-xs">
+      {/* search + filter in one row */}
+      <div className="flex items-center gap-2">
+      <div className="relative flex-shrink-0 w-full sm:w-auto sm:max-w-xs sm:flex-1">
         <Search
           size={12}
           className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"

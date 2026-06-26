@@ -411,7 +411,7 @@ export const RangeArena = () => {
         </div>
 
 
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           <button onClick={() => setActiveModelGroup('basic')}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'basic' ? 'bg-green-500/30 text-green-300 ring-1 ring-green-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
             🟢 基础篇 (1-10)
@@ -424,22 +424,15 @@ export const RangeArena = () => {
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'advanced' ? 'bg-red-500/30 text-red-300 ring-1 ring-red-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
             🔴 高级篇 (19-25)
           </button>
-        </div>
 
-        {/* 学习进度 — 制式不变，更紧凑 */}
-        <div className="p-2 sm:p-2.5 rounded-xl flex flex-col sm:flex-row items-center gap-2 relative mb-4"
-          style={{ background: THEME_COLORS.cardBg, border: `1px solid ${THEME_COLORS.border}` }}>
-          <div className="absolute inset-0 rounded-2xl opacity-5 pointer-events-none"
-            style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.15) 50%, rgba(16,185,129,0.15) 100%)' }} />
-          <div className="relative z-10 w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
-            style={{ background: `rgba(16,185,129,0.1)` }}>🏆</div>
-          <div className="relative z-10 flex-1 w-full">
-            <div className="flex items-center justify-between mb-0.5">
-              <span className="text-xs font-semibold text-white">学习进度</span>
-              <span className="text-xs font-bold" style={{ color: THEME_COLORS.success }}>{completedCount}/{LEVELS.length}</span>
-            </div>
-            <div className="h-1.5 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <div className="h-full rounded-full transition-all duration-700"
+          {/* 学习进度 — 内联在按钮行右侧 */}
+          <div className="ml-auto px-2.5 py-1 rounded-lg flex items-center gap-2 shrink-0"
+            style={{ background: THEME_COLORS.cardBg, border: `1px solid ${THEME_COLORS.border}` }}>
+            <span className="text-xs shrink-0">🏆</span>
+            <span className="text-[11px] font-semibold text-white">学习进度</span>
+            <span className="text-[11px] font-bold" style={{ color: THEME_COLORS.success }}>{completedCount}/{LEVELS.length}</span>
+            <div className="w-16 h-1.5 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="h-full rounded-full"
                 style={{
                   width: `${(completedCount / LEVELS.length) * 100}%`,
                   background: 'linear-gradient(90deg, #8B5CF6, #06B6D4, #10B981)',
