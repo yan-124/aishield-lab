@@ -286,7 +286,7 @@ export function HeroSection() {
             { icon: '🎯', num: '25+', label: '实战关卡' },
             { icon: '📊', num: '3', label: '大模型' },
             { icon: '📘', num: '7+', label: 'OWASP模块' },
-            { icon: '✅', num: 'Free', label: '免费开练' },
+            { icon: '✅', num: '全免费', label: '开练' },
           ].map((stat) => (
             <div key={stat.label} className="flex items-center gap-2 sm:gap-2.5">
               <span className="text-sm sm:text-base">{stat.icon}</span>

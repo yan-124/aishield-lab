@@ -17,7 +17,7 @@ const PLANS = [
     monthlyPrice: 0,
     yearlyPrice: null,
     monthlyCredits: 50,
-    features: ['基础知识库访问', '每日登录5盾币'],
+    features: ['全部知识库访问', '25关靶场实战', '职业安全评估', '每日登录5盾币'],
     isCurrent: true,
   },
   {
