@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ToastProvider } from './components/Toast'
 import { Navigation } from './components/Navigation'
 import { RegisterModal } from './components/RegisterModal'
 import { LoginModal } from './components/LoginModal'
+import { PaymentModal } from './components/PaymentModal'
 import { HomePage } from './components/HomePage'
 import { KnowledgeBase } from './components/KnowledgeBase'
 import { KnowledgeDetail } from './components/KnowledgeDetail'
@@ -32,6 +33,14 @@ interface AppProps {
 
 export const App = ({ onLoadComplete }: AppProps) => {
   const { state } = useAppContext()
+  const [showPayment, setShowPayment] = useState(false)
+
+  // 全局支付弹窗：任意页面触发 open-payment-modal 事件即可打开
+  useEffect(() => {
+    const handler = () => setShowPayment(true)
+    window.addEventListener('open-payment-modal', handler)
+    return () => window.removeEventListener('open-payment-modal', handler)
+  }, [])
 
   useEffect(() => {
     if (onLoadComplete) {
@@ -85,6 +94,12 @@ export const App = ({ onLoadComplete }: AppProps) => {
         <ShieldyAssistant />
         {state.showLogin && <LoginModal />}
         <RegisterModal />
+        {showPayment && (
+          <PaymentModal
+            onPaid={() => setShowPayment(false)}
+            onClose={() => setShowPayment(false)}
+          />
+        )}
       </div>
     </ToastProvider>
   )

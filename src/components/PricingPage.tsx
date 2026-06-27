@@ -152,7 +152,7 @@ export const PricingPage = () => {
                 </div>
               ))}
             </div>
-            <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' })}
+            <button onClick={() => window.dispatchEvent(new Event('open-payment-modal'))}
               className="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, #A78BFA, #8B5CF6)', color: '#0d1117' }}>
               开通会员
@@ -183,7 +183,7 @@ export const PricingPage = () => {
                 <div className="text-2xl mb-2">{s.icon}</div>
                 <h4 className="text-sm font-bold text-white mb-1">{s.name}</h4>
                 <p className="text-[10px] mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.desc}</p>
-                <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' })}
+                <button onClick={() => window.dispatchEvent(new Event('open-consult-modal'))}
                   className="w-full py-2 rounded-lg text-[11px] font-semibold cursor-pointer transition-all hover:opacity-80"
                   style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   加微信咨询
@@ -243,7 +243,7 @@ export const PricingPage = () => {
           <p className="text-[11px] mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
             微信号：AIShieldLab · 备注「AI安全」优先通过
           </p>
-          <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' })}
+          <button onClick={() => window.dispatchEvent(new Event('open-consult-modal'))}
             className="px-6 py-2.5 rounded-lg font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-all cursor-pointer">
             联系学长
           </button>
