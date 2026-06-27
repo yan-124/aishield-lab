@@ -895,6 +895,22 @@ export function InterviewCoach() {
 
           {/* 输入区 */}
           <div className="p-3 shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            {/* 免费用户次数用尽提示 */}
+            {!isMember && remainingInterviewUses === 0 && (
+              <div className="mb-2 flex items-center justify-between px-3 py-2 rounded-lg"
+                style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs" style={{ color: '#EF4444' }}>今日免费次数已用完</span>
+                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>会员可无限使用</span>
+                </div>
+                <button
+                  onClick={() => setUpgradeOpen(true)}
+                  className="text-[11px] font-medium px-3 py-1 rounded-md transition-all hover:scale-105 cursor-pointer text-white"
+                  style={{ background: 'linear-gradient(135deg, #A78BFA, #8B5CF6)' }}>
+                  升级会员
+                </button>
+              </div>
+            )}
             <HotQuestions onSelect={(q) => coach.setSession(s => ({ ...s, input: q }))} />
             <div className="flex items-center gap-2">
               <div className="flex-1 relative">

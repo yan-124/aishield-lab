@@ -579,17 +579,8 @@ export const CareerGuide = () => {
                 <div>
                   <h3 className="text-base font-bold text-white mb-1">一对一职业规划咨询</h3>
                   <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                    学长 1v1 语音咨询：岗位定位 · 学习路径 · 简历/面试建议
+                    学长 1v1 语音咨询：岗位定位 · 学习路径 · 简历/面试建议 · 点击右上角「联系学长」沟通
                   </p>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <button
-                    onClick={() => window.dispatchEvent(new Event('open-consult-modal'))}
-                    className="px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all"
-                    style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', boxShadow: '0 0 16px rgba(16,185,129,0.25)' }}
-                  >
-                    加微信咨询
-                  </button>
                 </div>
               </div>
             </div>

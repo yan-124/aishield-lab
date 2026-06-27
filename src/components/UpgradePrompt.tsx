@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Crown, X, Zap, ArrowRight } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
@@ -25,7 +26,8 @@ export const UpgradePrompt = ({ open, onClose, feature = 'range' }: UpgradePromp
     dispatch({ type: 'SET_VIEW_MODE', payload: 'pricing' })
   }
 
-  return (
+  // 使用 React Portal 确保弹窗渲染在 body 层级，不受父容器 overflow/transform 影响
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -34,7 +36,7 @@ export const UpgradePrompt = ({ open, onClose, feature = 'range' }: UpgradePromp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -44,7 +46,7 @@ export const UpgradePrompt = ({ open, onClose, feature = 'range' }: UpgradePromp
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-[90%] max-w-md rounded-2xl overflow-hidden"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90%] max-w-md rounded-2xl overflow-hidden"
             style={{
               background: 'linear-gradient(180deg, #0F1125 0%, #0A0E1F 100%)',
               border: '1px solid rgba(167,139,250,0.25)',
@@ -141,6 +143,7 @@ export const UpgradePrompt = ({ open, onClose, feature = 'range' }: UpgradePromp
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }
