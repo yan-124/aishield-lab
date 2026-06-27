@@ -17,6 +17,16 @@ export const RegisterModal = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
+  // 实时密码强度检测
+  const pwdRules = [
+    { label: '至少 8 个字符', ok: form.password.length >= 8 },
+    { label: '包含大写字母', ok: /[A-Z]/.test(form.password) },
+    { label: '包含小写字母', ok: /[a-z]/.test(form.password) },
+    { label: '包含数字', ok: /[0-9]/.test(form.password) },
+    { label: '包含特殊字符（!@#$%等）', ok: /[!@#$%^&*()_+\-=\[\]{}|;':",.<>/?~`]/.test(form.password) },
+  ];
+  const pwdAllOk = pwdRules.every(r => r.ok) && form.password.length > 0;
+
   if (!state.showRegister) return null;
 
   const step = state.registerStep;
@@ -27,7 +37,11 @@ export const RegisterModal = () => {
     if (!form.email.trim()) errors.email = '请输入邮箱';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = '邮箱格式不正确';
     if (!form.password) errors.password = '请输入密码';
-    else if (form.password.length < 8) errors.password = '密码至少8位，需包含大小写字母、数字和特殊字符';
+    else if (form.password.length < 8) errors.password = '密码至少8位';
+    else if (!/[A-Z]/.test(form.password)) errors.password = '密码必须包含大写字母';
+    else if (!/[a-z]/.test(form.password)) errors.password = '密码必须包含小写字母';
+    else if (!/[0-9]/.test(form.password)) errors.password = '密码必须包含数字';
+    else if (!/[!@#$%^&*()_+\-=\[\]{}|;':",.<>/?~`]/.test(form.password)) errors.password = '密码必须包含特殊字符';
       setFieldErrors(errors);
       if (Object.keys(errors).length > 0) return;
     }
@@ -162,6 +176,18 @@ export const RegisterModal = () => {
                       </button>
                     </div>
                     {fieldErrors.password && <p className="text-xs mt-1" style={{ color: '#F87171' }}>{fieldErrors.password}</p>}
+                    {form.password && (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                        {pwdRules.map((r) => (
+                          <span key={r.label} className="text-[11px] flex items-center gap-1" style={{ color: r.ok ? '#10B981' : 'rgba(255,255,255,0.35)' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              {r.ok ? <path d="M20 6L9 17l-5-5"/> : <circle cx="12" cy="12" r="10"/>}
+                            </svg>
+                            {r.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </>
               )}
