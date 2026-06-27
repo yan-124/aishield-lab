@@ -60,14 +60,26 @@ const HeroVisual = React.lazy(() => import('./ShieldyModel'))
 /* ── 新闻跑马灯（全宽顶栏，参考图：亮紫渐变+大字号） ── */
 export function HeroNewsTicker() {
   const { dispatch } = useAppContext()
-  const items = [
+  const [items, setItems] = useState<Array<{ text: string; newsId: string }>>([
     { text: '深度伪造语音攻击导致金融诈骗损失上升300%', newsId: '1' },
     { text: 'Google发布AI安全评估框架SAIF更新版', newsId: '2' },
     { text: 'Meta开源Purple Llama安全工具套件', newsId: '3' },
     { text: '研究人员发现新型LLM水印绕过攻击方法', newsId: '4' },
     { text: 'OpenAI发布新版安全对齐技术文档', newsId: '5' },
     { text: '欧盟AI法案正式生效，企业合规指南发布', newsId: '6' },
-  ]
+  ])
+
+  useEffect(() => {
+    fetch('/news-ticker.json?t=' + Date.now())
+      .then(r => r.json())
+      .then(data => {
+        if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+          setItems(data.items)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   const dup = [...items, ...items]
 
   const handleClick = (newsId: string) => {
