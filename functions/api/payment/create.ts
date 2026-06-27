@@ -62,8 +62,9 @@ export async function onRequestPost(context: any) {
 
   const { orderId, amount, title } = body
 
-  if (!orderId || typeof orderId !== 'string') {
-    return new Response(JSON.stringify({ error: '缺少订单号' }), { status: 400, headers: corsHeaders })
+  // 验证 orderId 格式（防止注入和路径遍历）
+  if (!orderId || typeof orderId !== 'string' || !/^[a-zA-Z0-9_-]{10,64}$/.test(orderId)) {
+    return new Response(JSON.stringify({ error: '无效的订单号格式' }), { status: 400, headers: corsHeaders })
   }
 
   // Only allow whitelisted amounts — ignore arbitrary client-provided values
@@ -84,6 +85,27 @@ export async function onRequestPost(context: any) {
   }
 
   params.hash = generateSign(params, env.HUPIJIAO_APP_SECRET)
+
+  // 预先写入订单记录到 KV，供回调时验证订单真实性
+  const orderRecord = {
+    orderId,
+    amount: finalAmount,
+    title: finalTitle,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  }
+  if (env.AUTH_KV) {
+    try {
+      await env.AUTH_KV.put(
+        `payment_order:${orderId}`,
+        JSON.stringify(orderRecord),
+        { expirationTtl: 86400 * 7 } // 7天过期
+      )
+    } catch (kvErr) {
+      console.error('Failed to store order record:', kvErr)
+      return new Response(JSON.stringify({ error: '订单创建失败，请重试' }), { status: 500, headers: corsHeaders })
+    }
+  }
 
   const formData = new URLSearchParams()
   for (const [k, v] of Object.entries(params)) {

@@ -36,11 +36,44 @@ async function handleNotify(context: any) {
 
     // 验证支付状态
     if (params.status === 'success' || params.pay_status === 'success') {
-      // 支付成功 — 写入 KV 持久化订单记录
       const orderId = params.trade_order_id || params.out_trade_order || 'unknown'
+      const callbackAmount = params.total_fee || '0'
+
+      // 验证订单是否存在（防止伪造不存在的订单）
+      if (env.AUTH_KV) {
+        const orderData = await env.AUTH_KV.get(`payment_order:${orderId}`)
+        if (!orderData) {
+          console.error(`Payment notify for non-existent order: ${orderId}`)
+          return new Response('fail: order not found', { status: 400 })
+        }
+
+        // 验证金额是否匹配（防止金额篡改）
+        const order = JSON.parse(orderData)
+        if (order.amount !== callbackAmount) {
+          console.error(`Payment amount mismatch for ${orderId}: expected ${order.amount}, got ${callbackAmount}`)
+          return new Response('fail: amount mismatch', { status: 400 })
+        }
+
+        // 验证订单状态（防止重复确认）
+        if (order.status === 'success') {
+          console.log(`Duplicate payment notify for ${orderId}`)
+          return new Response('success', { status: 200 })
+        }
+
+        // 更新订单状态为成功
+        order.status = 'success'
+        order.paidAt = new Date().toISOString()
+        await env.AUTH_KV.put(
+          `payment_order:${orderId}`,
+          JSON.stringify(order),
+          { expirationTtl: 86400 * 90 }
+        )
+      }
+
+      // 支付成功 — 写入 KV 持久化订单记录（用于用户查询）
       const paymentRecord = {
         orderId,
-        amount: params.total_fee || '0',
+        amount: callbackAmount,
         status: 'success',
         paidAt: new Date().toISOString(),
         rawParams: {

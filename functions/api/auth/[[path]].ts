@@ -381,7 +381,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   if (!env.JWT_SECRET) {
-    return jsonResponse({ error: 'JWT_SECRET not configured' }, 500);
+    console.error('JWT_SECRET not configured'); // 只记录在服务端
+    return jsonResponse({ error: '服务暂不可用' }, 503);
   }
   const JWT_SECRET = env.JWT_SECRET;
 
@@ -608,8 +609,35 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
       const user = JSON.parse(userData);
       if (body.nickname) user.nickname = sanitize(body.nickname, 20);
-      if (body.identity) user.identity = body.identity;
-      if (body.goals) user.goals = body.goals;
+
+      // Validate identity — only allow specific values
+      const ALLOWED_IDENTITIES = new Set(['student', 'professional', 'career_change']);
+      if (body.identity) {
+        if (!ALLOWED_IDENTITIES.has(body.identity)) {
+          return new Response(JSON.stringify({ error: 'Invalid identity value' }), {
+            status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+          });
+        }
+        user.identity = body.identity;
+      }
+
+      // Validate goals — array with allowed values
+      const ALLOWED_GOALS = new Set(['Prompt注入', '对抗攻击', '模型安全', '数据隐私', '合规治理', '红队测试', '安全审计', '威胁检测']);
+      if (body.goals) {
+        if (!Array.isArray(body.goals) || body.goals.length > 10) {
+          return new Response(JSON.stringify({ error: 'Invalid goals' }), {
+            status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+          });
+        }
+        for (const goal of body.goals) {
+          if (!ALLOWED_GOALS.has(goal)) {
+            return new Response(JSON.stringify({ error: 'Invalid goal: ' + goal }), {
+              status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+            });
+          }
+        }
+        user.goals = body.goals;
+      }
 
       await env.AUTH_KV.put('user:' + decoded.email, JSON.stringify(user), { expirationTtl: 86400 * 365 });
 
@@ -1247,14 +1275,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     // GET /api/auth/stats/dashboard - admin dashboard data
     if (method === 'GET' && path === 'stats/dashboard') {
-      // Simple auth check via query param or header
+      // Admin authentication — ONLY via Authorization header, NEVER via URL param (prevents log leakage)
       const authHeader = request.headers.get('Authorization') || '';
       const token = authHeader.replace('Bearer ', '');
-      // Admin secret must come from environment variable, never hardcoded
-      const urlObj = new URL(request.url);
-      const adminKey = urlObj.searchParams.get('key') || '';
       const ADMIN_SECRET = env.ADMIN_SECRET || '';
-      if (!ADMIN_SECRET || (adminKey !== ADMIN_SECRET && token !== ADMIN_SECRET)) {
+
+      if (!ADMIN_SECRET || token !== ADMIN_SECRET) {
+        console.warn(`Unauthorized admin dashboard access attempt from IP: ${ip}`);
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
         });

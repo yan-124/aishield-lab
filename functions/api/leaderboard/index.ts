@@ -167,8 +167,17 @@ export async function onRequestPost(context: any) {
     })
   }
 
-  // Sanitize name (strip HTML tags)
-  const sanitizedName = name.replace(/<[^>]*>/g, '').substring(0, MAX_NAME_LENGTH)
+  // Sanitize name — strict HTML entity encoding to prevent XSS
+  function encodeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;')
+  }
+  const sanitizedName = encodeHtml(name).substring(0, MAX_NAME_LENGTH)
 
   const kvKey = `lb:${level}`
   let entries: LeaderboardEntry[] = []
