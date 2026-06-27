@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAppContext } from '../context/AppContext'
 import { motion } from 'framer-motion'
-import { Check, Sparkles, ArrowLeft, Zap, Crown, ChevronRight, MessageCircle, Building2, Infinity as InfinityIcon } from 'lucide-react'
+import { Check, Sparkles, ArrowLeft, Zap, Crown, ChevronRight, Building2, Infinity as InfinityIcon } from 'lucide-react'
 
 const freeFeatures = [
   '前5关 Agent 安全靶场',
@@ -231,22 +231,6 @@ export const PricingPage = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* 联系学长 */}
-        <div className="text-center py-6 rounded-2xl mb-6"
-          style={{ background: 'radial-gradient(circle at 50% 0%, rgba(139,92,246,0.08), transparent 60%)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <MessageCircle size={18} className="text-purple-400" />
-            <span className="text-sm font-medium text-white">1v1服务加微信咨询</span>
-          </div>
-          <p className="text-[11px] mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            微信号：AIShieldLab · 备注「AI安全」优先通过
-          </p>
-          <button onClick={() => window.dispatchEvent(new Event('open-consult-modal'))}
-            className="px-6 py-2.5 rounded-lg font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-all cursor-pointer">
-            联系学长
-          </button>
         </div>
 
         <p className="text-center text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>

@@ -34,10 +34,20 @@ interface AppProps {
 export const App = ({ onLoadComplete }: AppProps) => {
   const { state } = useAppContext()
   const [showPayment, setShowPayment] = useState(false)
+  const [paymentOptions, setPaymentOptions] = useState<{ amount?: number; title?: string }>({})
 
   // 全局支付弹窗：任意页面触发 open-payment-modal 事件即可打开
+  // 支持通过 CustomEvent.detail 传递 { amount, title }，默认 ¥19.90 月度会员
   useEffect(() => {
-    const handler = () => setShowPayment(true)
+    const handler = ((e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail && typeof detail === 'object') {
+        setPaymentOptions({ amount: detail.amount, title: detail.title })
+      } else {
+        setPaymentOptions({})
+      }
+      setShowPayment(true)
+    }) as EventListener
     window.addEventListener('open-payment-modal', handler)
     return () => window.removeEventListener('open-payment-modal', handler)
   }, [])
@@ -96,8 +106,10 @@ export const App = ({ onLoadComplete }: AppProps) => {
         <RegisterModal />
         {showPayment && (
           <PaymentModal
-            onPaid={() => setShowPayment(false)}
-            onClose={() => setShowPayment(false)}
+            onPaid={() => { setShowPayment(false); setPaymentOptions({}) }}
+            onClose={() => { setShowPayment(false); setPaymentOptions({}) }}
+            amount={paymentOptions.amount}
+            title={paymentOptions.title}
           />
         )}
       </div>

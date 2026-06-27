@@ -1,7 +1,6 @@
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Crown, X, Zap, ArrowRight } from 'lucide-react'
-import { useAppContext } from '../context/AppContext'
 
 interface UpgradePromptProps {
   open: boolean
@@ -18,12 +17,13 @@ const FEATURE_INFO: Record<string, { icon: string; title: string; desc: string }
 }
 
 export const UpgradePrompt = ({ open, onClose, feature = 'range' }: UpgradePromptProps) => {
-  const { dispatch } = useAppContext()
   const info = FEATURE_INFO[feature] || FEATURE_INFO.range
 
-  const handleUpgrade = () => {
+  const handleUpgrade = (amount: number, title: string) => {
     onClose()
-    dispatch({ type: 'SET_VIEW_MODE', payload: 'pricing' })
+    window.dispatchEvent(new CustomEvent('open-payment-modal', {
+      detail: { amount, title: `AIShield Lab - ${title}` }
+    }))
   }
 
   // 外层 fixed div 负责绝对居中定位（不受 framer-motion transform 干扰）
@@ -80,7 +80,7 @@ export const UpgradePrompt = ({ open, onClose, feature = 'range' }: UpgradePromp
                 <div className="flex items-stretch gap-2">
                   {/* 月度 */}
                   <button
-                    onClick={handleUpgrade}
+                    onClick={() => handleUpgrade(19.90, '月度会员')}
                     className="flex-1 flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all hover:bg-white/[0.04] cursor-pointer group"
                     style={{ border: '1px solid rgba(255,255,255,0.06)' }}
                   >
@@ -93,7 +93,7 @@ export const UpgradePrompt = ({ open, onClose, feature = 'range' }: UpgradePromp
 
                   {/* 年度 — 推荐（居中放大 + 发光） */}
                   <button
-                    onClick={handleUpgrade}
+                    onClick={() => handleUpgrade(99.00, '年度会员')}
                     className="flex-[1.3] flex flex-col items-center gap-1 p-3 rounded-xl transition-all hover:bg-white/[0.06] cursor-pointer relative"
                     style={{
                       border: '1.5px solid rgba(167,139,250,0.35)',
@@ -112,7 +112,7 @@ export const UpgradePrompt = ({ open, onClose, feature = 'range' }: UpgradePromp
 
                   {/* 终身 */}
                   <button
-                    onClick={handleUpgrade}
+                    onClick={() => handleUpgrade(299.00, '终身会员')}
                     className="flex-1 flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all hover:bg-white/[0.04] cursor-pointer group"
                     style={{ border: '1px solid rgba(52,211,153,0.18)', background: 'rgba(52,211,153,0.03)' }}
                   >
