@@ -20,11 +20,12 @@ function isAllowedOrigin(origin: string): boolean {
   return false
 }
 
-const DEFAULT_PRODUCT_TITLE = 'AIShield Lab - 一对一职业规划咨询'
-const DEFAULT_PRODUCT_PRICE = '29.90'
+const DEFAULT_PRODUCT_TITLE = 'AIShield Lab - 月度会员'
+const DEFAULT_PRODUCT_PRICE = '19.90'
 // Server-side amount whitelist — prevents client-side price manipulation
-// 当前唯一付费产品：一对一职业规划咨询 ¥29.9
-const ALLOWED_AMOUNTS = new Set(['29.90', '199.00'])
+// 网站直接收钱的产品：会员订阅（月度19.9 / 年度99 / 终身299）
+// 1v1服务不在网站直接收费，走微信私域成交
+const ALLOWED_AMOUNTS = new Set(['19.90', '99.00', '299.00'])
 const NOTIFY_URL = 'https://aiseclearn.com/api/payment/notify'
 const RETURN_URL = 'https://aiseclearn.com'
 

@@ -4,6 +4,20 @@
  * 改 JSON 文件即生效，不用改代码
  */
 
+export interface MemberPlan {
+  name: string
+  price: string
+  unit: string
+}
+
+export interface ServiceItem {
+  name: string
+  price: string
+  unit: string
+  content: string
+  process: string
+}
+
 export interface ProductKnowledge {
   version: string
   updatedAt: string
@@ -13,25 +27,31 @@ export interface ProductKnowledge {
     positioning: string
     tagline: string
   }
-  features: {
-    free: string[]
-    paid: Array<{
+  pricing: {
+    free: {
       name: string
+      price: number
+      features: string[]
+    }
+    member: {
+      name: string
+      desc: string
+      plans: MemberPlan[]
+      features: string[]
+    }
+    services: ServiceItem[]
+    enterprise: {
+      name: string
+      desc: string
       price: string
-      priceDisplay: string
-      type: string
-      duration: string
-      content: string
       process: string
-      delivery: string
-      entry: string
-    }>
-    notAvailable: string[]
+    }
   }
   freeBoundary: {
     guest: string
     loggedIn: string
-    paidOnly: string
+    memberOnly: string
+    servicesOnly: string
   }
   contact: {
     wechat: string
@@ -40,10 +60,12 @@ export interface ProductKnowledge {
     qrCode: string
   }
   aiRules: {
-    productName: string
+    productName_1v1: string
+    productName_mock: string
     pricing: string
     serviceFlow: string
     freeFeatures: string
+    memberFeatures: string
     contactGuidance: string
     forbidden: string[]
   }
@@ -73,39 +95,43 @@ export async function getProductKnowledge(): Promise<ProductKnowledge | null> {
 
 /** 将知识库转为 system prompt 片段，供大模型注入 */
 export function knowledgeToPrompt(k: ProductKnowledge): string {
-  const paidList = k.features.paid
-    .map(p => `  · ${p.name} ¥${p.priceDisplay}（${p.type}）：${p.content}。${p.process}`)
-    .join('\n')
+  const memberPlans = k.pricing.member.plans
+    .map(p => `${p.price}元${p.unit}`)
+    .join(' / ')
 
-  const notAvail = k.features.notAvailable.length > 0
-    ? `\n- 暂未开放：${k.features.notAvailable.join('、')}`
-    : ''
+  const serviceList = k.pricing.services
+    .map(s => `  · ${s.name} ¥${s.price}（${s.unit}）：${s.content}。${s.process}`)
+    .join('\n')
 
   return `## 产品知识库（权威信息，回答时必须以此为准）
 
 ### 平台定位
 ${k.platform.positioning}。${k.platform.tagline}
 
-### 免费功能（登录即可用）
-${k.features.free.map(f => `- ${f}`).join('\n')}
-
-### 付费产品
-${paidList}${notAvail}
+### 定价体系
+**免费体验**：${k.pricing.free.features.join('、')}
+**会员订阅**（${memberPlans}）：${k.pricing.member.features.join('、')}
+**1v1定制服务**（加微信私域成交）：
+${serviceList}
+**企业服务**：${k.pricing.enterprise.desc}，${k.pricing.enterprise.price}元
 
 ### 免费与付费边界
 - ${k.freeBoundary.guest}
 - ${k.freeBoundary.loggedIn}
-- ${k.freeBoundary.paidOnly}
+- ${k.freeBoundary.memberOnly}
+- ${k.freeBoundary.servicesOnly}
 
 ### 联系方式
 - 微信号：${k.contact.wechat}（${k.contact.note}）
 - ${k.contact.entry}
 
 ### AI回答约束（必须严格遵守）
-1. ${k.aiRules.productName}
-2. ${k.aiRules.pricing}
-3. ${k.aiRules.serviceFlow}
-4. ${k.aiRules.freeFeatures}
-5. ${k.aiRules.contactGuidance}
-${k.aiRules.forbidden.map(f => `6. ${f}`).join('\n')}`
+1. ${k.aiRules.productName_1v1}
+2. ${k.aiRules.productName_mock}
+3. ${k.aiRules.pricing}
+4. ${k.aiRules.serviceFlow}
+5. ${k.aiRules.freeFeatures}
+6. ${k.aiRules.memberFeatures}
+7. ${k.aiRules.contactGuidance}
+${k.aiRules.forbidden.map((f, i) => `${i + 8}. ${f}`).join('\n')}`
 }

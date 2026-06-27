@@ -7,7 +7,7 @@ import {
   Users, Briefcase, FileText, Crown,
   Terminal, ChevronUp, MapPin, ScanLine
 } from 'lucide-react'
-import { PaymentModal } from './PaymentModal'
+// PaymentModal removed — 1v1 services redirect to WeChat private domain
 
 // ═══════════════════════════════════════════════════
 // 诊断维度（弱化理论，突出岗位匹配）
@@ -173,7 +173,7 @@ const FAQS = [
   { q: '零基础可以学 AI 安全吗？', a: '可以。建议从 OWASP LLM Top 10 和 Prompt 注入基础开始，配合靶场边学边练，3 个月左右可尝试初级岗位。' },
   { q: '学完能找到工作吗？', a: 'AI 安全人才缺口大。掌握靶场实战 + 1-2 个认证 + 项目经验，可大幅提升简历通过率与面试表现。' },
   { q: '需要会编程吗？', a: '基础岗位建议掌握 Python；红队/研究岗位需要较强的代码能力。我们提供从基础到进阶的学习路径。' },
-  { q: '付费咨询和免费报告有什么区别？', a: '免费报告提供方向建议；付费咨询为 30 分钟 1v1 语音，结合你的背景给出岗位定位、学习路径和简历/面试建议。' },
+  { q: '1v1咨询和免费报告有什么区别？', a: '免费报告提供方向建议；1v1咨询是学长亲自做的人工服务（¥399起含2次），结合你的背景给出岗位定位、学习路径和简历/面试建议，还包含学长内推。加微信沟通需求后微信转账。' },
 ]
 
 
@@ -183,7 +183,7 @@ export const CareerGuide = () => {
   const [reportTier, setReportTier] = useState<'free' | 'standard' | 'enterprise'>('free')
   const [llmReport, setLlmReport] = useState('')
   const [reportLoading, setReportLoading] = useState(false)
-  const [showPaymentTier, setShowPaymentTier] = useState<'standard' | 'enterprise' | null>(null)
+  // 1v1 services no longer use direct payment — redirect to WeChat
 
   // 能力自评
   const [quizAnswers, setQuizAnswers] = useState<number[]>(new Array(QUIZ.length).fill(-1))
@@ -579,15 +579,16 @@ export const CareerGuide = () => {
                 <div>
                   <h3 className="text-base font-bold text-white mb-1">一对一职业规划咨询</h3>
                   <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                    30 分钟 1v1 语音咨询：岗位定位 · 学习路径 · 简历/面试建议 · 入行时间规划
+                    学长 1v1 语音咨询（含2次）：岗位定位 · 学习路径 · 简历/面试建议 · 学长内推 · ¥399起
                   </p>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <button
-                    onClick={() => setShowPaymentTier('standard')}
-                    className="px-5 py-2.5 rounded-lg font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-all"
+                    onClick={() => window.dispatchEvent(new Event('open-consult-modal'))}
+                    className="px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all"
+                    style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', boxShadow: '0 0 16px rgba(16,185,129,0.25)' }}
                   >
-                    预约 1v1 咨询 ¥29.9
+                    加微信咨询
                   </button>
                 </div>
               </div>
@@ -647,37 +648,7 @@ export const CareerGuide = () => {
         </AnimatePresence>
       </div>
 
-      {/* Payment Modal - tiered */}
-      {showPaymentTier === 'standard' && (
-        <PaymentModal
-          amount={29.90}
-          title="AIShield Lab - 一对一职业规划咨询"
-          onPaid={() => {
-            setShowPaymentTier(null)
-            setReportTier('standard')
-            try {
-              localStorage.setItem('career_report_tier', 'standard')
-              // orderId already stored by PaymentModal
-            } catch {}
-          }}
-          onClose={() => setShowPaymentTier(null)}
-        />
-      )}
-      {showPaymentTier === 'enterprise' && (
-        <PaymentModal
-          amount={199.00}
-          title="AIShield Lab - 企业AI安全治理评估"
-          onPaid={() => {
-            setShowPaymentTier(null)
-            setReportTier('enterprise')
-            try {
-              localStorage.setItem('career_report_tier', 'enterprise')
-              localStorage.setItem('career_diagnosis_paid', 'true')
-            } catch {}
-          }}
-          onClose={() => setShowPaymentTier(null)}
-        />
-      )}
+      {/* 1v1 services redirect to WeChat — no direct payment modal */}
     </div>
   )
 }

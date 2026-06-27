@@ -5,7 +5,7 @@ import { X, CheckCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
 interface PaymentModalProps {
   onPaid: () => void
   onClose: () => void
-  amount?: number       // 金额，单位元，默认 29.90
+  amount?: number       // 金额，单位元，默认 19.90（月度会员）
   title?: string        // 商品名称
   creditsAmount?: number // 盾币数量（充值时使用）
 }
@@ -18,8 +18,8 @@ const MAX_POLL_DURATION = 5 * 60 * 1000 // 5分钟超时
 export const PaymentModal = ({
   onPaid,
   onClose,
-  amount = 29.90,
-  title = 'AIShield Lab - 一对一职业规划咨询',
+  amount = 19.90,
+  title = 'AIShield Lab - 月度会员',
   creditsAmount
 }: PaymentModalProps) => {
   const [state, setState] = useState<ModalState>('loading')
