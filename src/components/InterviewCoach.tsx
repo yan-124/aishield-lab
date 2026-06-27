@@ -3,6 +3,8 @@ import { Send, RotateCcw, User, Lightbulb, Loader2, FileText, Upload, Sparkles, 
 import { useToast } from './Toast'
 import { getAuthToken } from '../services/authFetch'
 import { useRequireAuth } from '../hooks/useRequireAuth'
+import { usePermissions } from '../hooks/usePermissions'
+import { UpgradePrompt } from './UpgradePrompt'
 
 /* ═══════════════════════════════════════════════════════════════
    AIShield Lab — 应聘搭子 v2
@@ -673,9 +675,11 @@ export function InterviewCoach() {
   })
   const [selectedStyle, setSelectedStyle] = useState<AnswerStyle>(ANSWER_STYLES[0])
   const [showTemplate, setShowTemplate] = useState(false)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
 
   const coach = useChat()
   const { checkAuth } = useRequireAuth()
+  const { canUseInterviewCoach, recordInterviewUse, remainingInterviewUses, isMember } = usePermissions()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { showToast } = useToast()
 
@@ -713,9 +717,11 @@ export function InterviewCoach() {
   const handleSend = useCallback((text: string) => {
     if (!text.trim()) return
     if (!checkAuth()) return
+    if (!canUseInterviewCoach()) { setUpgradeOpen(true); return }
+    if (!recordInterviewUse()) { setUpgradeOpen(true); return }
     const resumeContext = buildResumeContext()
     coach.sendMessage(text, resumeContext, selectedStyle.prompt)
-  }, [coach, buildResumeContext, selectedStyle.prompt, checkAuth])
+  }, [coach, buildResumeContext, selectedStyle.prompt, checkAuth, canUseInterviewCoach, recordInterviewUse])
 
   const handleCopy = useCallback((text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -762,6 +768,12 @@ export function InterviewCoach() {
               <Sparkles size={11} />
               AI安全面试助手
             </div>
+            {!isMember && (
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px]"
+                style={{ background: remainingInterviewUses <= 1 ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)', color: remainingInterviewUses <= 1 ? '#EF4444' : '#FBBF24', border: `1px solid ${remainingInterviewUses <= 1 ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
+                今日剩余 {remainingInterviewUses === Infinity ? '∞' : `${remainingInterviewUses}/3`}
+              </div>
+            )}
             <h1 className="text-xl sm:text-2xl font-black tracking-tight"
               style={{
                 background: 'linear-gradient(135deg, #34D399 0%, #60A5FA 50%, #A78BFA 100%)',
@@ -921,6 +933,8 @@ export function InterviewCoach() {
           </div>
         </div>
       </div>
+
+      <UpgradePrompt open={upgradeOpen} onClose={() => setUpgradeOpen(false)} feature="interview" />
     </section>
   )
 }

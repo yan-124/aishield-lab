@@ -6,6 +6,8 @@ import {
   ShieldAlert, Swords, Brain, Lock, Scale, Crosshair,
   Clock,
 } from 'lucide-react';
+import { usePermissions } from '../hooks/usePermissions';
+import { UpgradePrompt } from './UpgradePrompt';
 
 const categories: KnowledgeCategory[] = [
   { id: 'prompt-injection', name: 'Prompt 注入', icon: '💉', description: 'Prompt注入、越狱攻击、多语言注入与间接注入实例深度分析', articleCount: 35, color: '#EF4444' },
@@ -78,6 +80,8 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
   const { dispatch } = useAppContext();
   const [search, setSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const { canAccessFullKnowledge } = usePermissions();
 
   const filtered = selectedCat
     ? articles.filter(a => a.categoryId === selectedCat)
@@ -216,6 +220,7 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
             <div
               key={article.id}
               onClick={() => {
+                if (!canAccessFullKnowledge) { setUpgradeOpen(true); return; }
                 dispatch({ type: 'SET_CURRENT_ARTICLE', payload: article.id });
                 dispatch({ type: 'SET_VIEW_MODE', payload: 'knowledge-detail' });
               }}
@@ -286,11 +291,21 @@ export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {
                   className="flex-shrink-0 mt-1 opacity-20 group-hover:opacity-60 group-hover:translate-x-1 transition-all duration-300"
                   style={{ color: 'rgba(255,255,255,0.5)' }}
                 />
+
+                {/* 非会员预览标识 */}
+                {!canAccessFullKnowledge && (
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-medium"
+                    style={{ background: 'rgba(245,158,11,0.12)', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.2)' }}>
+                    预览
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      <UpgradePrompt open={upgradeOpen} onClose={() => setUpgradeOpen(false)} feature="knowledge" />
     </div>
   );
 };

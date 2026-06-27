@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Play, Sword, Building, FileCheck, Settings, GraduationCap } from 'lucide-react';
+import { Play, Sword, Building, FileCheck, Settings, GraduationCap, Lock } from 'lucide-react';
+import { usePermissions } from '../hooks/usePermissions';
+import { UpgradePrompt } from './UpgradePrompt';
 
 // 5大方向分类，与职业评估10岗位一一对应
 const VIDEO_CATEGORIES = [
@@ -72,6 +74,8 @@ const SAMPLE_VIDEOS = [
 
 export const VideoSection = ({ compact = false }: { compact?: boolean }) => {
   const [activeCategory, setActiveCategory] = useState('offense');
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const { canAccessFullVideo } = usePermissions();
 
   const activeCat = VIDEO_CATEGORIES.find(c => c.id === activeCategory) || VIDEO_CATEGORIES[0];
   const filteredVideos = SAMPLE_VIDEOS.filter(v => v.cat === activeCategory);
@@ -129,16 +133,30 @@ export const VideoSection = ({ compact = false }: { compact?: boolean }) => {
         {/* Video grid */}
         <div className={`grid gap-4 ${compact ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
           {filteredVideos.map((video, i) => (
-            <div key={i} className="group bg-white/[0.03] rounded-xl border border-white/5 overflow-hidden hover:border-white/10 transition-colors">
+            <div key={i} className="group bg-white/[0.03] rounded-xl border border-white/5 overflow-hidden hover:border-white/10 transition-colors relative">
               {/* Thumbnail placeholder */}
               <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                <Play className="w-10 h-10 text-white/30 group-hover:text-white/50 transition-colors" />
+                <Play className={`w-10 h-10 text-white/30 group-hover:text-white/50 transition-colors ${!canAccessFullVideo ? 'opacity-30' : ''}`} />
                 <span className="absolute bottom-2 right-2 text-[10px] bg-black/60 px-1.5 py-0.5 rounded text-gray-300">
                   {video.duration}
                 </span>
                 <span className="absolute top-2 left-2 text-[10px] px-1.5 py-0.5 rounded" style={{ color: activeCat.color, backgroundColor: activeCat.color + '20' }}>
                   {video.level}
                 </span>
+
+                {/* 非会员锁 */}
+                {!canAccessFullVideo && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center z-10"
+                    style={{ background: 'rgba(10,10,26,0.7)', backdropFilter: 'blur(4px)' }}
+                    onClick={(e) => { e.stopPropagation(); setUpgradeOpen(true); }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center mb-1.5"
+                      style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                      <Lock size={16} style={{ color: '#A78BFA' }} />
+                    </div>
+                    <span className="text-[10px] font-medium text-white/60">预览 3 分钟</span>
+                    <span className="text-[9px] text-white/30">会员解锁完整版</span>
+                  </div>
+                )}
               </div>
               {/* Info */}
               <div className="p-3">
@@ -153,6 +171,8 @@ export const VideoSection = ({ compact = false }: { compact?: boolean }) => {
           <p className="text-xs text-gray-600">更多视频持续更新中 · 每周新增3-5个实战教程</p>
         </div>
       </div>
+
+      <UpgradePrompt open={upgradeOpen} onClose={() => setUpgradeOpen(false)} feature="video" />
     </div>
   );
 };

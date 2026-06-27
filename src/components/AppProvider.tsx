@@ -137,6 +137,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
       try { localStorage.setItem('aishield_theme', next); } catch {}
       return { ...state, theme: next };
     }
+    case 'SET_SUBSCRIPTION': {
+      const { tier, expiresAt } = action.payload
+      const user = state.user ? { ...state.user, subscriptionTier: tier, subscriptionExpiresAt: expiresAt } : null;
+      if (user) {
+        try { localStorage.setItem('aishield_user', JSON.stringify(user)); } catch {}
+      }
+      return { ...state, user };
+    }
     default:
       return state;
   }

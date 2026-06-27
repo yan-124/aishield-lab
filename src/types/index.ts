@@ -27,6 +27,9 @@ export type ViewMode =
 
 export type ThemeMode = 'dark' | 'light';
 
+// 订阅等级
+export type SubscriptionTier = 'free' | 'monthly' | 'yearly' | 'lifetime';
+
 export interface UserInfo {
   id: string;
   email?: string;
@@ -39,6 +42,8 @@ export interface UserInfo {
   isGuest?: boolean;
   painPoints?: string[];
   token?: string;
+  subscriptionTier?: SubscriptionTier;
+  subscriptionExpiresAt?: string;
 }
 
 export interface KnowledgeCategory {
@@ -195,7 +200,8 @@ export type AppAction =
   | { type: 'ADD_PRACTICE_RECORD'; payload: PracticeRecord }
   | { type: 'SET_PRACTICE_RECORDS'; payload: PracticeRecord[] }
   | { type: 'TOGGLE_THEME' }
-  | { type: 'LOGOUT' };
+  | { type: 'LOGOUT' }
+  | { type: 'SET_SUBSCRIPTION'; payload: { tier: SubscriptionTier; expiresAt?: string } };
 
 export interface Template {
   id: string;

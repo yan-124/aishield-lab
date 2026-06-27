@@ -3,6 +3,8 @@ import { useAppContext } from '../context/AppContext';
 import { chatWithLLM } from '../services/dashscope';
 import { getAuthToken } from '../services/authFetch';
 import type { RangeLevel, ChatMessage, LevelHint } from '../types';
+import { usePermissions } from '../hooks/usePermissions';
+import { UpgradePrompt } from './UpgradePrompt';
 
 /* ═══════════════════════════════════════════════════════════════
    ChatResponseRenderer — 解析 AI 返回的 JSON 应用响应并美化展示
@@ -276,6 +278,8 @@ export const RangeArena = () => {
   const { state, dispatch } = useAppContext();
   const [activeModule, setActiveModule] = useState<string>('all');
   const [activeModelGroup, setActiveModelGroup] = useState<string>('all');
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const { canAccessRange, isMember } = usePermissions();
 
   const getCompletedLevels = (): Set<string> => {
     try {
@@ -425,14 +429,16 @@ export const RangeArena = () => {
             const color = diffColors[level.difficulty];
             const owaspBg = OWASP_BADGE_COLORS[level.owasp] || 'rgba(255,255,255,0.05)';
             const owaspBorder = OWASP_BORDER_COLORS[level.owasp] || 'rgba(255,255,255,0.1)';
+            const locked = !canAccessRange(level.number);
 
             return (
               <div key={level.id}
                 onClick={() => {
+                  if (locked) { setUpgradeOpen(true); return; }
                   dispatch({ type: 'SET_CURRENT_LEVEL', payload: level as RangeLevel });
                   dispatch({ type: 'SET_VIEW_MODE', payload: 'range-level' });
                 }}
-                className="group relative p-4 rounded-xl cursor-pointer transition-all duration-300 hover:-translate-y-1 flex flex-col gap-2.5 overflow-hidden"
+                className={`group relative p-4 rounded-xl cursor-pointer transition-all duration-300 hover:-translate-y-1 flex flex-col gap-2.5 overflow-hidden ${locked ? 'opacity-60' : ''}`}
                 style={{
                   background: completed ? 'rgba(16,185,129,0.06)' : THEME_COLORS.cardBg,
                   border: completed ? '1px solid rgba(16,185,129,0.3)' : `1px solid ${THEME_COLORS.border}`,
@@ -478,6 +484,22 @@ export const RangeArena = () => {
                   <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>{level.owaspName}</span>
                   <span className="text-white/10 text-xs group-hover:text-white/30 transition-colors">→</span>
                 </div>
+
+                {/* 会员锁 */}
+                {locked && (
+                  <div className="absolute inset-0 rounded-xl flex flex-col items-center justify-center z-10"
+                    style={{ background: 'rgba(6,11,20,0.75)', backdropFilter: 'blur(4px)' }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+                      style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0110 0v4"/>
+                      </svg>
+                    </div>
+                    <span className="text-[11px] font-medium text-white/70">会员专属</span>
+                    <span className="text-[9px] text-white/35 mt-0.5">开通解锁</span>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -488,10 +510,14 @@ export const RangeArena = () => {
             style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
             <span className="text-lg">💡</span>
             <span className="text-xs" style={{ color: 'rgba(203,213,225,0.5)' }}>
-              提示：每个关卡都对应 OWASP LLM Top 10 中的一种安全风险，掌握攻击手法是理解防御的第一步
+              {isMember
+                ? '提示：每个关卡都对应 OWASP LLM Top 10 中的一种安全风险，掌握攻击手法是理解防御的第一步'
+                : '免费可体验前5关，开通会员解锁全部25关实战关卡'}
             </span>
           </div>
         </div>
+
+        <UpgradePrompt open={upgradeOpen} onClose={() => setUpgradeOpen(false)} feature="range" />
       </div>
     </div>
     );

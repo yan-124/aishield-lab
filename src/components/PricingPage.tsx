@@ -24,30 +24,22 @@ const memberFeatures = [
 const services = [
   {
     name: '1v1职业规划',
-    price: '399',
-    unit: '含2次',
     desc: '学长1v1语音咨询，岗位定位 · 学习路径 · 入行规划',
     icon: '🎯',
   },
   {
     name: '简历精修',
-    price: '299',
-    unit: '含2次',
     desc: 'AI安全岗位简历定向优化，学长逐句改写',
     icon: '📝',
   },
   {
     name: '学长模拟面',
-    price: '599',
-    unit: '/次',
     desc: '学长亲自模拟面试 + 面试后辅助复盘',
     icon: '🎤',
   },
   {
     name: '全流程陪跑',
-    price: '3999-5999',
-    unit: '/期',
-    desc: '职业规划+简历精修+模拟面+学长内推+督学，4-6周',
+    desc: '职业规划+简历精修+模拟面+持续督学，4-6周',
     icon: '🚀',
     hot: true,
   },
@@ -57,7 +49,7 @@ const FAQ = [
   { q: '免费版有什么限制？', a: '免费可体验前5关靶场、知识库文章前300字、视频前3分钟、面试搭子每天3次。购买会员后解锁全部25关靶场、完整知识库和视频、面试搭子无限次。' },
   { q: '会员三种套餐怎么选？', a: '月度19.9元适合短期体验；年度99元（月均8.25元）最划算；终身299元一次买断+持续更新，以后涨价也不影响你。推荐年度或终身。' },
   { q: '1v1服务怎么购买？', a: '1v1服务不在网站直接收费。点击「联系学长」加微信，跟学长沟通需求后微信转账，学长亲自服务。' },
-  { q: '全流程陪跑包含什么？', a: '4-6周全流程：2次1v1职业规划 + 2次简历精修 + 2次学长模拟面 + 学长内推3家 + 持续督学答疑。相当于把上面三个服务打包再送内推和督学。' },
+  { q: '全流程陪跑包含什么？', a: '4-6周全流程陪伴：包含职业规划、简历精修、模拟面试、持续督学答疑等。具体方案加微信与学长沟通定制。' },
   { q: '企业服务怎么对接？', a: '点击导航栏「企业版」提交需求，我们提供AI安全内训、安全测评、定制靶场等服务，销售会在48小时内联系你。' },
 ]
 
@@ -191,10 +183,6 @@ export const PricingPage = () => {
                 <div className="text-2xl mb-2">{s.icon}</div>
                 <h4 className="text-sm font-bold text-white mb-1">{s.name}</h4>
                 <p className="text-[10px] mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.desc}</p>
-                <div className="flex items-baseline gap-1 mb-3 mt-auto">
-                  <span className="text-xl font-black" style={{ color: s.hot ? '#A78BFA' : '#60A5FA' }}>¥{s.price}</span>
-                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.unit}</span>
-                </div>
                 <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' })}
                   className="w-full py-2 rounded-lg text-[11px] font-semibold cursor-pointer transition-all hover:opacity-80"
                   style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}>
