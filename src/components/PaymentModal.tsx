@@ -24,7 +24,6 @@ export const PaymentModal = ({
 }: PaymentModalProps) => {
   const [state, setState] = useState<ModalState>('loading')
   const [paymentUrl, setPaymentUrl] = useState('')
-  const [errorMsg, setErrorMsg] = useState('')
   const orderIdRef = useRef('')
   const pollTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const startTimeRef = useRef(0)
@@ -41,7 +40,6 @@ export const PaymentModal = ({
   // 创建支付订单
   const createOrder = async () => {
     setState('loading')
-    setErrorMsg('')
     const orderId = generateOrderId()
     orderIdRef.current = orderId
     startTimeRef.current = Date.now()
@@ -59,7 +57,6 @@ export const PaymentModal = ({
 
       if (!resp.ok) {
         setState('error')
-        setErrorMsg(`HTTP错误: ${resp.status} ${resp.statusText}`)
         return
       }
 
@@ -67,13 +64,11 @@ export const PaymentModal = ({
 
       if (data.error) {
         setState('error')
-        setErrorMsg(data.error + (data.errCode ? ` (错误码: ${data.errCode})` : ''))
         return
       }
 
       if (!data.url && !data.urlQrcode && !data.url_qrcode) {
         setState('error')
-        setErrorMsg('支付服务未返回有效的支付链接')
         return
       }
 
@@ -86,9 +81,8 @@ export const PaymentModal = ({
 
       setState('qr_ready')
       startPolling()
-    } catch (err: any) {
+    } catch {
       setState('error')
-      setErrorMsg('创建订单失败: ' + (err.message || '网络异常'))
     }
   }
 
@@ -296,34 +290,46 @@ export const PaymentModal = ({
 
             {/* Error state */}
             {state === 'error' && (
-              <div className="py-8">
-                <AlertCircle size={40} className="mx-auto mb-4" style={{ color: '#EF4444' }} />
-                <h3 className="text-sm font-bold text-white mb-2">支付创建失败</h3>
-                <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>{errorMsg}</p>
-                <button
-                  onClick={handleRetry}
-                  className="px-6 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition-all"
-                  style={{ background: 'rgba(139,92,246,0.12)', color: '#A78BFA', border: '1px solid rgba(139,92,246,0.2)' }}
-                >
-                  <RefreshCw size={13} className="inline mr-1.5" /> 重试
-                </button>
+              <div className="py-6">
+                <AlertCircle size={36} className="mx-auto mb-3" style={{ color: '#FBBF24' }} />
+                <h3 className="text-sm font-bold text-white mb-1">支付通道临时维护</h3>
+                <p className="text-xs mb-4 px-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  别急，添加学长微信，发送「解锁{title.replace(/^AIShield Lab - /, '')}」即可开通
+                </p>
+                <img src="/wechat-qr.png" alt="学长微信二维码" className="w-40 h-40 rounded-xl mx-auto mb-3 object-cover bg-white p-2" style={{ border: '1px solid rgba(16,185,129,0.2)' }} />
+                <p className="text-[10px] mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  微信号：AIShieldLab · 备注「AI安全」优先通过
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={handleRetry}
+                    className="px-5 py-2 rounded-xl text-xs font-medium cursor-pointer transition-all"
+                    style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  >
+                    <RefreshCw size={12} className="inline mr-1" /> 重试支付
+                  </button>
+                </div>
               </div>
             )}
 
             {/* Timeout state */}
             {state === 'timeout' && (
-              <div className="py-8">
-                <AlertCircle size={40} className="mx-auto mb-4" style={{ color: '#FBBF24' }} />
-                <h3 className="text-sm font-bold text-white mb-2">支付等待超时</h3>
-                <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  如果已完成支付，可点击下方按钮检查状态
+              <div className="py-6">
+                <AlertCircle size={36} className="mx-auto mb-3" style={{ color: '#FBBF24' }} />
+                <h3 className="text-sm font-bold text-white mb-1">支付等待超时</h3>
+                <p className="text-xs mb-4 px-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  如已完成支付但未到账，或想快速开通，请直接联系学长
+                </p>
+                <img src="/wechat-qr.png" alt="学长微信二维码" className="w-40 h-40 rounded-xl mx-auto mb-3 object-cover bg-white p-2" style={{ border: '1px solid rgba(16,185,129,0.2)' }} />
+                <p className="text-[10px] mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  微信号：AIShieldLab · 备注「AI安全」优先通过
                 </p>
                 <button
                   onClick={handleRetry}
-                  className="px-6 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition-all"
+                  className="px-5 py-2 rounded-xl text-xs font-medium cursor-pointer transition-all"
                   style={{ background: 'rgba(139,92,246,0.12)', color: '#A78BFA', border: '1px solid rgba(139,92,246,0.2)' }}
                 >
-                  <RefreshCw size={13} className="inline mr-1.5" /> 重新检查
+                  <RefreshCw size={12} className="inline mr-1" /> 重新检查
                 </button>
               </div>
             )}

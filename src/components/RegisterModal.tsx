@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { useToast } from './Toast';
 
 const steps = [
   { title: '基本信息', icon: '1' },
@@ -11,10 +12,10 @@ const steps = [
 
 export const RegisterModal = () => {
   const { state, dispatch } = useAppContext();
+  const { showToast } = useToast();
   const [form, setForm] = useState<{ nickname: string; email: string; identity: string; goals: string[]; painPoint: string; password: string }>({ nickname: '', email: '', identity: '', goals: [], painPoint: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
-  const [slideDir, setSlideDir] = useState<1 | -1>(1);
 
   if (!state.showRegister) return null;
 
@@ -31,13 +32,12 @@ export const RegisterModal = () => {
       if (Object.keys(errors).length > 0) return;
     }
     if (step === 1 && !form.identity) {
-      alert('请选择身份'); return;
+      showToast('请选择身份', 'warning'); return;
     }
     if (step === 2 && form.goals.length === 0) {
-      alert('请至少选一个方向'); return;
+      showToast('请至少选一个方向', 'warning'); return;
     }
     if (step < 3) {
-      setSlideDir(1);
       dispatch({ type: 'SET_REGISTER_STEP', payload: step + 1 });
     } else {
         try {
@@ -53,17 +53,16 @@ export const RegisterModal = () => {
             dispatch({ type: 'SET_USER', payload: { ...data.user, token: data.token, isLoggedIn: true } });
             dispatch({ type: 'HIDE_REGISTER' });
           } else {
-            alert(data.error || '注册失败');
+            showToast(data.error || '注册失败', 'error');
           }
         } catch {
-          alert('网络异常，请检查连接');
+          showToast('网络异常，请检查连接', 'error');
         }
       }
   };
 
   const handleBack = () => {
     if (step > 0) {
-      setSlideDir(-1);
       dispatch({ type: 'SET_REGISTER_STEP', payload: step - 1 });
     }
   };

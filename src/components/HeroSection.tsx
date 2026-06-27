@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react'
-import ReactDOM from 'react-dom'
-import { Sparkles, ArrowRight, BookOpen, Newspaper } from 'lucide-react'
+import { Sparkles, ArrowRight, Newspaper, ShieldCheck, Target, Layers, Zap, CheckCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAppContext } from '../context/AppContext'
 
@@ -217,41 +216,63 @@ export function HeroSection() {
               </p>
             </motion.div>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons — 双主CTA：靶场 + 职业评估 */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.22 }}
-              className="flex flex-wrap items-center gap-3 sm:gap-4 mt-10 sm:mt-16">
-              {/* 主CTA：进入Agent靶场 */}
+              className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mt-10 sm:mt-16">
+              {/* 主CTA 1：进入Agent靶场 — 粉色 */}
               <button onClick={(e) => { handleClick(e); dispatch({ type: 'SET_VIEW_MODE', payload: 'range' }); }}
-                className="group relative inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-white overflow-hidden transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
+                className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-white overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(244,114,182,0.55)] cursor-pointer flex-1 sm:flex-none"
                 style={{
                   background: 'linear-gradient(135deg, #F472B6 0%, #EC4899 100%)',
-                  boxShadow: '0 6px 24px rgba(244,114,182,0.4), 0 0 0 1px rgba(244,114,182,0.15) inset',
+                  boxShadow: '0 6px 24px rgba(244,114,182,0.45), 0 0 0 1px rgba(244,114,182,0.2) inset, 0 0 60px rgba(244,114,182,0.15)',
+                  animation: 'cta-glow 2.5s ease-in-out infinite',
                 }}>
                 {ripples.map(r => (
                   <span key={r.id} className="absolute rounded-full pointer-events-none animate-ripple"
                     style={{ left: r.x, top: r.y, width: 8, height: 8, background: 'rgba(255,255,255,0.3)', transform: 'translate(-50%, -50%)' }} />
                 ))}
-                <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.18) 0%, transparent 60%)' }} />
-                <Sparkles className="w-4 h-4 relative z-10 group-hover:rotate-12 transition-transform duration-300" strokeWidth={2} />
-                <span className="relative z-10 text-[13px] sm:text-[14px] tracking-wide">进入靶场</span>
-                <ArrowRight className="w-3.5 h-3.5 relative z-10 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+                <span className="absolute -inset-[1px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ background: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.22) 0%, transparent 60%)' }} />
+                {/* 发光边框 */}
+                <span className="absolute inset-0 rounded-xl" style={{
+                  background: 'linear-gradient(135deg, rgba(244,114,182,0.5), rgba(168,85,247,0.3), rgba(244,114,182,0.5))',
+                  backgroundSize: '200% 100%',
+                  animation: 'border-glow 3s linear infinite',
+                  zIndex: -1,
+                  margin: '-2px',
+                  padding: '2px',
+                  WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  WebkitMaskComposite: 'xor',
+                  maskComposite: 'exclude',
+                }} />
+                <Sparkles className="w-5 h-5 relative z-10 group-hover:rotate-12 transition-transform duration-300" strokeWidth={2.5} />
+                <span className="relative z-10 text-[15px] sm:text-[17px] tracking-wide">进入靶场</span>
+                <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover:translate-x-1.5" strokeWidth={2.5} />
               </button>
-              {/* 次CTA：职业安全评估 */}
+              {/* 次CTA：职业安全评估 — 低调紫色线框，与主CTA区分层级 */}
               <button onClick={() => {
                 dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' });
               }}
-                className="group relative inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-medium text-[13px] sm:text-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden"
+                className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer flex-1 sm:flex-none"
                 style={{
-                  color: 'rgba(226,232,240,0.9)',
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-                  border: '1px solid rgba(255,255,255,0.10)',
+                  color: 'rgba(167,139,250,0.92)',
+                  background: 'rgba(139,92,246,0.06)',
+                  border: '1px solid rgba(139,92,246,0.35)',
+                  boxShadow: '0 0 0 1px rgba(139,92,246,0.05) inset',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(139,92,246,0.12)';
+                  e.currentTarget.style.borderColor = 'rgba(167,139,250,0.55)';
+                  e.currentTarget.style.color = '#C4B5FD';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(139,92,246,0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(139,92,246,0.35)';
+                  e.currentTarget.style.color = 'rgba(167,139,250,0.92)';
                 }}>
-                <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: 'linear-gradient(135deg, rgba(244,114,182,0.08) 0%, rgba(99,102,241,0.04) 100%)' }} />
-                <BookOpen className="w-4 h-4 relative z-10 text-slate-400 group-hover:text-[#F472B6] transition-colors" strokeWidth={2} />
-                <span className="relative z-10">职业安全评估</span>
-                <ArrowRight className="w-3.5 h-3.5 relative z-10 text-slate-500 group-hover:text-[#F472B6] group-hover:translate-x-1 transition-all" strokeWidth={2} />
+                <ShieldCheck className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-300" strokeWidth={2} />
+                <span className="relative z-10 text-[15px] sm:text-[17px] tracking-wide">职业安全评估</span>
+                <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover:translate-x-1.5" strokeWidth={2.5} />
               </button>
             </motion.div>
           </div>
@@ -279,23 +300,24 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* === 数据统计行（功能卡上方）=== */}
+        {/* === 数据统计行 === */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.15 }}
-          className="pb-2 sm:pb-4 pt-0 sm:pt-1 lg:pt-2 flex items-center justify-start gap-4 sm:gap-8 lg:gap-12 max-w-lg">
+          className="pb-2 sm:pb-4 pt-0 sm:pt-1 lg:pt-2 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
           {[
-            { icon: '🎯', num: '25+', label: '实战关卡' },
-            { icon: '📊', num: '3', label: '大模型' },
-            { icon: '📘', num: '7+', label: 'OWASP模块' },
-            { icon: '✅', num: '全免费', label: '开练' },
+            { Icon: Target, num: '25+', label: '实战关卡', color: '#F472B6' },
+            { Icon: Layers, num: '3', label: '攻击模型', color: '#60A5FA' },
+            { Icon: Zap, num: '7+', label: '安全模块', color: '#FBBF24' },
+            { Icon: CheckCircle, num: '全免费', label: '入门开练', color: '#34D399' },
           ].map((stat) => (
-            <div key={stat.label} className="flex items-center gap-2 sm:gap-2.5">
-              <span className="text-sm sm:text-base">{stat.icon}</span>
+            <div key={stat.label} className="flex items-center gap-2.5 sm:gap-3 p-2.5 rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `${stat.color}15` }}>
+                <stat.Icon size={16} style={{ color: stat.color }} strokeWidth={2} />
+              </div>
               <div>
-                <div className="text-base sm:text-lg lg:text-xl font-bold bg-clip-text text-transparent" style={{
-                  backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #60A5FA 100%)',
-                  WebkitBackgroundClip: 'text', backgroundClip: 'text',
-                }}>{stat.num}</div>
-                <div className="text-[9px] sm:text-[10px]" style={{ color: 'rgba(148,163,184,0.4)' }}>{stat.label}</div>
+                <div className="text-base sm:text-lg font-bold text-white">{stat.num}</div>
+                <div className="text-[9px] sm:text-[10px]" style={{ color: 'rgba(148,163,184,0.45)' }}>{stat.label}</div>
               </div>
             </div>
           ))}

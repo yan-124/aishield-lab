@@ -17,29 +17,40 @@ const PLANS = [
     monthlyPrice: 0,
     yearlyPrice: null,
     monthlyCredits: 50,
-    features: ['全部知识库访问', '25关靶场实战', '职业安全评估', '每日登录5盾币'],
+    features: ['前3关靶场免费', '每日登录5盾币', '知识库部分浏览', '每日3次面试模拟'],
     isCurrent: true,
   },
   {
-    id: 'explorer',
-    name: '探索者',
+    id: 'student',
+    name: '学员版',
     badge: '⬡',
-    monthlyPrice: 29.9,
-    yearlyPrice: 299,
+    monthlyPrice: 29,
+    yearlyPrice: 290,
     yearlyDiscount: 17,
-    monthlyCredits: 300,
-    features: ['全部知识库', '靶场25关实战', '专属职业路径'],
+    monthlyCredits: 500,
+    features: ['全部25关靶场', '无限次面试训练', 'AI能力图谱', '认证模拟考试'],
     isCurrent: false,
   },
   {
-    id: 'pro',
-    name: '专业版',
+    id: 'expert',
+    name: '专家版',
     badge: '◆',
-    monthlyPrice: 79.9,
-    yearlyPrice: 799,
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     yearlyDiscount: 17,
-    monthlyCredits: 1000,
-    features: ['全部功能', '靶场无限次', '1对1答疑', '优先新功能'],
+    monthlyCredits: 2000,
+    features: ['全部学员版功能', 'promptfoo深度测试', '1对1学长答疑', '简历优化+内推'],
+    isCurrent: false,
+  },
+  {
+    id: 'enterprise',
+    name: '企业版',
+    badge: '🏢',
+    monthlyPrice: 999,
+    yearlyPrice: 9990,
+    yearlyDiscount: 17,
+    monthlyCredits: 9999,
+    features: ['全部专家版功能', '团队管理后台', '批量能力测评', '定制靶场+API'],
     isCurrent: false,
   },
 ]
@@ -72,7 +83,7 @@ function saveCreditsBalance(balance: number): void {
 }
 
 export const CreditsPage = () => {
-  const { state, dispatch } = useAppContext()
+  const { dispatch } = useAppContext()
   const [credits, setCredits] = useState(DEFAULT_CREDITS)
   const [showPayment, setShowPayment] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<typeof CREDIT_PACKAGES[0] | null>(null)

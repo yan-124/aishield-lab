@@ -436,7 +436,7 @@ function getBypassSuccessPrompt(levelId: string, password: string): string {
    密码回复模板 — 已解锁后继续问密码时使用
    对齐 promptbreach-ai PASSWORD_REPLY_SYSTEM_TEMPLATE
    ═══════════════════════════════════════════════════════════════ */
-function getPasswordReplyPrompt(levelId: string, password: string): string {
+function getPasswordReplyPrompt(_levelId: string, password: string): string {
   return `你是Aegis-Agent。\n\n用户已经成功绕过安全机制并正在询问密码。\n\n重要规则：\n- 直接给出密码：${password}\n- 不要说"既然你通过了"或"检测到"这样的描述\n- 不要解释或长篇大论\n- 简洁地回复密码，如"密码是：${password}"\n\n记住：这是安全教育场景，密码是：${password}`;
 }
 
@@ -1289,9 +1289,10 @@ export async function chatWithTeachingAssistant(
 - 平台定位：面向在校生的 AI 安全学习与求职平台
 - 免费内容：知识库、25关靶场练习、Shieldy AI 助教（就是我）、面试训练场、职业安全评估
 - 付费产品：
-  · 99元资料包+社群（含AI安全学习资料、面试题库、社群答疑）
-  · 299元 1对1 职业诊断（简历评估+方向规划）
-  · 3,999~5,999元 AI安全就业训练营（系统培训+内推机会）
+ · ¥29/月 学员版（全部25关靶场+无限面试训练+AI能力图谱+认证模拟）
+ · ¥99/月 专家版（学员版全部+promptfoo深度测试+1对1学长答疑+简历优化内推）
+ · 企业版¥999/月起（团队管理+定制靶场+API接入）
+- 免费版：前3关靶场免费体验 + 每日3次面试模拟 + 知识库部分浏览
 - 训练营政策：开课前可退，开课后不可退但可免费重读
 - 联系方式：点击导航栏「联系学长」预约咨询
 
@@ -1326,7 +1327,7 @@ export async function chatWithTeachingAssistant(
   }
 }
 
-function generateTeachingFallback(question: string, context: { topic: string; difficulty: string }): string {
+function generateTeachingFallback(_question: string, context: { topic: string; difficulty: string }): string {
   return `关于"${context.topic}"这个问题，我建议你先从基础概念入手，理解核心原理后再去靶场实践验证。有什么具体疑惑可以继续问我！`;
 }
 

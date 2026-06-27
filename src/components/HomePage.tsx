@@ -1,4 +1,6 @@
 import { HeroSection, HeroNewsTicker } from './HeroSection'
+import { QuickStartSection } from './QuickStartSection'
+import { DailyChallenge } from './DailyChallenge'
 import HacktivityHeatmap from './HacktivityHeatmap'
 import { useEffect } from 'react'
 
@@ -46,6 +48,12 @@ export const HomePage = () => {
 
       {/* 首屏 */}
       <HeroSection />
+
+      {/* 快速开始 - 新增模块 */}
+      <QuickStartSection />
+
+      {/* 每日一题打卡 */}
+      <DailyChallenge />
 
       {/* Hacktivity */}
       <HacktivityHeatmap />

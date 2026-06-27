@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext'
-import { authFetch } from '../services/authFetch';
 
 export function LoginModal() {
   const { dispatch } = useAppContext();
@@ -15,7 +14,6 @@ export function LoginModal() {
   const [mfaCode, setMfaCode] = useState('');
   const [backupCode, setBackupCode] = useState('');
   const [useBackup, setUseBackup] = useState(false);
-  const [pkLoading, setPkLoading] = useState(false);
 
   const handleClose = () => {
     setMfaStep(false);
@@ -48,63 +46,6 @@ export function LoginModal() {
       setError('\u7F51\u7EDC\u5F02\u5E38\uFF0C\u8BF7\u91CD\u8BD5');
     } finally {
       setLoading(false);
-    }
-  };
-
-
-  const handlePasskeyLogin = async () => {
-    if (!window.PublicKeyCredential) {
-      setError('\u60A8\u7684\u6D4F\u89C8\u5668\u4E0D\u652F\u6301 Passkey');
-      return;
-    }
-    setPkLoading(true);
-    setError('');
-    try {
-      const optResp = await fetch('/api/auth/passkey/authenticate-options', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-      const optData = await optResp.json();
-
-      const publicKey: any = {
-        challenge: Uint8Array.from(atob(optData.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)),
-        rpId: optData.rpId,
-        timeout: optData.timeout,
-        userVerification: optData.userVerification,
-        allowCredentials: [],
-      };
-
-      const credential = await navigator.credentials.get({ publicKey }) as PublicKeyCredential | null;
-      if (!credential) { setPkLoading(false); return; }
-
-      const response = credential.response as AuthenticatorResponse;
-      const authResp = await fetch('/api/auth/passkey/authenticate-verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: credential.id,
-          rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
-          response: {
-            clientDataJSON: btoa(String.fromCharCode(...new Uint8Array((response as any).clientDataJSON))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
-            authenticatorData: btoa(String.fromCharCode(...new Uint8Array((response as any).authenticatorData))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
-            signature: btoa(String.fromCharCode(...new Uint8Array((response as any).signature))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
-          },
-          challengeId: optData.challengeId,
-        }),
-      });
-
-      const authData = await authResp.json();
-      if (!authResp.ok) {
-        setError(authData.error || 'Passkey \u767B\u5F55\u5931\u8D25');
-        return;
-      }
-
-      localStorage.setItem('aishield_token', authData.token);
-      localStorage.setItem('aishield_user', JSON.stringify({ ...authData.user, token: authData.token, isLoggedIn: true }));
-      dispatch({ type: 'SET_USER', payload: { ...authData.user, token: authData.token, isLoggedIn: true } });
-      dispatch({ type: 'HIDE_LOGIN' });
-    } catch (err: any) {
-      if (err.name === 'NotAllowedError') { /* user cancelled */ }
-      else { setError('Passkey \u767B\u5F55\u5931\u8D25'); }
-    } finally {
-      setPkLoading(false);
     }
   };
 

@@ -4,7 +4,7 @@ import type { ViewMode } from '../types'
 import {
   Home, BookOpen, Play, Target, GraduationCap, Compass,
   MessageCircle, Building2, Newspaper, Sun, Moon,
-  Search, ArrowRight, Command, User, Trophy,
+  Search, Command, User, Trophy,
   CreditCard, Settings, Sparkles
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'

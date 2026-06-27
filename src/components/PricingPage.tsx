@@ -1,64 +1,101 @@
 import { useState } from 'react'
 import { useAppContext } from '../context/AppContext'
 import { motion } from 'framer-motion'
-import { Check, X, Sparkles, ArrowLeft, Zap, Shield, Crown, ChevronRight } from 'lucide-react'
+import { Check, Sparkles, ArrowLeft, Zap, Shield, Crown, ChevronRight, Users } from 'lucide-react'
 
 const plans = [
   {
-    id: 'basic', name: '入门版', price: '¥49', period: '/月', icon: Zap, color: '#60A5FA', badge: '',
-    desc: '适合刚接触AI安全的学习者',
+    id: 'free',
+    name: '免费版',
+    price: '¥0',
+    period: '',
+    icon: Zap,
+    color: '#60A5FA',
+    badge: '',
+    desc: '体验靶场玩法，感受AI安全魅力',
     features: [
-      { text: '25关靶场全部开放', included: true },
-      { text: '知识库全部文章', included: true },
-      { text: '面试训练场基础功能', included: true },
+      { text: '3关靶场免费体验', included: true },
+      { text: '知识库浏览（部分）', included: true },
+      { text: '每日3次面试模拟', included: true },
       { text: '社区讨论参与', included: true },
-      { text: 'AI盾牌助手对话', included: false },
-      { text: '职业引导完整报告', included: false },
-      { text: '漏洞分析报告生成', included: false },
-      { text: '1对1导师辅导', included: false },
+      { text: '全部25关靶场', included: false },
+      { text: '无限次面试训练', included: false },
+      { text: 'AI能力图谱', included: false },
+      { text: '1对1学长答疑', included: false },
     ]
   },
   {
-    id: 'expert', name: '专家版', price: '¥149', period: '/月', icon: Shield, color: '#A78BFA', badge: '推荐',
-    desc: '全面掌握AI安全攻防，最受欢迎',
+    id: 'student',
+    name: '学员版',
+    price: '¥29',
+    period: '/月',
+    icon: Shield,
+    color: '#A78BFA',
+    badge: '推荐',
+    desc: '求职者首选，性价比最高',
     features: [
-      { text: '25关全模型场', included: true },
+      { text: '全部25关靶场', included: true },
       { text: '知识库全部文章', included: true },
-      { text: '面试训练场双AI陪练', included: true },
-      { text: '社区讨论 + 优先展示', included: true },
-      { text: 'AI盾牌助手无限对话', included: true },
-      { text: '职业引导完整报告', included: true },
-      { text: '漏洞分析报告生成', included: true },
-      { text: '1对1导师辅导', included: false },
+      { text: '无限次面试训练', included: true },
+      { text: 'AI能力图谱 + 学习路径', included: true },
+      { text: '认证模拟考试', included: true },
+      { text: 'promptfoo深度测试', included: false },
+      { text: '1对1学长答疑', included: false },
+      { text: '简历优化服务', included: false },
     ]
   },
   {
-    id: 'enterprise', name: '企业版', price: '¥1,999', period: '/月', icon: Crown, color: '#FBBF24', badge: '定制',
+    id: 'expert',
+    name: '专家版',
+    price: '¥99',
+    period: '/月',
+    icon: Crown,
+    color: '#FBBF24',
+    badge: '深度',
+    desc: '职场进阶，含1对1专属服务',
+    features: [
+      { text: '全部25关靶场', included: true },
+      { text: '无限次面试训练', included: true },
+      { text: 'AI能力图谱 + 学习路径', included: true },
+      { text: '认证模拟考试', included: true },
+      { text: 'promptfoo深度测试', included: true },
+      { text: '1对1学长答疑（每月2次）', included: true },
+      { text: '简历优化 + 内推机会', included: true },
+      { text: '企业定制靶场', included: false },
+    ]
+  },
+  {
+    id: 'enterprise',
+    name: '企业版',
+    price: '¥999',
+    period: '/月起',
+    icon: Users,
+    color: '#34D399',
+    badge: '定制',
     desc: '企业级安全培训与团队管理',
     features: [
       { text: '全部专家版功能', included: true },
-      { text: '自定义靶场关卡', included: true },
       { text: '团队管理后台', included: true },
+      { text: '批量能力测评', included: true },
+      { text: '定制靶场关卡', included: true },
       { text: 'API 接口调用', included: true },
       { text: '安全评估报告定制', included: true },
-      { text: '1对1安全顾问', included: true },
+      { text: '专属安全顾问', included: true },
       { text: '培训工作坊（季度）', included: true },
-      { text: 'SLA 保障 + 专属支持', included: true },
     ]
   }
 ]
 
 const FAQ = [
-  { q: '靶场难度适合什么水平？', a: '靶场从3大模型分组，难度逐步递进。入门用户可以从基础Prompt注入学起，专家用户可以挑战高级绕过技巧和实战对抗。' },
-  { q: '双AI面试训练场是什么？', a: '专家版独有功能：一个AI模拟面试官提问，另一个AI作为教练实时点评你的回答，帮助你针对性提升面试表现。' },
-  { q: '可以随时取消订阅吗？', a: '所有方案支持7天无理由退款，取消后当月仍可使用到月底。不设自动续费陷阱。' },
-  { q: '企业版最低几人起订？', a: '企业版5人起订，含团队管理后台和专属安全顾问。支持自定义靶场关卡和培训工作坊。' },
-  { q: 'AI盾牌助手能回答哪些问题？', a: 'AI盾牌助手覆盖AI安全知识问答、靶场攻略提示、面试题解析、职业路径规划等场景。专家版支持无限对话，入门版暂不开放。' },
-  { q: '职业引导报告包含什么？', a: '专家版职业引导报告包含：能力画像评估、岗位匹配推荐、职业路径规划、面试重点方向。由AI分析你的学习数据后生成个性化报告。' },
-  { q: '支持哪些支付方式？', a: '目前支持微信支付和支付宝。企业版支持对公转账，可开具增值税发票。' },
+  { q: '免费版够用吗？', a: '免费版可以体验前3关靶场和每日3次面试模拟，适合先感受平台风格。如果认真准备AI安全方向求职，建议开通学员版解锁全部内容。' },
+  { q: '学员版和专家版有什么区别？', a: '学员版适合自主学习的求职者；专家版额外包含promptfoo深度测试、1对1学长答疑（每月2次）和简历优化+内推机会，适合求职冲刺期。' },
+  { q: '可以随时取消订阅吗？', a: '支持随时取消，取消后当月仍可使用到月底。学员版/专家版支持7天无理由退款。' },
+  { q: '企业版最低几人起订？', a: '企业版5人起订，含团队管理后台和专属安全顾问。支持定制靶场关卡和企业培训工作坊，支持对公转账并可开具增值税发票。' },
+  { q: '内推机会是怎么运作的？', a: '专家版用户完成能力测评后，如达到合格线，学长和合作企业会提供内推机会。覆盖互联网、金融、安全厂商等多类型企业的 AI 安全团队。' },
+  { q: '支持哪些支付方式？', a: '目前支持微信支付和支付宝。企业版支持对公转账，可开具增值税发票。学生凭学生证可享学员版8折优惠。' },
 ]
 
-const TRUST_ITEMS = ['7天无理由退款', '学生证享8折', '无自动续费', '数据安全加密']
+const TRUST_ITEMS = ['7天无理由退款', '学生证享8折', '随时取消订阅', '数据安全加密']
 
 export const PricingPage = () => {
   const { dispatch } = useAppContext()
@@ -66,27 +103,30 @@ export const PricingPage = () => {
 
   return (
     <div className="min-h-screen" style={{ background: '#060B14' }}>
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto px-6 py-10">
         <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'home' })}
           className="flex items-center gap-2 text-sm cursor-pointer mb-8" style={{ color: 'rgba(255,255,255,0.4)' }}>
           <ArrowLeft size={16} /> 返回首页
         </button>
 
+        {/* header */}
         <div className="mb-10">
           <div className="flex items-center justify-center gap-3">
-            <div className="p-2.5 rounded-lg" style={{ background: 'rgba(251,191,36,0.1)' }}>
-              <Crown size={24} className="text-amber-400" />
+            <div className="p-2.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.1)' }}>
+              <Sparkles size={24} className="text-purple-400" />
             </div>
             <div>
               <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide"
-                style={{ color: '#FBBF24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                style={{ color: '#A78BFA', background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
                 PRICING
               </span>
-              <h1 className="text-4xl font-black  mb-1" style={{ color: '#FBBF24' }}>选择适合你的方案</h1>
+              <h1 className="text-4xl font-black mb-1" style={{ color: '#A78BFA' }}>选择适合你的方案</h1>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>AI安全求职专属 · 从入门到内推一条龙</p>
             </div>
           </div>
         </div>
 
+        {/* trust badges */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">
           {TRUST_ITEMS.map(item => (
             <div key={item} className="flex items-center gap-1.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
@@ -95,19 +135,20 @@ export const PricingPage = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        {/* pricing cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
           {plans.map((plan, idx) => {
             const Icon = plan.icon
             return (
               <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
-                className="relative rounded-2xl p-6 flex flex-col"
+                className="relative rounded-2xl p-5 flex flex-col"
                 style={{
-                  background: plan.badge === '推荐' ? 'linear-gradient(180deg, rgba(167,139,250,0.06) 0%, rgba(255,255,255,0.02) 100%)' : 'rgba(255,255,255,0.02)',
-                  border: plan.badge === '推荐' ? '1px solid rgba(167,139,250,0.2)' : '1px solid rgba(255,255,255,0.06)',
+                  background: plan.badge ? 'linear-gradient(180deg, rgba(167,139,250,0.06) 0%, rgba(255,255,255,0.02) 100%)' : 'rgba(255,255,255,0.02)',
+                  border: plan.badge ? `1px solid ${plan.color}33` : '1px solid rgba(255,255,255,0.06)',
                 }}>
                 {plan.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold"
-                    style={{ background: plan.color, color: '#fff' }}>{plan.badge}</div>
+                    style={{ background: plan.color, color: '#0d1117' }}>{plan.badge}</div>
                 )}
                 <div className="mb-5">
                   <Icon size={22} style={{ color: plan.color }} className="mb-3" />
@@ -115,58 +156,60 @@ export const PricingPage = () => {
                   <p className="text-[11px] mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>{plan.desc}</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black" style={{ color: plan.color }}>{plan.price}</span>
-                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{plan.period}</span>
+                    {plan.period && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{plan.period}</span>}
                   </div>
                 </div>
-                <div className="space-y-3 flex-1 mb-6">
+                <div className="space-y-2.5 flex-1 mb-6">
                   {plan.features.map((f, i) => (
-                    <div key={i} className="flex items-center gap-2.5">
-                      {f.included ? <Check size={14} style={{ color: plan.color }} className="shrink-0" /> : <X size={14} style={{ color: 'rgba(255,255,255,0.15)' }} className="shrink-0" />}
-                      <span className="text-xs" style={{ color: f.included ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)' }}>{f.text}</span>
+                    <div key={i} className="flex items-center gap-2">
+                      {f.included ? <Check size={13} style={{ color: plan.color }} className="shrink-0" /> : <span className="w-[13px] h-[13px] rounded-full shrink-0" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />}
+                      <span className="text-[11px]" style={{ color: f.included ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)' }}>{f.text}</span>
                     </div>
                   ))}
                 </div>
-                <button className="w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all"
+                <button className="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all hover:opacity-90"
                   style={{
-                    background: plan.badge === '推荐' ? 'linear-gradient(135deg, #A78BFA, #60A5FA)' : 'rgba(255,255,255,0.05)',
-                    color: plan.badge === '推荐' ? 'white' : 'rgba(255,255,255,0.5)',
-                    border: plan.badge === '推荐' ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                    background: plan.id === 'free' ? 'rgba(255,255,255,0.06)' : `linear-gradient(135deg, ${plan.color}, ${plan.color}cc)`,
+                    color: plan.id === 'free' ? 'rgba(255,255,255,0.5)' : '#0d1117',
+                    border: plan.id === 'free' ? '1px solid rgba(255,255,255,0.08)' : 'none',
                   }}>
-                  {plan.badge === '推荐' ? '立即订阅' : '选择方案'}
+                  {plan.id === 'free' ? '当前免费' : plan.id === 'student' ? '立即开通' : plan.id === 'expert' ? '升级专家版' : '联系销售'}
                 </button>
               </motion.div>
             )
           })}
         </div>
 
+        {/* feature comparison table */}
         <div className="mb-16">
           <h2 className="text-xl font-bold text-white text-center mb-6">功能对比</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs" style={{ minWidth: '480px' }}>
+            <table className="w-full text-xs" style={{ minWidth: '640px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <th className="text-left py-3 px-4 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>功能</th>
-                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#60A5FA' }}>入门版</th>
-                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#A78BFA' }}>专家版</th>
-                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#FBBF24' }}>企业版</th>
+                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#60A5FA' }}>免费版</th>
+                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#A78BFA' }}>学员版</th>
+                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#FBBF24' }}>专家版</th>
+                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#34D399' }}>企业版</th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  ['Prompt注入靶场', '10关基础', '10关+高级模式', '自定义关卡'],
-                  ['知识库', '全部文章', '全部文章', '全部+定制内容'],
-                  ['面试训练', '基础模式', '双AI陪练', '双AI+定制题库'],
-                  ['AI助手', '-', '无限对话', '专属模型'],
-                  ['职业引导', '简版结论', '完整报告', '定制方案'],
-                  ['报告生成', '-', '漏洞分析', '安全评估定制'],
-                  ['团队管理', '-', '-', '管理后台+API'],
-                  ['专属支持', '-', '-', '1对1顾问+SLA'],
+                  ['靶场关卡', '3关', '25关', '25关+定制', '无限+定制'],
+                  ['知识库', '部分浏览', '全部文章', '全部+离线', '全部+定制'],
+                  ['面试训练', '3次/天', '无限次', '无限次+双AI', '团队测评'],
+                  ['AI能力图谱', '-', '✅', '✅', '团队报告'],
+                  ['promptfoo测试', '-', '-', '✅', '✅'],
+                  ['1对1学长答疑', '-', '-', '每月2次', '专属顾问'],
+                  ['简历优化+内推', '-', '-', '✅', '企业内推'],
+                  ['团队管理', '-', '-', '-', '✅'],
                 ].map(([feature, ...vals], i) => (
                   <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                     <td className="py-3 px-4 font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>{feature}</td>
                     {vals.map((v, j) => (
-                      <td key={j} className="text-center py-3 px-4" style={{ color: v === '-' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)' }}>
-                        {v === '-' ? <X size={12} className="mx-auto" style={{ color: 'rgba(255,255,255,0.15)' }} /> : v}
+                      <td key={j} className="text-center py-3 px-4" style={{ color: v === '-' ? 'rgba(255,255,255,0.15)' : v === '✅' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.5)' }}>
+                        {v === '-' ? <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span> : v}
                       </td>
                     ))}
                   </tr>
@@ -176,6 +219,7 @@ export const PricingPage = () => {
           </div>
         </div>
 
+        {/* FAQ */}
         <div className="mb-12">
           <h2 className="text-xl font-bold text-white text-center mb-6">常见问题</h2>
           <div className="space-y-2 max-w-2xl mx-auto">
@@ -197,7 +241,7 @@ export const PricingPage = () => {
         </div>
 
         <p className="text-center text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
-          所有方案均支持7天无理由退款 · 学生凭学生证可享8折优惠
+          所有方案均支持7天无理由退款 · 学生凭学生证可享学员版8折优惠 · 随时取消订阅
         </p>
       </div>
     </div>

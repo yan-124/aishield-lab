@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Play, Sword, Building, FileCheck, Settings, GraduationCap, ChevronRight, Lock } from 'lucide-react';
+import { useState } from 'react';
+import { Play, Sword, Building, FileCheck, Settings, GraduationCap } from 'lucide-react';
 
 // 5大方向分类，与职业评估10岗位一一对应
 const VIDEO_CATEGORIES = [

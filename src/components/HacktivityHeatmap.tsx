@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Flame, Trophy, Zap } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 /* -- Generate mock activity data (past 52 weeks) -- */
-function generateActivityData() {
-  const data = {}
+function generateActivityData(): Record<string, number> {
+  const data: Record<string, number> = {}
   const now = new Date()
   for (let i = 365; i >= 0; i--) {
     const d = new Date(now)
@@ -36,7 +36,7 @@ const ACTIVITY_COLORS = [
   'rgba(192,132,252,0.90)',
 ]
 
-function getColor(count) {
+function getColor(count: number): string {
   if (count === 0) return ACTIVITY_COLORS[0]
   if (count === 1) return ACTIVITY_COLORS[1]
   if (count <= 2) return ACTIVITY_COLORS[2]
@@ -47,18 +47,34 @@ function getColor(count) {
 
 const MONTH_LABELS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
 
+interface CellData {
+  date: string
+  count: number
+}
+
+interface WeekData {
+  label: string
+  weekIdx: number
+}
+
+interface TooltipData {
+  date: string
+  count: number
+  pos: { x: number; y: number }
+}
+
 export default function HacktivityHeatmap() {
-  const [hoveredCell, setHoveredCell] = useState(null)
+  const [hoveredCell, setHoveredCell] = useState<TooltipData | null>(null)
   const activityData = useMemo(() => generateActivityData(), [])
 
-  const weeks = []
+  const weeks: CellData[][] = []
   const now = new Date()
   const startDate = new Date(now)
   startDate.setDate(startDate.getDate() - 364)
   startDate.setDate(startDate.getDate() - startDate.getDay())
 
   let currentDate = new Date(startDate)
-  let currentWeek = []
+  let currentWeek: CellData[] = []
   while (currentDate <= now || currentWeek.length > 0) {
     const key = currentDate.toISOString().split("T")[0]
     const count = activityData[key] ?? 0
@@ -72,10 +88,11 @@ export default function HacktivityHeatmap() {
     if (currentWeek.length === 0 && currentDate > now) break
   }
 
-  const totalSolves = Object.values(activityData).reduce((s, c) => s + c, 0)
-  const activeDays = Object.values(activityData).filter(c => c > 0).length
+  const values = Object.values(activityData)
+  const totalSolves = values.reduce((s, c) => s + c, 0)
+  const activeDays = values.filter(c => c > 0).length
 
-  const monthPositions = []
+  const monthPositions: WeekData[] = []
   let lastMonth = -1
   weeks.forEach((week, wi) => {
     const midDate = new Date(week[0].date)

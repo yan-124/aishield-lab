@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { ToastProvider } from './components/Toast'
 import { Navigation } from './components/Navigation'
 import { RegisterModal } from './components/RegisterModal'
 import { LoginModal } from './components/LoginModal'
@@ -7,7 +8,6 @@ import { KnowledgeBase } from './components/KnowledgeBase'
 import { KnowledgeDetail } from './components/KnowledgeDetail'
 import { VideoSection } from './components/VideoSection'
 import { RangeArena } from './components/RangeArena'
-import { InterviewArena } from './components/InterviewArena'
 import { InterviewCoach } from './components/InterviewCoach'
 import { CommunityFeed } from './components/CommunityFeed'
 import { EnterprisePage } from './components/EnterprisePage'
@@ -31,7 +31,7 @@ interface AppProps {
 }
 
 export const App = ({ onLoadComplete }: AppProps) => {
-  const { state, dispatch } = useAppContext()
+  const { state } = useAppContext()
 
   useEffect(() => {
     if (onLoadComplete) {
@@ -41,6 +41,11 @@ export const App = ({ onLoadComplete }: AppProps) => {
       return () => clearTimeout(timer)
     }
   }, [onLoadComplete])
+
+  // 切换页面时强制滚动到顶部（解决点击导航/卡片后页面停在中间的问题）
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [state.viewMode, state.currentArticleId])
 
   const renderPage = () => {
     switch (state.viewMode) {
@@ -70,15 +75,17 @@ export const App = ({ onLoadComplete }: AppProps) => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg-root)' }}>
-      <Navigation />
-      <div className="pt-16 pb-16 md:pb-0">
-        {renderPage()}
+    <ToastProvider>
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg-root)' }}>
+        <Navigation />
+        <div className="pt-16 pb-16 md:pb-0">
+          {renderPage()}
+        </div>
+        <CommandPalette />
+        <ShieldyAssistant />
+        {state.showLogin && <LoginModal />}
+        <RegisterModal />
       </div>
-      <CommandPalette />
-      <ShieldyAssistant />
-      {state.showLogin && <LoginModal />}
-      <RegisterModal />
-    </div>
+    </ToastProvider>
   )
 }

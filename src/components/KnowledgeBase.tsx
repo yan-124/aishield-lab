@@ -2,7 +2,7 @@
 import { useAppContext } from '../context/AppContext';
 import type { KnowledgeCategory, KnowledgeArticle } from '../types';
 import {
-  BookOpen, HelpCircle, Search, ArrowRight,
+  BookOpen, Search, ArrowRight,
   ShieldAlert, Swords, Brain, Lock, Scale, Crosshair,
   Clock,
 } from 'lucide-react';
@@ -72,15 +72,6 @@ const catIconMap: Record<string, React.ReactNode> = {
   'data-privacy': <Lock size={18} />,
   'compliance': <Scale size={18} />,
   'red-team': <Crosshair size={18} />,
-};
-
-const catIconMapLg: Record<string, React.ReactNode> = {
-  'prompt-injection': <ShieldAlert size={22} />,
-  'adversarial': <Swords size={22} />,
-  'model-safety': <Brain size={22} />,
-  'data-privacy': <Lock size={22} />,
-  'compliance': <Scale size={22} />,
-  'red-team': <Crosshair size={22} />,
 };
 
 export const KnowledgeBase = ({ compact = false }: { compact?: boolean }) => {

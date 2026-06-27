@@ -22,14 +22,14 @@ import {
   Vector3,
   WebGLRenderer,
   three_module_exports
-} from "./chunk-FKBRZBJI.js";
+} from "./chunk-Z34OPN6T.js";
 import {
   require_react
-} from "./chunk-QTVD6AVW.js";
+} from "./chunk-OC5S6P4L.js";
 import {
   __commonJS,
   __toESM
-} from "./chunk-PR4QN5HX.js";
+} from "./chunk-SNAQBZPT.js";
 
 // node_modules/react-reconciler/cjs/react-reconciler-constants.development.js
 var require_react_reconciler_constants_development = __commonJS({

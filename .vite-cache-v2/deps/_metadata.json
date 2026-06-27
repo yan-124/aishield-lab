@@ -1,94 +1,97 @@
 {
-  "hash": "398c5c6a",
+  "hash": "fa1983e3",
   "configHash": "3efd1857",
-  "lockfileHash": "32da0e26",
-  "browserHash": "dbcd836f",
+  "lockfileHash": "411fd802",
+  "browserHash": "ea74f1b2",
   "optimized": {
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "cb1a5a98",
+      "fileHash": "861bc842",
       "needsInterop": true
     },
     "react-dom": {
       "src": "../../node_modules/react-dom/index.js",
       "file": "react-dom.js",
-      "fileHash": "282cdbcf",
+      "fileHash": "88f87e69",
       "needsInterop": true
     },
     "react/jsx-dev-runtime": {
       "src": "../../node_modules/react/jsx-dev-runtime.js",
       "file": "react_jsx-dev-runtime.js",
-      "fileHash": "d0f66c87",
+      "fileHash": "cb171a0b",
       "needsInterop": true
     },
     "react/jsx-runtime": {
       "src": "../../node_modules/react/jsx-runtime.js",
       "file": "react_jsx-runtime.js",
-      "fileHash": "193a7f56",
+      "fileHash": "5db9ffdc",
       "needsInterop": true
+    },
+    "@react-three/fiber": {
+      "src": "../../node_modules/@react-three/fiber/dist/react-three-fiber.esm.js",
+      "file": "@react-three_fiber.js",
+      "fileHash": "7756f54e",
+      "needsInterop": false
+    },
+    "dompurify": {
+      "src": "../../node_modules/dompurify/dist/purify.es.mjs",
+      "file": "dompurify.js",
+      "fileHash": "2308780f",
+      "needsInterop": false
     },
     "framer-motion": {
       "src": "../../node_modules/framer-motion/dist/es/index.mjs",
       "file": "framer-motion.js",
-      "fileHash": "3bcb96fc",
+      "fileHash": "31c2dd3b",
       "needsInterop": false
     },
     "lucide-react": {
       "src": "../../node_modules/lucide-react/dist/esm/lucide-react.mjs",
       "file": "lucide-react.js",
-      "fileHash": "c9252f2d",
+      "fileHash": "a39b574e",
+      "needsInterop": false
+    },
+    "pdfjs-dist": {
+      "src": "../../node_modules/pdfjs-dist/build/pdf.mjs",
+      "file": "pdfjs-dist.js",
+      "fileHash": "2251fa1d",
       "needsInterop": false
     },
     "react-dom/client": {
       "src": "../../node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "a6042854",
+      "fileHash": "a552459c",
       "needsInterop": true
     },
     "three": {
       "src": "../../node_modules/three/build/three.module.js",
       "file": "three.js",
-      "fileHash": "8df54a37",
-      "needsInterop": false
-    },
-    "three/addons/loaders/GLTFLoader.js": {
-      "src": "../../node_modules/three/examples/jsm/loaders/GLTFLoader.js",
-      "file": "three_addons_loaders_GLTFLoader__js.js",
-      "fileHash": "45d07c8c",
-      "needsInterop": false
-    },
-    "@react-three/fiber": {
-      "src": "../../node_modules/@react-three/fiber/dist/react-three-fiber.esm.js",
-      "file": "@react-three_fiber.js",
-      "fileHash": "d8aaa61f",
+      "fileHash": "f7af6a0b",
       "needsInterop": false
     },
     "three/examples/jsm/loaders/GLTFLoader.js": {
       "src": "../../node_modules/three/examples/jsm/loaders/GLTFLoader.js",
       "file": "three_examples_jsm_loaders_GLTFLoader__js.js",
-      "fileHash": "461afd47",
+      "fileHash": "800b2656",
       "needsInterop": false
     }
   },
   "chunks": {
-    "chunk-K7US7FQN": {
-      "file": "chunk-K7US7FQN.js"
+    "chunk-B2HMOCGO": {
+      "file": "chunk-B2HMOCGO.js"
     },
-    "chunk-A57JMF2K": {
-      "file": "chunk-A57JMF2K.js"
+    "chunk-Z34OPN6T": {
+      "file": "chunk-Z34OPN6T.js"
     },
-    "chunk-FKBRZBJI": {
-      "file": "chunk-FKBRZBJI.js"
+    "chunk-KDUSVCWO": {
+      "file": "chunk-KDUSVCWO.js"
     },
-    "chunk-YMDWH563": {
-      "file": "chunk-YMDWH563.js"
+    "chunk-OC5S6P4L": {
+      "file": "chunk-OC5S6P4L.js"
     },
-    "chunk-QTVD6AVW": {
-      "file": "chunk-QTVD6AVW.js"
-    },
-    "chunk-PR4QN5HX": {
-      "file": "chunk-PR4QN5HX.js"
+    "chunk-SNAQBZPT": {
+      "file": "chunk-SNAQBZPT.js"
     }
   }
 }

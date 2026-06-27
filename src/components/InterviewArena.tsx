@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, RotateCcw, User, Bot, MessageCircle, Lightbulb, Loader2, FileText, Upload, X, Sparkles } from 'lucide-react'
+import { useToast } from './Toast'
 
 /* ═══════════════════════════════════════════════════════════════
    AIShield Lab — 双AI面试训练场 v4
@@ -267,13 +268,14 @@ function FileUploadBar({
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
+  const { showToast } = useToast()
 
   const handleFile = async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase()
     
     // DOCX 暂不支持前端解析，提示用户转格式
     if (ext === 'docx' || ext === 'doc') {
-      alert('暂不支持 .docx/.doc 格式，请将内容复制到 .txt 或 .md 文件后上传')
+      showToast('暂不支持 .docx/.doc 格式，请将内容复制到 .txt 或 .md 文件后上传', 'warning')
       return
     }
     if (!ext || !['txt', 'pdf', 'md'].includes(ext)) return
@@ -293,9 +295,9 @@ function FileUploadBar({
         }
         const isJD = /jd|职位|岗位|招聘|job.*description/i.test(file.name)
         onUpload({ name: file.name, content: text.slice(0, 8000), type: isJD ? 'jd' : 'resume' })
-      } catch (e) {
+        } catch (e) {
         console.error('PDF parse error:', e)
-        alert('PDF 解析失败，请将内容复制到 .txt 文件后上传')
+        showToast('PDF 解析失败，请将内容复制到 .txt 文件后上传', 'error')
       }
       return
     }

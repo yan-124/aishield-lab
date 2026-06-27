@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Building2, Users, Zap, Mail, ArrowRight, CheckCircle, Star } from 'lucide-react';
+import { Shield, Building2, Users, Zap, ArrowRight, CheckCircle, Star } from 'lucide-react';
 
 export const EnterprisePage = () => {
   const [email, setEmail] = useState('');

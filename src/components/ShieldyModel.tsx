@@ -39,7 +39,7 @@ function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Grou
 }
 
 /* ── Model with idle animation ── */
-function AnimatedModel({ model }: { model: THREE.Group }) {
+export function AnimatedModel({ model }: { model: THREE.Group }) {
   const groupRef = useRef<THREE.Group>(null!)
   const tRef = useRef(0)
   useFrame((_, delta) => {
@@ -224,7 +224,7 @@ const MODEL_URLS = [
 // 模型缩放配置：第二个模型减小5%
 const MODEL_SCALE_MULTIPLIERS = [1.0, 0.95, 1.0]
 
-function ShieldyScene() {
+export function ShieldyScene() {
   const [model, setModel] = useState<THREE.Group | null>(null)
   const [hasError, setHasError] = useState(false)
 

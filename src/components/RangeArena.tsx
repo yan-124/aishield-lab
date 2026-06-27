@@ -19,68 +19,20 @@ const ChatResponseRenderer = ({ content }: { content: string }) => {
   }
 
   if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    // 优先展示 JSON 中的可读文本字段
+    const displayText =
+      typeof parsed.message === 'string' ? parsed.message :
+      typeof parsed.reply === 'string' ? parsed.reply :
+      typeof parsed.response === 'string' ? parsed.response :
+      typeof parsed.content === 'string' ? parsed.content :
+      typeof parsed.text === 'string' ? parsed.text :
+      JSON.stringify(parsed, null, 2);
+
     return (
-    <div className="space-y-4">
-      {/* 紧凑进度条 */}
-      <div className="flex items-center gap-3 px-1">
-        <div className="flex-1 h-2 rounded-full bg-gray-700/50 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-500" style={{ width: `${(completedCount / LEVELS.length) * 100}%` }} />
-        </div>
-        <span className="text-xs text-gray-400 whitespace-nowrap">{completedCount}/{LEVELS.length}</span>
+      <div className="whitespace-pre-wrap text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>
+        {displayText}
       </div>
-
-      {/* 模型筛选 */}
-      <div className="flex flex-wrap gap-1.5">
-        {MODEL_GROUPS.map(g => (
-          <button key={g.id} onClick={() => setActiveModelGroup(g.id)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${activeModelGroup === g.id ? 'bg-indigo-500/30 text-indigo-300 ring-1 ring-indigo-500/50' : 'bg-gray-700/40 text-gray-400 hover:bg-gray-700/60'}`}>
-            {g.icon} {g.name}
-          </button>
-        ))}
-      </div>
-
-      {/* OWASP 模块筛选 */}
-      <div className="flex flex-wrap gap-1.5">
-        <button onClick={() => setActiveModule('all')}
-          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${activeModule === 'all' ? 'bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50' : 'bg-gray-700/40 text-gray-400 hover:bg-gray-700/60'}`}>
-          全部
-        </button>
-        {MODULES.map(m => (
-          <button key={m.id} onClick={() => setActiveModule(m.id)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${activeModule === m.id ? 'bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50' : 'bg-gray-700/40 text-gray-400 hover:bg-gray-700/60'}`}>
-            {m.icon} {m.label}
-          </button>
-        ))}
-      </div>
-
-      {/* 关卡卡片网格 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        {filtered.map(level => {
-          const completed = state.completedLevels.has(level.id);
-          const dc = diffColors[level.difficulty] || '#6B7280';
-          return (
-            <div key={level.id} onClick={() => dispatch({ type: 'SELECT_LEVEL', payload: level.id })}
-              className={`relative p-3 rounded-lg border cursor-pointer transition-all hover:scale-[1.02] ${completed ? 'border-green-500/40 bg-green-500/5' : 'border-gray-700/50 bg-gray-800/40 hover:border-gray-600/50'}`}>
-              <div className="flex items-start gap-2">
-                <span className="text-lg">{level.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold" style={{ color: dc }}>#{level.number}</span>
-                    <span className="text-sm font-medium text-gray-200 truncate">{level.name}</span>
-                    {completed && <span className="text-green-400 text-xs">✓</span>}
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700/60 text-gray-400">{level.owasp}</span>
-                    <span className="text-[10px] text-gray-500">{level.attackType}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );;
+    );
   }
 
   return (
@@ -249,39 +201,32 @@ const MODULES = [
   { id: 'unbounded-attack', label: 'LLM09-10 虚假信息', icon: '⚠️' },
 ];
 
-const MODEL_GROUPS = [
-  { id: 'all', name: '全部', icon: '🎯', startLevel: 1, endLevel: 25, freeCount: 0 },
-  { id: 'basic', name: '基础', icon: '🟢', startLevel: 1, endLevel: 10, freeCount: 3 },
-  { id: 'intermediate', name: '进阶', icon: '🟡', startLevel: 11, endLevel: 18, freeCount: 0 },
-  { id: 'advanced', name: '高级', icon: '🔴', startLevel: 19, endLevel: 25, freeCount: 0 },
-];
-
 const LEVELS = [
-  { id: '1', number: 1, name: 'Agent角色扮演', attackType: '身份扮演绕过', difficulty: 1, icon: '🎭', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: '伪装系统指令接管Agent行为' },
-  { id: '2', number: 2, name: '开发者模式注入', attackType: '系统提示注入', difficulty: 2, icon: '🧪', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: '利用伪调试指令突破Agent安全边界' },
-  { id: '3', number: 3, name: '虚构场景绕过', attackType: '信任建立攻击', difficulty: 3, icon: '🎪', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: '伪装安全研究员骗取Agent内部协议' },
-  { id: '4', number: 4, name: '编码混淆攻击', attackType: 'Base64/编码绕过', difficulty: 4, icon: '🔀', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: 'Base64/ROT13编码绕过Agent输入过滤' },
-  { id: '5', number: 5, name: '多语言绕过', attackType: '多语言绕过', difficulty: 4, icon: '🌍', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', desc: '切换语言规避Agent安全过滤' },
-  { id: '6', number: 6, name: '系统提示提取', attackType: '直接套取提示词', difficulty: 2, icon: '🔍', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', desc: '直接套取Agent系统提示词与内部规则' },
-  { id: '7', number: 7, name: '训练数据泄露', attackType: '记忆提取攻击', difficulty: 3, icon: '📦', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', desc: '诱导Agent输出训练记忆中的敏感信息' },
-  { id: '8', number: 8, name: '上下文窃取', attackType: '多轮对话提取', difficulty: 4, icon: '🕳', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', desc: '从多轮对话中逐步提取隐藏上下文' },
-  { id: '9', number: 9, name: '恶意插件注入', attackType: '第三方工具指令注入', difficulty: 3, icon: '🔌', module: 'supply-chain', owasp: 'LLM03', owaspName: '供应链污染', desc: '通过恶意插件向Agent注入隐藏指令' },
-  { id: '10', number: 10, name: '知识库投毒', attackType: 'RAG数据源污染', difficulty: 4, icon: '☠', module: 'supply-chain', owasp: 'LLM04', owaspName: '数据与模型投毒', desc: '向Agent知识库注入虚假信息操控输出' },
-  { id: '11', number: 11, name: '模型后门触发', attackType: '预设后门激活', difficulty: 5, icon: '🚨', module: 'supply-chain', owasp: 'LLM04', owaspName: '数据与模型投毒', desc: '触发模型预设后门执行隐藏指令' },
-  { id: '12', number: 12, name: '输出过滤绕过', attackType: '输出格式绕过', difficulty: 5, icon: '🔒', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', desc: '绕过Agent输出端XSS/敏感词检测' },
-  { id: '13', number: 13, name: 'XSS输出注入', attackType: '输出格式注入', difficulty: 3, icon: '💉', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', desc: '绕过输出转义注入恶意脚本' },
-  { id: '14', number: 14, name: '格式欺骗输出', attackType: 'Markdown/格式欺骗', difficulty: 4, icon: '📋', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', desc: '利用Markdown格式绕过内容安全检测' },
-  { id: '15', number: 15, name: '质疑刺激突破', attackType: '心理操控绕过', difficulty: 3, icon: '⛿', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', desc: '激励让Agent突破行为限制' },
-  { id: '16', number: 16, name: '道德绑架绕过', attackType: '情感操控攻击', difficulty: 3, icon: '💀', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', desc: '情感操控绕过Agent安全决策' },
-  { id: '17', number: 17, name: 'Agent权限越狱', attackType: '指令冲突攻击', difficulty: 5, icon: '🔑', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', desc: '覆盖安全护栏获取未授权操作权限' },
-  { id: '18', number: 18, name: '系统提示词泄露', attackType: '间接提取系统指令', difficulty: 4, icon: '📜', module: 'excessive-agency', owasp: 'LLM07', owaspName: '系统提示泄露', desc: '通过间接方式提取Agent系统提示词' },
-  { id: '19', number: 19, name: '分步拆解提取', attackType: '指令分解攻击', difficulty: 4, icon: '🔪', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', desc: '将敏感请求拆解为无害步骤逐步窃取' },
-  { id: '20', number: 20, name: '嵌入空间攻击', attackType: '相似度检索欺骗', difficulty: 4, icon: '🌐', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', desc: '利用嵌入相似度检索敏感文档片段' },
-  { id: '21', number: 21, name: '跨文档信息关联', attackType: '多文档关联推断', difficulty: 5, icon: '🔗', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', desc: '通过多文档关联推断出敏感信息' },
-  { id: '22', number: 22, name: '对抗样本注入', attackType: '对抗嵌入攻击', difficulty: 5, icon: '🛡', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', desc: '构造对抗样本绕过嵌入安全检测' },
-  { id: '23', number: 23, name: '事实注入欺骗', attackType: '虚假事实注入', difficulty: 3, icon: '🎯', module: 'unbounded-attack', owasp: 'LLM09', owaspName: '虚假信息', desc: '注入虚假事实让Agent输出错误结论' },
-  { id: '24', number: 24, name: '幻觉利用', attackType: '模型幻觉构造', difficulty: 4, icon: '🌀', module: 'unbounded-attack', owasp: 'LLM09', owaspName: '虚假信息', desc: '利用模型幻觉输出虚假权威信息' },
-  { id: '25', number: 25, name: '递归调用攻击', attackType: 'Agent自我调用消耗', difficulty: 5, icon: '⛿', module: 'unbounded-attack', owasp: 'LLM10', owaspName: '无界消耗', desc: '诱导Agent无限递归调用耗尽资源' },
+  { id: '1', number: 1, name: 'Agent角色扮演', attackType: '身份扮演绕过', difficulty: 1, icon: '🎭', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', description: '伪装系统指令接管Agent行为' },
+  { id: '2', number: 2, name: '开发者模式注入', attackType: '系统提示注入', difficulty: 2, icon: '🧪', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', description: '利用伪调试指令突破Agent安全边界' },
+  { id: '3', number: 3, name: '虚构场景绕过', attackType: '信任建立攻击', difficulty: 3, icon: '🎪', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', description: '伪装安全研究员骗取Agent内部协议' },
+  { id: '4', number: 4, name: '编码混淆攻击', attackType: 'Base64/编码绕过', difficulty: 4, icon: '🔀', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', description: 'Base64/ROT13编码绕过Agent输入过滤' },
+  { id: '5', number: 5, name: '多语言绕过', attackType: '多语言绕过', difficulty: 4, icon: '🌍', module: 'prompt-injection', owasp: 'LLM01', owaspName: '提示词注入', description: '切换语言规避Agent安全过滤' },
+  { id: '6', number: 6, name: '系统提示提取', attackType: '直接套取提示词', difficulty: 2, icon: '🔍', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', description: '直接套取Agent系统提示词与内部规则' },
+  { id: '7', number: 7, name: '训练数据泄露', attackType: '记忆提取攻击', difficulty: 3, icon: '📦', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', description: '诱导Agent输出训练记忆中的敏感信息' },
+  { id: '8', number: 8, name: '上下文窃取', attackType: '多轮对话提取', difficulty: 4, icon: '🕳', module: 'sensitive-info', owasp: 'LLM02', owaspName: '敏感信息泄露', description: '从多轮对话中逐步提取隐藏上下文' },
+  { id: '9', number: 9, name: '恶意插件注入', attackType: '第三方工具指令注入', difficulty: 3, icon: '🔌', module: 'supply-chain', owasp: 'LLM03', owaspName: '供应链污染', description: '通过恶意插件向Agent注入隐藏指令' },
+  { id: '10', number: 10, name: '知识库投毒', attackType: 'RAG数据源污染', difficulty: 4, icon: '☠', module: 'supply-chain', owasp: 'LLM04', owaspName: '数据与模型投毒', description: '向Agent知识库注入虚假信息操控输出' },
+  { id: '11', number: 11, name: '模型后门触发', attackType: '预设后门激活', difficulty: 5, icon: '🚨', module: 'supply-chain', owasp: 'LLM04', owaspName: '数据与模型投毒', description: '触发模型预设后门执行隐藏指令' },
+  { id: '12', number: 12, name: '输出过滤绕过', attackType: '输出格式绕过', difficulty: 5, icon: '🔒', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', description: '绕过Agent输出端XSS/敏感词检测' },
+  { id: '13', number: 13, name: 'XSS输出注入', attackType: '输出格式注入', difficulty: 3, icon: '💉', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', description: '绕过输出转义注入恶意脚本' },
+  { id: '14', number: 14, name: '格式欺骗输出', attackType: 'Markdown/格式欺骗', difficulty: 4, icon: '📋', module: 'improper-output', owasp: 'LLM05', owaspName: '不当输出处理', description: '利用Markdown格式绕过内容安全检测' },
+  { id: '15', number: 15, name: '质疑刺激突破', attackType: '心理操控绕过', difficulty: 3, icon: '⛿', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', description: '激励让Agent突破行为限制' },
+  { id: '16', number: 16, name: '道德绑架绕过', attackType: '情感操控攻击', difficulty: 3, icon: '💀', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', description: '情感操控绕过Agent安全决策' },
+  { id: '17', number: 17, name: 'Agent权限越狱', attackType: '指令冲突攻击', difficulty: 5, icon: '🔑', module: 'excessive-agency', owasp: 'LLM06', owaspName: '过度代理', description: '覆盖安全护栏获取未授权操作权限' },
+  { id: '18', number: 18, name: '系统提示词泄露', attackType: '间接提取系统指令', difficulty: 4, icon: '📜', module: 'excessive-agency', owasp: 'LLM07', owaspName: '系统提示泄露', description: '通过间接方式提取Agent系统提示词' },
+  { id: '19', number: 19, name: '分步拆解提取', attackType: '指令分解攻击', difficulty: 4, icon: '🔪', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', description: '将敏感请求拆解为无害步骤逐步窃取' },
+  { id: '20', number: 20, name: '嵌入空间攻击', attackType: '相似度检索欺骗', difficulty: 4, icon: '🌐', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', description: '利用嵌入相似度检索敏感文档片段' },
+  { id: '21', number: 21, name: '跨文档信息关联', attackType: '多文档关联推断', difficulty: 5, icon: '🔗', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', description: '通过多文档关联推断出敏感信息' },
+  { id: '22', number: 22, name: '对抗样本注入', attackType: '对抗嵌入攻击', difficulty: 5, icon: '🛡', module: 'rag-attack', owasp: 'LLM08', owaspName: '向量与嵌入攻击', description: '构造对抗样本绕过嵌入安全检测' },
+  { id: '23', number: 23, name: '事实注入欺骗', attackType: '虚假事实注入', difficulty: 3, icon: '🎯', module: 'unbounded-attack', owasp: 'LLM09', owaspName: '虚假信息', description: '注入虚假事实让Agent输出错误结论' },
+  { id: '24', number: 24, name: '幻觉利用', attackType: '模型幻觉构造', difficulty: 4, icon: '🌀', module: 'unbounded-attack', owasp: 'LLM09', owaspName: '虚假信息', description: '利用模型幻觉输出虚假权威信息' },
+  { id: '25', number: 25, name: '递归调用攻击', attackType: 'Agent自我调用消耗', difficulty: 5, icon: '⛿', module: 'unbounded-attack', owasp: 'LLM10', owaspName: '无界消耗', description: '诱导Agent无限递归调用耗尽资源' },
 ];
 const diffColors: Record<number, string> = { 1: '#10B981', 2: '#3B82F6', 3: '#F59E0B', 4: '#F97316', 5: '#EF4444' };
 const difficultyStars = (d: number) => '★'.repeat(d) + '☆'.repeat(5 - d);
@@ -299,16 +244,6 @@ const THEME_COLORS = {
   darkBg: '#070B14',
   cardBg: 'rgba(255,255,255,0.03)',
   border: 'rgba(255,255,255,0.08)',
-};
-
-const SECURITY_ICONS: Record<string, string> = {
-  'prompt-injection': '💉',
-  'sensitive-info': '🔓',
-  'supply-chain': '📦',
-  'improper-output': '🔒',
-  'excessive-agency': '⚡',
-  'rag-attack': '🌐',
-  'unbounded-attack': '⚠️',
 };
 
 const OWASP_BADGE_COLORS: Record<string, string> = {
@@ -366,8 +301,6 @@ export const RangeArena = () => {
     return moduleMatch && groupMatch;
   });
 
-  const completedCount = LEVELS.filter(l => state.completedLevels.has(l.id)).length;
-
   if (state.viewMode === 'range' || !state.currentLevel) {
     const completedSet = getCompletedLevels();
     const completedCount = completedSet.size;
@@ -394,64 +327,96 @@ export const RangeArena = () => {
           style={{ background: 'radial-gradient(circle, #8B5CF6 0%, #06B6D4 50%, transparent 70%)' }}
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-          <div className="mb-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+          {/* 标题 + 进度条：合并到一行，减少占用 */}
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-lg" style={{ background: 'rgba(139,92,246,0.1)' }}>
-                <span className="text-2xl">🛡️</span>
+              <div className="p-2 rounded-lg" style={{ background: 'rgba(139,92,246,0.1)' }}>
+                <span className="text-xl">🛡️</span>
               </div>
               <div>
-                <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide"
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
                   style={{ color: '#A78BFA', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
                   AI SECURITY RANGE
                 </span>
-                <h1 className="text-4xl font-black mb-1" style={{ color: '#A78BFA' }}>AI安全靶场</h1>
+                <h1 className="text-2xl sm:text-3xl font-black" style={{ color: '#A78BFA' }}>AI安全靶场</h1>
               </div>
             </div>
-        </div>
 
-
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button onClick={() => setActiveModelGroup('basic')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'basic' ? 'bg-green-500/30 text-green-300 ring-1 ring-green-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-            🟢 基础篇 (1-10)
-          </button>
-          <button onClick={() => setActiveModelGroup('intermediate')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'intermediate' ? 'bg-yellow-500/30 text-yellow-300 ring-1 ring-yellow-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-            🟡 进阶篇 (11-18)
-          </button>
-          <button onClick={() => setActiveModelGroup('advanced')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModelGroup === 'advanced' ? 'bg-red-500/30 text-red-300 ring-1 ring-red-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-            🔴 高级篇 (19-25)
-          </button>
-
-          {/* 学习进度 — 内联在按钮行右侧 */}
-          <div className="ml-auto px-2.5 py-1 rounded-lg flex items-center gap-2 shrink-0"
-            style={{ background: THEME_COLORS.cardBg, border: `1px solid ${THEME_COLORS.border}` }}>
-            <span className="text-xs shrink-0">🏆</span>
-            <span className="text-[11px] font-semibold text-white">学习进度</span>
-            <span className="text-[11px] font-bold" style={{ color: THEME_COLORS.success }}>{completedCount}/{LEVELS.length}</span>
-            <div className="w-16 h-1.5 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <div className="h-full rounded-full"
-                style={{
-                  width: `${(completedCount / LEVELS.length) * 100}%`,
-                  background: 'linear-gradient(90deg, #8B5CF6, #06B6D4, #10B981)',
-                }} />
+            <div className="flex-1 max-w-md">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-medium" style={{ color: 'rgba(167,139,250,0.9)' }}>
+                  靶场进度
+                </span>
+                <span className="text-[10px]" style={{ color: 'rgba(203,213,225,0.5)' }}>
+                  {completedCount}/25 关 · {Math.round((completedCount / 25) * 100)}%
+                </span>
+              </div>
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div className="h-full rounded-full transition-all duration-700 ease-out relative"
+                  style={{
+                    width: `${Math.round((completedCount / 25) * 100)}%`,
+                    background: completedCount === 0
+                      ? 'rgba(107,114,128,0.3)'
+                      : completedCount < 8
+                      ? 'linear-gradient(90deg, #F472B6, #EC4899)'
+                      : completedCount < 20
+                      ? 'linear-gradient(90deg, #A78BFA, #60A5FA)'
+                      : 'linear-gradient(90deg, #34D399, #10B981)',
+                  }}>
+                  {completedCount > 0 && (
+                    <div className="absolute inset-0 rounded-full" style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+                      animation: 'progress-shine 2s ease-in-out infinite',
+                    }} />
+                  )}
+                </div>
+              </div>
+              <p className="mt-1 text-[10px]" style={{ color: 'rgba(203,213,225,0.4)' }}>
+                {completedCount === 0
+                  ? '🚀 开始你的第一关挑战吧！'
+                  : completedCount < 5
+                  ? '💪 不错的开始，继续加油！'
+                  : completedCount < 13
+                  ? '🔥 进展顺利，你已经超过一半用户！'
+                  : completedCount < 20
+                  ? '⚡ 高手之路，离通关不远了！'
+                  : completedCount < 25
+                  ? '🏆 接近通关！最后一击！'
+                  : '🎉 恭喜通关全部25关！你是真正的安全专家！'}
+              </p>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap gap-2 mb-8">
-          <button onClick={() => setActiveModule('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModule === 'all' ? 'bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-            全部模块
-          </button>
-          {MODULES.map(m => (
-            <button key={m.id} onClick={() => setActiveModule(m.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeModule === m.id ? 'bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-              {SECURITY_ICONS[m.id] || m.icon} {m.label}
+        {/* 筛选器：紧凑化，模块和难度合并 */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5 p-3 rounded-xl"
+          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+            {[
+              { id: 'all', label: '全部' },
+              { id: 'basic', label: '基础 1-10' },
+              { id: 'intermediate', label: '进阶 11-18' },
+              { id: 'advanced', label: '高级 19-25' },
+            ].map(g => (
+              <button key={g.id} onClick={() => setActiveModelGroup(g.id)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-all ${activeModelGroup === g.id ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                {g.label}
+              </button>
+            ))}
+          </div>
+          <div className="hidden sm:block w-px h-4" style={{ background: 'rgba(255,255,255,0.08)' }} />
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+            <button onClick={() => setActiveModule('all')}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-all ${activeModule === 'all' ? 'bg-cyan-500/20 text-cyan-300' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+              全部模块
             </button>
-          ))}
+            {MODULES.map(m => (
+              <button key={m.id} onClick={() => setActiveModule(m.id)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-all ${activeModule === m.id ? 'bg-cyan-500/20 text-cyan-300' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -507,7 +472,7 @@ export const RangeArena = () => {
                   <span className="text-[9px] text-gray-500 truncate">{level.attackType}</span>
                 </div>
 
-                <p className="text-xs line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{level.desc}</p>
+                <p className="text-xs line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{level.description}</p>
 
                 <div className="flex items-center justify-between mt-auto">
                   <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>{level.owaspName}</span>
@@ -953,24 +918,32 @@ const RangeArenaLevel = () => {
         <div className="rounded-2xl p-4"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
           <div className="text-[10px] font-semibold uppercase tracking-widest mb-3"
-            style={{ color: 'rgba(255,255,255,0.3)' }}>关卡信息</div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg"
-              style={{ background: `${color}15`, color }}>
-              {level.number}
+            style={{ color: 'rgba(255,255,255,0.3)' }}>关卡目标</div>
+          <div className="space-y-3">
+            <div>
+              <div className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>OWASP 风险</div>
+              <div className="text-xs font-medium text-white">{level.owasp} · {level.owaspName}</div>
             </div>
             <div>
-              <div className="text-sm font-bold text-white">{level.name}</div>
-              <div className="text-[10px]" style={{ color }}>{difficultyStars(level.difficulty)}</div>
+              <div className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>攻击类型</div>
+              <span className="text-[10px] px-2 py-0.5 rounded-md"
+                style={{ background: `${color}12`, color, border: `1px solid ${color}25` }}>
+                {level.attackType}
+              </span>
+            </div>
+            <div>
+              <div className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>通关条件</div>
+              <div className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>通过 Prompt 注入获取通关密码，输入验证框完成通关</div>
+            </div>
+            <div>
+              <div className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>预计用时</div>
+              <div className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>15 - 30 分钟</div>
+            </div>
+            <div>
+              <div className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>你将学到</div>
+              <div className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>{level.description}</div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-1 mb-3">
-            <span className="text-[10px] px-2 py-0.5 rounded-md"
-              style={{ background: `${color}12`, color, border: `1px solid ${color}25` }}>
-              {level.attackType}
-            </span>
-          </div>
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{level.description}</p>
         </div>
 
         <div className="rounded-2xl overflow-hidden"

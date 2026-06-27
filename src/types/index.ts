@@ -22,20 +22,23 @@ export type ViewMode =
   | 'career-guide'
   | 'pricing'
   | 'credits'
+  | 'jobs'
   | 'admin';
 
 export type ThemeMode = 'dark' | 'light';
 
 export interface UserInfo {
   id: string;
-  email: string;
+  email?: string;
   nickname: string;
   avatar?: string;
   identity?: 'student' | 'professional' | 'career_change';
   goals?: string[];
   mfaEnabled?: boolean;
   isLoggedIn?: boolean;
+  isGuest?: boolean;
   painPoints?: string[];
+  token?: string;
 }
 
 export interface KnowledgeCategory {

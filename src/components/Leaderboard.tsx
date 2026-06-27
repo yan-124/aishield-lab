@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext'
 import { useRequireAuth } from '../hooks/useRequireAuth';
-import { RefreshCw, TrendingUp, TrendingDown, Minus, Trophy, Flame, Target, Zap, Crown } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { LeaderboardEntry } from '../types';
 
@@ -50,7 +50,7 @@ function getUserRealScore(): { completedLevels: number; score: number } {
 
 export const Leaderboard = () => {
   const { state, dispatch } = useAppContext()
-  const { isLoggedIn, checkAuth } = useRequireAuth();
+  useRequireAuth();
   const [sortKey, setSortKey] = useState<SortKey>('score');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('all');
   const [userScore, setUserScore] = useState(getUserRealScore());

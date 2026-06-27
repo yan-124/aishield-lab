@@ -3,9 +3,9 @@ import { useAppContext } from '../context/AppContext'
 import { KNOWLEDGE_ARTICLES } from './KnowledgeDetail'
 import type { ViewMode } from '../types'
 import {
-  Home, BookOpen, Play, Target, MessageCircle, Briefcase,
-  Newspaper, Search, Bell, ChevronDown, LogOut, User, Settings, Bot,
-  Building2, GraduationCap, Compass, Sun, Moon, Command, BarChart3 } from 'lucide-react'
+  Home, BookOpen, Play, Target, MessageCircle,
+  Search, Bell, ChevronDown, LogOut, User, Settings, Bot,
+  Building2, GraduationCap, Compass, BarChart3 } from 'lucide-react'
 
 const navItems = [
   { key: 'home', label: '首页', icon: Home },
