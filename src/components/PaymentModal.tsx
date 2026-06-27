@@ -5,7 +5,7 @@ import { X, CheckCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
 interface PaymentModalProps {
   onPaid: () => void
   onClose: () => void
-  amount?: number       // 金额，单位元，默认 19.90
+  amount?: number       // 金额，单位元，默认 29.90
   title?: string        // 商品名称
   creditsAmount?: number // 盾币数量（充值时使用）
 }
@@ -18,8 +18,8 @@ const MAX_POLL_DURATION = 5 * 60 * 1000 // 5分钟超时
 export const PaymentModal = ({
   onPaid,
   onClose,
-  amount = 9.90,
-  title = 'AIShield Lab - 职业引导完整报告',
+  amount = 29.90,
+  title = 'AIShield Lab - 一对一职业规划咨询',
   creditsAmount
 }: PaymentModalProps) => {
   const [state, setState] = useState<ModalState>('loading')
@@ -268,7 +268,7 @@ export const PaymentModal = ({
                 {!creditsAmount ? (
                   <>
                     <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      添加微信，发送<strong style={{ color: '#A78BFA' }}>订单号+简历</strong>，48h内出具诊断书
+                      添加微信，发送<strong style={{ color: '#A78BFA' }}>订单号</strong>，学长48h内联系你做1v1咨询
                     </p>
                     <img src="/wechat-qr.png" alt="微信二维码" className="w-32 h-32 rounded-xl mx-auto mb-3 object-cover" style={{ border: '1px solid rgba(16,185,129,0.2)' }} />
                     <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>

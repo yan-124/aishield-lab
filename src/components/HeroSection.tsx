@@ -224,7 +224,7 @@ export function HeroSection() {
                 <div className="flex-1 h-px rounded-full" style={{ background: 'linear-gradient(90deg, rgba(139,92,246,0.4), transparent)' }} />
               </div>
               <p className="text-base sm:text-lg lg:text-xl leading-[1.8] sm:leading-[2] mt-2" style={{ color: 'rgba(203,213,225,0.78)' }}>
-                25关Agent安全靶场实战 + OWASP LLM Top 10攻防演练 + 职业安全评估，专注AI Agent安全
+                25关Agent安全靶场实战 + OWASP LLM Top 10攻防演练 + 职业规划咨询，专注AI Agent安全
               </p>
             </motion.div>
 
@@ -261,7 +261,7 @@ export function HeroSection() {
                 <span className="relative z-10 text-[15px] sm:text-[17px] tracking-wide">进入靶场</span>
                 <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover:translate-x-1.5" strokeWidth={2.5} />
               </button>
-              {/* 次CTA：职业安全评估 — 低调紫色线框，与主CTA区分层级 */}
+              {/* 次CTA：职业规划咨询 — 低调紫色线框，与主CTA区分层级 */}
               <button onClick={() => {
                 dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' });
               }}
@@ -283,7 +283,7 @@ export function HeroSection() {
                   e.currentTarget.style.color = 'rgba(167,139,250,0.92)';
                 }}>
                 <ShieldCheck className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-300" strokeWidth={2} />
-                <span className="relative z-10 text-[15px] sm:text-[17px] tracking-wide">职业安全评估</span>
+                <span className="relative z-10 text-[15px] sm:text-[17px] tracking-wide">职业规划咨询</span>
                 <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover:translate-x-1.5" strokeWidth={2.5} />
               </button>
             </motion.div>

@@ -25,7 +25,6 @@ export const RegisterModal = () => {
     { label: '包含数字', ok: /[0-9]/.test(form.password) },
     { label: '包含特殊字符（!@#$%等）', ok: /[!@#$%^&*()_+\-=\[\]{}|;':",.<>/?~`]/.test(form.password) },
   ];
-  const pwdAllOk = pwdRules.every(r => r.ok) && form.password.length > 0;
 
   if (!state.showRegister) return null;
 

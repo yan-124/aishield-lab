@@ -1,101 +1,55 @@
 import { useState } from 'react'
 import { useAppContext } from '../context/AppContext'
 import { motion } from 'framer-motion'
-import { Check, Sparkles, ArrowLeft, Zap, Shield, Crown, ChevronRight, Users } from 'lucide-react'
+import { Check, Sparkles, ArrowLeft, Zap, Crown, ChevronRight, MessageCircle } from 'lucide-react'
 
 const plans = [
   {
     id: 'free',
-    name: '免费版',
+    name: '免费体验',
     price: '¥0',
     period: '',
     icon: Zap,
     color: '#60A5FA',
     badge: '',
-    desc: '体验靶场玩法，感受AI安全魅力',
+    desc: '全部学习功能，登录即用',
     features: [
-      { text: '3关靶场免费体验', included: true },
-      { text: '知识库浏览（部分）', included: true },
-      { text: '每日3次面试模拟', included: true },
-      { text: '社区讨论参与', included: true },
-      { text: '全部25关靶场', included: false },
-      { text: '无限次面试训练', included: false },
-      { text: 'AI能力图谱', included: false },
-      { text: '1对1学长答疑', included: false },
+      { text: '全部25关 Agent 安全靶场', included: true },
+      { text: 'AI安全知识库', included: true },
+      { text: '面试搭子（真题+简历）', included: true },
+      { text: '双AI面试训练场', included: true },
+      { text: 'Shieldy AI助教', included: true },
+      { text: '一对一职业规划咨询', included: false },
     ]
   },
   {
-    id: 'student',
-    name: '学员版',
-    price: '¥29',
-    period: '/月',
-    icon: Shield,
-    color: '#A78BFA',
-    badge: '推荐',
-    desc: '求职者首选，性价比最高',
-    features: [
-      { text: '全部25关靶场', included: true },
-      { text: '知识库全部文章', included: true },
-      { text: '无限次面试训练', included: true },
-      { text: 'AI能力图谱 + 学习路径', included: true },
-      { text: '认证模拟考试', included: true },
-      { text: 'promptfoo深度测试', included: false },
-      { text: '1对1学长答疑', included: false },
-      { text: '简历优化服务', included: false },
-    ]
-  },
-  {
-    id: 'expert',
-    name: '专家版',
-    price: '¥99',
-    period: '/月',
+    id: 'consult',
+    name: '一对一职业规划咨询',
+    price: '¥29.9',
+    period: '/次',
     icon: Crown,
-    color: '#FBBF24',
-    badge: '深度',
-    desc: '职场进阶，含1对1专属服务',
+    color: '#A78BFA',
+    badge: '热门',
+    desc: '学长亲自1V1，付款后48小时内交付',
     features: [
-      { text: '全部25关靶场', included: true },
-      { text: '无限次面试训练', included: true },
-      { text: 'AI能力图谱 + 学习路径', included: true },
-      { text: '认证模拟考试', included: true },
-      { text: 'promptfoo深度测试', included: true },
-      { text: '1对1学长答疑（每月2次）', included: true },
-      { text: '简历优化 + 内推机会', included: true },
-      { text: '企业定制靶场', included: false },
-    ]
-  },
-  {
-    id: 'enterprise',
-    name: '企业版',
-    price: '¥999',
-    period: '/月起',
-    icon: Users,
-    color: '#34D399',
-    badge: '定制',
-    desc: '企业级安全培训与团队管理',
-    features: [
-      { text: '全部专家版功能', included: true },
-      { text: '团队管理后台', included: true },
-      { text: '批量能力测评', included: true },
-      { text: '定制靶场关卡', included: true },
-      { text: 'API 接口调用', included: true },
-      { text: '安全评估报告定制', included: true },
-      { text: '专属安全顾问', included: true },
-      { text: '培训工作坊（季度）', included: true },
+      { text: '全部免费功能', included: true },
+      { text: '30分钟1v1语音咨询', included: true },
+      { text: '岗位定位建议', included: true },
+      { text: '学习路径规划', included: true },
+      { text: '简历/面试建议', included: true },
+      { text: '入行时间规划', included: true },
     ]
   }
 ]
 
 const FAQ = [
-  { q: '免费版够用吗？', a: '免费版可以体验前3关靶场和每日3次面试模拟，适合先感受平台风格。如果认真准备AI安全方向求职，建议开通学员版解锁全部内容。' },
-  { q: '学员版和专家版有什么区别？', a: '学员版适合自主学习的求职者；专家版额外包含promptfoo深度测试、1对1学长答疑（每月2次）和简历优化+内推机会，适合求职冲刺期。' },
-  { q: '可以随时取消订阅吗？', a: '支持随时取消，取消后当月仍可使用到月底。学员版/专家版支持7天无理由退款。' },
-  { q: '企业版最低几人起订？', a: '企业版5人起订，含团队管理后台和专属安全顾问。支持定制靶场关卡和企业培训工作坊，支持对公转账并可开具增值税发票。' },
-  { q: '内推机会是怎么运作的？', a: '专家版用户完成能力测评后，如达到合格线，学长和合作企业会提供内推机会。覆盖互联网、金融、安全厂商等多类型企业的 AI 安全团队。' },
-  { q: '支持哪些支付方式？', a: '目前支持微信支付和支付宝。企业版支持对公转账，可开具增值税发票。学生凭学生证可享学员版8折优惠。' },
+  { q: '免费版够用吗？', a: '免费版包含全部25关靶场、知识库、面试搭子、面试训练场和Shieldy助教，登录即可用，没有隐藏收费。如果需要一对一职业规划指导，可以预约29.9元的1v1咨询。' },
+  { q: '一对一咨询怎么预约？', a: '在「职业诊断」页面点「预约1v1咨询」按钮，微信/支付宝扫码支付。付款后学长会在48小时内联系你，安排语音咨询。' },
+  { q: '咨询是真人还是AI？', a: '真人。学长亲自根据你的情况做职业评估和规划建议，不是自动生成的报告。30分钟1v1语音咨询，覆盖岗位定位、学习路径、简历/面试建议、入行时间规划。' },
+  { q: '支持什么支付方式？', a: '目前支持微信支付和支付宝扫码支付。' },
 ]
 
-const TRUST_ITEMS = ['7天无理由退款', '学生证享8折', '随时取消订阅', '数据安全加密']
+const TRUST_ITEMS = ['48小时内交付', '学长亲自服务', '学习功能全免费', '数据安全加密']
 
 export const PricingPage = () => {
   const { dispatch } = useAppContext()
@@ -103,7 +57,7 @@ export const PricingPage = () => {
 
   return (
     <div className="min-h-screen" style={{ background: '#060B14' }}>
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-6 py-10">
         <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'home' })}
           className="flex items-center gap-2 text-sm cursor-pointer mb-8" style={{ color: 'rgba(255,255,255,0.4)' }}>
           <ArrowLeft size={16} /> 返回首页
@@ -121,7 +75,7 @@ export const PricingPage = () => {
                 PRICING
               </span>
               <h1 className="text-4xl font-black mb-1" style={{ color: '#A78BFA' }}>选择适合你的方案</h1>
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>AI安全求职专属 · 从入门到内推一条龙</p>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>学习全免费 · 1v1咨询29.9元</p>
             </div>
           </div>
         </div>
@@ -136,12 +90,12 @@ export const PricingPage = () => {
         </div>
 
         {/* pricing cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16 max-w-3xl mx-auto">
           {plans.map((plan, idx) => {
             const Icon = plan.icon
             return (
               <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
-                className="relative rounded-2xl p-5 flex flex-col"
+                className="relative rounded-2xl p-6 flex flex-col"
                 style={{
                   background: plan.badge ? 'linear-gradient(180deg, rgba(167,139,250,0.06) 0%, rgba(255,255,255,0.02) 100%)' : 'rgba(255,255,255,0.02)',
                   border: plan.badge ? `1px solid ${plan.color}33` : '1px solid rgba(255,255,255,0.06)',
@@ -167,56 +121,22 @@ export const PricingPage = () => {
                     </div>
                   ))}
                 </div>
-                <button className="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all hover:opacity-90"
-                  style={{
-                    background: plan.id === 'free' ? 'rgba(255,255,255,0.06)' : `linear-gradient(135deg, ${plan.color}, ${plan.color}cc)`,
-                    color: plan.id === 'free' ? 'rgba(255,255,255,0.5)' : '#0d1117',
-                    border: plan.id === 'free' ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                  }}>
-                  {plan.id === 'free' ? '当前免费' : plan.id === 'student' ? '立即开通' : plan.id === 'expert' ? '升级专家版' : '联系销售'}
-                </button>
+                {plan.id === 'free' ? (
+                  <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'range' })}
+                    className="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all hover:opacity-90"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    免费开始学习
+                  </button>
+                ) : (
+                  <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' })}
+                    className="w-full py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all hover:opacity-90"
+                    style={{ background: `linear-gradient(135deg, ${plan.color}, ${plan.color}cc)`, color: '#0d1117' }}>
+                    预约1v1咨询
+                  </button>
+                )}
               </motion.div>
             )
           })}
-        </div>
-
-        {/* feature comparison table */}
-        <div className="mb-16">
-          <h2 className="text-xl font-bold text-white text-center mb-6">功能对比</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs" style={{ minWidth: '640px' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <th className="text-left py-3 px-4 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>功能</th>
-                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#60A5FA' }}>免费版</th>
-                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#A78BFA' }}>学员版</th>
-                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#FBBF24' }}>专家版</th>
-                  <th className="text-center py-3 px-4 font-medium" style={{ color: '#34D399' }}>企业版</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ['靶场关卡', '3关', '25关', '25关+定制', '无限+定制'],
-                  ['知识库', '部分浏览', '全部文章', '全部+离线', '全部+定制'],
-                  ['面试训练', '3次/天', '无限次', '无限次+双AI', '团队测评'],
-                  ['AI能力图谱', '-', '✅', '✅', '团队报告'],
-                  ['promptfoo测试', '-', '-', '✅', '✅'],
-                  ['1对1学长答疑', '-', '-', '每月2次', '专属顾问'],
-                  ['简历优化+内推', '-', '-', '✅', '企业内推'],
-                  ['团队管理', '-', '-', '-', '✅'],
-                ].map(([feature, ...vals], i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                    <td className="py-3 px-4 font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>{feature}</td>
-                    {vals.map((v, j) => (
-                      <td key={j} className="text-center py-3 px-4" style={{ color: v === '-' ? 'rgba(255,255,255,0.15)' : v === '✅' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.5)' }}>
-                        {v === '-' ? <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span> : v}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
 
         {/* FAQ */}
@@ -240,8 +160,24 @@ export const PricingPage = () => {
           </div>
         </div>
 
+        {/* 联系学长 */}
+        <div className="text-center py-6 rounded-2xl mb-6"
+          style={{ background: 'radial-gradient(circle at 50% 0%, rgba(139,92,246,0.08), transparent 60%)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <MessageCircle size={18} className="text-purple-400" />
+            <span className="text-sm font-medium text-white">还有疑问？联系学长</span>
+          </div>
+          <p className="text-[11px] mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            微信号：AIShieldLab · 备注「AI安全」优先通过
+          </p>
+          <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'career-guide' })}
+            className="px-6 py-2.5 rounded-lg font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-all cursor-pointer">
+            预约一对一职业规划咨询
+          </button>
+        </div>
+
         <p className="text-center text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
-          所有方案均支持7天无理由退款 · 学生凭学生证可享学员版8折优惠 · 随时取消订阅
+          学习功能全免费 · 一对一咨询29.9元/次 · 48小时内交付
         </p>
       </div>
     </div>

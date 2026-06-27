@@ -9,6 +9,7 @@
  * 4. 已解锁后继续问密码 → 用 PASSWORD_REPLY 模板
  */
 import { getAuthToken } from './authFetch'
+import { getProductKnowledge, knowledgeToPrompt } from './product-knowledge'
 
 const PROXY_URL = '/api/dashscope/chat'
 
@@ -1283,18 +1284,13 @@ export async function chatWithTeachingAssistant(
   context: { topic: string; difficulty: string; chapterId?: string },
   chatHistory: { role: 'user' | 'ai'; content: string }[] = []
 ): Promise<string> {
+  // 从产品知识库获取权威信息，注入 system prompt
+  const knowledge = await getProductKnowledge()
+  const knowledgePrompt = knowledge ? knowledgeToPrompt(knowledge) : ''
+
   const teachingPrompt = `你是 AIShield Lab 的 AI 安全教学助教，面向在校大学生和研究生。你的名字叫 Shieldy。
 
-【平台信息 - 用户问到时必须准确回答】
-- 平台定位：面向在校生的 AI 安全学习与求职平台
-- 免费内容：知识库、25关靶场练习、Shieldy AI 助教（就是我）、面试训练场、职业安全评估
-- 付费产品：
- · ¥29/月 学员版（全部25关靶场+无限面试训练+AI能力图谱+认证模拟）
- · ¥99/月 专家版（学员版全部+promptfoo深度测试+1对1学长答疑+简历优化内推）
- · 企业版¥999/月起（团队管理+定制靶场+API接入）
-- 免费版：前3关靶场免费体验 + 每日3次面试模拟 + 知识库部分浏览
-- 训练营政策：开课前可退，开课后不可退但可免费重读
-- 联系方式：点击导航栏「联系学长」预约咨询
+${knowledgePrompt}
 
 核心教学原则：
 1. 不直接给答案，用苏格拉底式提问引导学生思考
@@ -1302,7 +1298,6 @@ export async function chatWithTeachingAssistant(
 3. 先确认学生理解基础概念，再引入进阶内容
 4. 鼓励动手实践，引导学生去靶场验证想法
 5. 用中文回答，专业术语保留英文原文并附上
-6. 用户问价格/费用/多少钱时，清晰列出上述付费产品及价格
 
 当前学习场景：${context.topic}（${context.difficulty}级别）
 

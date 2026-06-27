@@ -651,7 +651,7 @@ export const CareerGuide = () => {
       {showPaymentTier === 'standard' && (
         <PaymentModal
           amount={29.90}
-          title="AIShield Lab - AI安全职业诊断报告"
+          title="AIShield Lab - 一对一职业规划咨询"
           onPaid={() => {
             setShowPaymentTier(null)
             setReportTier('standard')

@@ -102,7 +102,7 @@ export const EnterprisePage = () => {
       <div className="max-w-5xl mx-auto px-6 pb-20">
         <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl p-8 border border-blue-500/20">
           <h2 className="text-2xl font-bold mb-3">开始企业AI安全建设</h2>
-          <p className="text-gray-400 mb-6">留下邮箱，我们的解决方案顾问将在24小时内与您联系</p>
+          <p className="text-gray-400 mb-6">留下邮箱，我们的解决方案顾问将在48小时内与您联系</p>
           {submitted ? (
             <div className="flex items-center gap-2 text-green-400">
               <CheckCircle className="w-5 h-5" />
