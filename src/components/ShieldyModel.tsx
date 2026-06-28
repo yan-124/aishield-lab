@@ -159,14 +159,14 @@ function Particles({ count = 30 }: { count?: number }) {
 export function SceneLighting() {
   return (
     <>
-      <ambientLight intensity={0.75} color="#e8eeff" />
-      <hemisphereLight intensity={0.55} color="#99ccff" groundColor="#0a0a15" />
-      <directionalLight position={[0, 6, 5]} intensity={3.5} color="#ffffff" />
-      <directionalLight position={[-4, 3, 3]} intensity={1.2} color="#60b8ff" />
-      <directionalLight position={[3, 2, -2]} intensity={0.8} color="#a78bfa" />
-      <pointLight position={[2, 1.5, -2]} intensity={1.2} color="#38BDF8" distance={6} />
-      <pointLight position={[0, -1, 1.5]} intensity={0.5} color="#ffffff" distance={5} />
-      <pointLight position={[-2, 0, 2]} intensity={0.6} color="#f472b6" distance={4} />
+      <ambientLight intensity={0.5} color="#e8eeff" />
+      <hemisphereLight intensity={0.35} color="#99ccff" groundColor="#0a0a15" />
+      <directionalLight position={[0, 6, 5]} intensity={2.0} color="#ffffff" />
+      <directionalLight position={[-4, 3, 3]} intensity={0.7} color="#60b8ff" />
+      <directionalLight position={[3, 2, -2]} intensity={0.5} color="#a78bfa" />
+      <pointLight position={[2, 1.5, -2]} intensity={0.8} color="#38BDF8" distance={6} />
+      <pointLight position={[0, -1, 1.5]} intensity={0.3} color="#ffffff" distance={5} />
+      <pointLight position={[-2, 0, 2]} intensity={0.4} color="#f472b6" distance={4} />
     </>
   )
 }
@@ -228,7 +228,6 @@ export function ShieldyModelCard({
         const cvs = state.gl.domElement
         if (cvs) {
           cvs.style.background = 'transparent'
-          cvs.style.mixBlendMode = 'screen'
         }
       }}>
       <SceneLighting />
@@ -349,7 +348,6 @@ export default function ShieldyModel({ modelUrl, className }: { modelUrl?: strin
         const cvs = state.gl.domElement
         if (cvs) {
           cvs.style.background = 'transparent'
-          cvs.style.mixBlendMode = 'screen'
         }
       }}>
       <SceneLighting />
