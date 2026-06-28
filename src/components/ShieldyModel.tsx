@@ -18,7 +18,26 @@ function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Grou
       loader.load(
         url,
         (gltf) => {
-          const scene = gltf.scene
+          const scene = gltf.scene.clone(true)
+          // Fix blown-out white emissive and enhance PBR materials
+          scene.traverse((child: any) => {
+            if (child.isMesh && child.material) {
+              const mats = Array.isArray(child.material) ? child.material : [child.material]
+              mats.forEach((mat: any) => {
+                if (mat.isMeshStandardMaterial || mat.isMeshPhongMaterial) {
+                  // The model has emissiveFactor=[1,1,1]; turn off self-illumination
+                  // so the baseColor texture is visible instead of a white silhouette.
+                  if (mat.emissive) {
+                    mat.emissive.setHex(0x000000)
+                  }
+                  mat.emissiveIntensity = 0
+                  // Enhance surface definition
+                  mat.roughness = Math.max(0.25, (mat.roughness ?? 0.7) - 0.15)
+                  mat.metalness = Math.min(0.45, (mat.metalness ?? 0.1) + 0.12)
+                }
+              })
+            }
+          })
           // Auto-center & scale (应用额外的缩放因子)
           const box = new THREE.Box3().setFromObject(scene)
           const size = box.getSize(new THREE.Vector3())
