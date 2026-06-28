@@ -32,7 +32,10 @@ function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Grou
           resolve(scene)
         },
         undefined,
-        () => reject(new Error('GLB load failed: ' + url))
+        (err) => {
+          console.error('[ShieldyModel] GLB load failed:', url, err)
+          reject(new Error('GLB load failed: ' + url))
+        }
       )
     }).catch(reject)
   })
@@ -189,7 +192,8 @@ export function ShieldyModelCard({
     setModel(null)
     loadGLB(modelUrl).then(m => {
       if (!cancelled) setModel(m)
-    }).catch(() => {
+    }).catch((err) => {
+      console.error('[ShieldyModel] Failed to load model card:', modelUrl, err)
       if (!cancelled) setError(true)
     })
     return () => { cancelled = true }
@@ -233,7 +237,8 @@ export function ShieldyScene() {
     loadGLB(MODEL_URLS[0], MODEL_SCALE_MULTIPLIERS[0]).then(m => {
       clearTimeout(timeoutId)
       setModel(m)
-    }).catch(() => {
+    }).catch((err) => {
+      console.error('[ShieldyModel] Failed to load scene model:', MODEL_URLS[0], err)
       clearTimeout(timeoutId)
       setHasError(true)
     })
@@ -264,7 +269,8 @@ function MultiModelSwitcher() {
           next[idx] = m
           return next
         })
-      }).catch(() => {
+      }).catch((err) => {
+        console.error('[ShieldyModel] MultiModelSwitcher failed to load:', url, err)
         setModels(prev => {
           const next = [...prev]
           next[idx] = null
