@@ -6,6 +6,12 @@ interface Env {
   AUTH_KV: KVNamespace;
   JWT_SECRET?: string;
   ADMIN_SECRET?: string;
+  ADMIN_EMAILS?: string; // comma-separated list of admin emails
+}
+
+function isAdminEmail(email: string, adminEmails: string): boolean {
+  if (!adminEmails || !email) return false;
+  return adminEmails.split(',').map(e => e.trim().toLowerCase()).includes(email.toLowerCase());
 }
 
 // Web Crypto API password hashing with PBKDF2 (100k iterations)
@@ -337,6 +343,28 @@ async function verifyWebAuthnSignature(publicKey: any, signature: Uint8Array, da
 }
 
 
+// Daily challenge questions (must match frontend DailyChallenge.tsx)
+const DAILY_QUESTIONS = [
+  { id: 1, answer: 1 },
+  { id: 2, answer: 1 },
+  { id: 3, answer: 2 },
+  { id: 4, answer: 1 },
+  { id: 5, answer: 1 },
+  { id: 6, answer: 3 },
+  { id: 7, answer: 1 },
+  { id: 8, answer: 1 },
+];
+
+function getTodaysQuestionId(): number {
+  const today = new Date();
+  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  return DAILY_QUESTIONS[dayOfYear % DAILY_QUESTIONS.length].id;
+}
+
+function getTodayStr(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -458,11 +486,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       await env.AUTH_KV.put('uid:' + userId, email, { expirationTtl: 86400 * 365 });
 
       // Create token (7 day expiry)
-      const token = await createToken({ userId, email, exp: Math.floor(Date.now() / 1000) + 86400 * 7 }, JWT_SECRET);
+      const token = await createToken({ userId, email, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), exp: Math.floor(Date.now() / 1000) + 86400 * 7 }, JWT_SECRET);
 
       return new Response(JSON.stringify({
         token,
-        user: { id: userId, email, nickname, isLoggedIn: true }
+        user: { id: userId, email, nickname, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), isLoggedIn: true }
       }), {
         status: 201, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
       });
@@ -544,11 +572,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
 
       // Create token
-      const token = await createToken({ userId: user.id, email, exp: Math.floor(Date.now() / 1000) + 86400 * 7 }, JWT_SECRET);
+      const token = await createToken({ userId: user.id, email, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), exp: Math.floor(Date.now() / 1000) + 86400 * 7 }, JWT_SECRET);
 
       return new Response(JSON.stringify({
         token,
-        user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: false, isLoggedIn: true }
+        user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: false, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), isLoggedIn: true }
       }), {
         status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
       });
@@ -580,8 +608,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
 
       const user = JSON.parse(userData);
+      const isAdmin = decoded.isAdmin === true || isAdminEmail(user.email, env.ADMIN_EMAILS || '');
       return new Response(JSON.stringify({
-        user: { id: user.id, email: user.email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: !!user.mfaEnabled, isLoggedIn: true }
+        user: { id: user.id, email: user.email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: !!user.mfaEnabled, isAdmin, isLoggedIn: true }
       }), {
         status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
       });
@@ -882,10 +911,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
 
       // MFA verified — issue token
-      const token = await createToken({ userId: user.id, email, exp: Math.floor(Date.now() / 1000) + 86400 * 7 }, JWT_SECRET);
+      const token = await createToken({ userId: user.id, email, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), exp: Math.floor(Date.now() / 1000) + 86400 * 7 }, JWT_SECRET);
       return new Response(JSON.stringify({
         token,
-        user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: true, isLoggedIn: true }
+        user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: true, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), isLoggedIn: true }
       }), {
         status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
       });
@@ -1170,10 +1199,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         });
       }
       const user = JSON.parse(userData);
-      const token = await createToken({ userId: user.id, email, exp: Math.floor(Date.now() / 1000) + 86400 * 7 }, JWT_SECRET);
+      const token = await createToken({ userId: user.id, email, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), exp: Math.floor(Date.now() / 1000) + 86400 * 7 }, JWT_SECRET);
       return new Response(JSON.stringify({
         token,
-        user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: !!user.mfaEnabled, isLoggedIn: true }
+        user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: !!user.mfaEnabled, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), isLoggedIn: true }
       }), {
         status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
       });
@@ -1280,7 +1309,17 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       const token = authHeader.replace('Bearer ', '');
       const ADMIN_SECRET = env.ADMIN_SECRET || '';
 
-      if (!ADMIN_SECRET || token !== ADMIN_SECRET) {
+      let isAuthorized = false;
+      if (ADMIN_SECRET && token === ADMIN_SECRET) {
+        isAuthorized = true;
+      } else {
+        const decoded = await verifyToken(token, JWT_SECRET);
+        if (decoded && decoded.isAdmin === true) {
+          isAuthorized = true;
+        }
+      }
+
+      if (!isAuthorized) {
         console.warn(`Unauthorized admin dashboard access attempt from IP: ${ip}`);
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
@@ -1349,6 +1388,78 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
 
       return new Response(JSON.stringify({ counters, recentEvents: limitedEvents, topQuestions, daily }), {
+        status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+      });
+    }
+
+    // GET /api/auth/daily-challenge/streak - get user's daily challenge streak
+    if (method === 'GET' && path === 'daily-challenge/streak') {
+      const authHeader = request.headers.get('Authorization') || '';
+      const token = authHeader.replace('Bearer ', '');
+      const decoded = await verifyToken(token, JWT_SECRET);
+      if (!decoded) {
+        return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+          status: 401, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        });
+      }
+      const streakKey = 'daily_streak:' + decoded.userId;
+      const data = await env.AUTH_KV.get(streakKey);
+      const streak = data ? JSON.parse(data) : { count: 0, lastDate: '' };
+      const todayAnswered = streak.lastDate === getTodayStr();
+      return new Response(JSON.stringify({ ...streak, todayAnswered, todayQuestionId: getTodaysQuestionId() }), {
+        status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+      });
+    }
+
+    // POST /api/auth/daily-challenge/submit - submit answer and update streak
+    if (method === 'POST' && path === 'daily-challenge/submit') {
+      if (!(await checkKVRateLimit(env.AUTH_KV, ip, 10))) {
+        return new Response(JSON.stringify({ error: 'Too many requests' }), {
+          status: 429, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        });
+      }
+      const authHeader = request.headers.get('Authorization') || '';
+      const token = authHeader.replace('Bearer ', '');
+      const decoded = await verifyToken(token, JWT_SECRET);
+      if (!decoded) {
+        return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+          status: 401, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        });
+      }
+      const body = await request.json() as { questionId?: number; answer?: number; isCorrect?: boolean };
+      if (body.questionId == null || body.answer == null) {
+        return new Response(JSON.stringify({ error: 'Missing questionId or answer' }), {
+          status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        });
+      }
+      const todayQuestionId = getTodaysQuestionId();
+      if (body.questionId !== todayQuestionId) {
+        return new Response(JSON.stringify({ error: 'Invalid question for today' }), {
+          status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        });
+      }
+      const question = DAILY_QUESTIONS.find(q => q.id === body.questionId);
+      const isCorrect = question ? question.answer === body.answer : false;
+      if (!isCorrect) {
+        return new Response(JSON.stringify({ correct: false, streak: 0 }), {
+          status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        });
+      }
+      const streakKey = 'daily_streak:' + decoded.userId;
+      const today = getTodayStr();
+      const data = await env.AUTH_KV.get(streakKey);
+      const streak = data ? JSON.parse(data) : { count: 0, lastDate: '' };
+      if (streak.lastDate === today) {
+        return new Response(JSON.stringify({ correct: true, streak: streak.count, alreadyAnswered: true }), {
+          status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        });
+      }
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      const newCount = streak.lastDate === yesterdayStr ? streak.count + 1 : 1;
+      await env.AUTH_KV.put(streakKey, JSON.stringify({ count: newCount, lastDate: today }), { expirationTtl: 86400 * 365 });
+      return new Response(JSON.stringify({ correct: true, streak: newCount }), {
         status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
       });
     }

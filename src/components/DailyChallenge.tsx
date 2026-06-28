@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Flame, CheckCircle2, XCircle, Calendar } from 'lucide-react'
+import { useAppContext } from '../context/AppContext'
 
 /* ═══════════════════════════════════════════════════════
    DailyChallenge — 每日一题打卡模块
@@ -8,7 +9,8 @@ import { Flame, CheckCircle2, XCircle, Calendar } from 'lucide-react'
    - 每天展示一道 AI 安全相关题目
    - 选择题形式，即时反馈
    - 连续打卡天数统计
-   - 本地存储打卡记录
+   - 已登录用户：打卡记录同步到后端 KV
+   - 未登录用户：本地存储打卡记录
    ═══════════════════════════════════════════════════════ */
 
 const QUESTIONS = [
@@ -127,19 +129,76 @@ function saveStreak(solved: boolean) {
 }
 
 export const DailyChallenge: React.FC = () => {
+  const { state } = useAppContext()
   const question = useMemo(() => getTodaysQuestion(), [])
   const [selected, setSelected] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [streak, setStreak] = useState(() => getStreak().count)
+  const [loading, setLoading] = useState(false)
 
   const isCorrect = selected === question.answer
   const todayStr = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })
 
-  const handleSubmit = () => {
+  // Load streak from backend when logged in, otherwise localStorage
+  useEffect(() => {
+    if (!state.user?.token) {
+      setStreak(getStreak().count)
+      return
+    }
+    fetch('/api/auth/daily-challenge/streak', {
+      headers: { 'Authorization': `Bearer ${state.user.token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (typeof data.count === 'number') {
+          setStreak(data.count)
+          if (data.todayAnswered) {
+            setSubmitted(true)
+          }
+        }
+      })
+      .catch(() => {
+        setStreak(getStreak().count)
+      })
+  }, [state.user?.token])
+
+  const handleSubmit = async () => {
     if (selected === null) return
     setSubmitted(true)
-    const newStreak = saveStreak(true)
-    setStreak(newStreak)
+    setLoading(true)
+
+    const correct = selected === question.answer
+    const today = new Date().toISOString().split('T')[0]
+
+    if (state.user?.token) {
+      try {
+        const resp = await fetch('/api/auth/daily-challenge/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.user.token}`
+          },
+          body: JSON.stringify({ questionId: question.id, answer: selected, isCorrect: correct })
+        })
+        const data = await resp.json()
+        if (data.correct) {
+          setStreak(data.streak)
+          localStorage.setItem('aishield-daily-streak', JSON.stringify({ count: data.streak, lastDate: today }))
+        } else {
+          setStreak(data.streak || 0)
+        }
+      } catch {
+        // Fallback to localStorage on network error
+        const newStreak = saveStreak(correct)
+        setStreak(newStreak)
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      const newStreak = saveStreak(correct)
+      setStreak(newStreak)
+      setLoading(false)
+    }
   }
 
   return (
@@ -259,14 +318,14 @@ export const DailyChallenge: React.FC = () => {
           {/* 提交 / 已提交状态 */}
           {!submitted ? (
             <button onClick={handleSubmit}
-              disabled={selected === null}
+              disabled={selected === null || loading}
               className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300 ${
-                selected === null
+                selected === null || loading
                   ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:-translate-y-0.5 cursor-pointer'
               }`}
             >
-              提交答案
+              {loading ? '提交中...' : '提交答案'}
             </button>
           ) : (
             <div className="space-y-4">

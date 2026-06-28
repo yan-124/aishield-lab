@@ -38,6 +38,7 @@ export interface UserInfo {
   identity?: 'student' | 'professional' | 'career_change';
   goals?: string[];
   mfaEnabled?: boolean;
+  isAdmin?: boolean;
   isLoggedIn?: boolean;
   isGuest?: boolean;
   painPoints?: string[];

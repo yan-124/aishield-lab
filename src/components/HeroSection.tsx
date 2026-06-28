@@ -319,7 +319,7 @@ export function HeroSection() {
             { Icon: Target, num: '25+', label: '实战关卡', color: '#F472B6' },
             { Icon: Layers, num: '3', label: '攻击模型', color: '#60A5FA' },
             { Icon: Zap, num: '7+', label: '安全模块', color: '#FBBF24' },
-            { Icon: CheckCircle, num: '全免费', label: '入门开练', color: '#34D399' },
+            { Icon: CheckCircle, num: '前5关', label: '免费试练', color: '#34D399' },
           ].map((stat) => (
             <div key={stat.label} className="flex items-center gap-2.5 sm:gap-3 p-2.5 rounded-xl"
               style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>

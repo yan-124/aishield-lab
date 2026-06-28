@@ -292,7 +292,7 @@ export const Navigation = () => {
                     {([
                       { label: '个人中心', icon: User, action: () => { dispatch({ type: 'SET_VIEW_MODE', payload: 'user-profile' }); setShowUserMenu(false); } },
                       { label: '设置', icon: Settings, action: () => { dispatch({ type: 'SET_VIEW_MODE', payload: 'settings' }); setShowUserMenu(false); } },
-                      ...(state.user?.email === 'wuyanset@outlook.com' ? [{ label: '数据看板', icon: BarChart3, action: () => { dispatch({ type: 'SET_VIEW_MODE', payload: 'admin' }); setShowUserMenu(false); } }] : []),
+                      ...(state.user?.isAdmin ? [{ label: '数据看板', icon: BarChart3, action: () => { dispatch({ type: 'SET_VIEW_MODE', payload: 'admin' }); setShowUserMenu(false); } }] : []),
                     ] as const).map(item => (
                       <button key={item.label}
                         onClick={item.action}
