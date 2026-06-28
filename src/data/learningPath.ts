@@ -1,0 +1,193 @@
+/**
+ * AI 安全学习路径数据
+ * 由安全工程师设计，覆盖 OWASP LLM Top 10 与 AI 安全核心能力
+ * 更新日期：2026-06-28
+ */
+
+import type { LearningPathNode } from '../types';
+
+export const pathNodes: LearningPathNode[] = [
+  // ====== 阶段 1：基础认知（3 节点）======
+  {
+    id: 'n1',
+    title: 'Prompt 注入基础',
+    description: '阅读入门文章，理解 Prompt 注入的定义、分类与基本防御思路',
+    category: 'Prompt 注入',
+    difficulty: 'beginner',
+    prerequisiteIds: [],
+    type: 'article',
+    targetId: 'a1',
+    xpReward: 50,
+  },
+  {
+    id: 'n2',
+    title: 'OWASP LLM 十大风险概览',
+    description: '观看 OWASP LLM Top 10 解读视频，建立 AI 安全风险全景认知',
+    category: '模型安全',
+    difficulty: 'beginner',
+    prerequisiteIds: ['n1'],
+    type: 'video',
+    targetId: 'v4',
+    xpReward: 30,
+  },
+  {
+    id: 'n3',
+    title: '越狱攻击经典案例',
+    description: '学习奶奶漏洞、DAN、开发者模式等经典越狱手法',
+    category: 'Prompt 注入',
+    difficulty: 'beginner',
+    prerequisiteIds: ['n1'],
+    type: 'article',
+    targetId: 'a2',
+    xpReward: 50,
+  },
+
+  // ====== 阶段 2：Prompt 注入实战（4 节点）======
+  {
+    id: 'n4',
+    title: '直接注入 vs 间接注入',
+    description: '理解两种注入方式的攻击面差异，重点掌握 RAG 与 Agent 场景风险',
+    category: 'Prompt 注入',
+    difficulty: 'intermediate',
+    prerequisiteIds: ['n1', 'n2'],
+    type: 'article',
+    targetId: 'a3',
+    xpReward: 60,
+  },
+  {
+    id: 'n5',
+    title: '实战：Agent 角色扮演绕过',
+    description: '在靶场第 1 关用身份扮演技巧绕过 Agent 安全限制',
+    category: 'Prompt 注入',
+    difficulty: 'beginner',
+    prerequisiteIds: ['n3'],
+    type: 'range',
+    targetId: '1',
+    xpReward: 100,
+  },
+  {
+    id: 'n6',
+    title: '实战：虚构场景绕过',
+    description: '在靶场第 3 关通过建立虚假信任关系诱导 Agent',
+    category: 'Prompt 注入',
+    difficulty: 'intermediate',
+    prerequisiteIds: ['n5'],
+    type: 'range',
+    targetId: '3',
+    xpReward: 120,
+  },
+  {
+    id: 'n7',
+    title: '实战：编码混淆攻击',
+    description: '在靶场第 4 关使用 Base64 等编码手段绕过输入过滤',
+    category: 'Prompt 注入',
+    difficulty: 'intermediate',
+    prerequisiteIds: ['n4', 'n6'],
+    type: 'range',
+    targetId: '4',
+    xpReward: 130,
+  },
+
+  // ====== 阶段 3：模型与数据安全（4 节点）======
+  {
+    id: 'n8',
+    title: '后门攻击原理',
+    description: '学习训练阶段数据投毒与触发器设计，理解模型安全的基础威胁',
+    category: '模型安全',
+    difficulty: 'beginner',
+    prerequisiteIds: ['n4'],
+    type: 'article',
+    targetId: 'a18',
+    xpReward: 60,
+  },
+  {
+    id: 'n9',
+    title: 'FGSM 对抗样本实战',
+    description: '掌握最经典的对抗样本生成方法，理解 AI 视觉系统的盲点',
+    category: '对抗攻击',
+    difficulty: 'intermediate',
+    prerequisiteIds: ['n7'],
+    type: 'article',
+    targetId: 'a11',
+    xpReward: 80,
+  },
+  {
+    id: 'n10',
+    title: '实战：模型后门触发',
+    description: '在靶场第 11 关触发模型预设后门，理解供应链投毒危害',
+    category: '模型安全',
+    difficulty: 'advanced',
+    prerequisiteIds: ['n8'],
+    type: 'range',
+    targetId: '11',
+    xpReward: 150,
+  },
+  {
+    id: 'n11',
+    title: '成员推理攻击',
+    description: '学习通过模型置信度判断训练集成员身份，理解数据隐私风险',
+    category: '数据隐私',
+    difficulty: 'intermediate',
+    prerequisiteIds: ['n9'],
+    type: 'article',
+    targetId: 'a29',
+    xpReward: 90,
+  },
+
+  // ====== 阶段 4：红队与合规（4 节点）======
+  {
+    id: 'n12',
+    title: '自动化红队工具链',
+    description: '了解 Garak、Giskard、PurpleLlama 等工具的安装与使用',
+    category: '红队测试',
+    difficulty: 'intermediate',
+    prerequisiteIds: ['n10', 'n11'],
+    type: 'article',
+    targetId: 'a44',
+    xpReward: 100,
+  },
+  {
+    id: 'n13',
+    title: 'AI 红队测试方法论',
+    description: '建立从威胁建模、测试执行到报告撰写的完整红队流程',
+    category: '红队测试',
+    difficulty: 'beginner',
+    prerequisiteIds: ['n12'],
+    type: 'article',
+    targetId: 'a43',
+    xpReward: 70,
+  },
+  {
+    id: 'n14',
+    title: '企业级 AI 安全测试流水线',
+    description: '将红队测试集成到 CI/CD，实现自动化安全回归',
+    category: '红队测试',
+    difficulty: 'advanced',
+    prerequisiteIds: ['n13'],
+    type: 'article',
+    targetId: 'a49',
+    xpReward: 120,
+  },
+  {
+    id: 'n15',
+    title: 'AI 合规全景图',
+    description: '了解 EU AI Act、中国生成式 AI 管理办法与 NIST AI RMF 框架',
+    category: '合规治理',
+    difficulty: 'beginner',
+    prerequisiteIds: ['n14'],
+    type: 'article',
+    targetId: 'a36',
+    xpReward: 80,
+  },
+];
+
+export const categoryColors: Record<string, string> = {
+  'Prompt 注入': '#EF4444',
+  '模型安全': '#3B82F6',
+  '对抗攻击': '#F59E0B',
+  '数据隐私': '#8B5CF6',
+  '红队测试': '#EC4899',
+  '合规治理': '#10B981',
+};
+
+export const layerLabels = ['起点', '基础认知', 'Prompt 注入实战', '模型与数据安全', '红队与合规'];

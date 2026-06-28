@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react'
 import { useAppContext } from '../context/AppContext'
-import { KNOWLEDGE_ARTICLES } from './KnowledgeDetail'
+import { articles as KNOWLEDGE_ARTICLES } from '../data/knowledge'
 import type { ViewMode } from '../types'
 import {
   Home, BookOpen, Play, Target, MessageCircle,

@@ -8,46 +8,9 @@ import {
 } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { UpgradePrompt } from './UpgradePrompt';
+import { categories, articles } from '../data/knowledge';
 
-const categories: KnowledgeCategory[] = [
-  { id: 'prompt-injection', name: 'Prompt 注入', icon: '💉', description: 'Prompt注入、越狱攻击、多语言注入与间接注入实例深度分析', articleCount: 35, color: '#EF4444' },
-  { id: 'adversarial', name: '对抗攻击', icon: '⚔️', description: '对抗样本生成、CLIP攻击、多模态对抗与物理世界对抗防御', articleCount: 30, color: '#F59E0B' },
-  { id: 'model-safety', name: '模型安全', icon: '🤖', description: '模型水印、对齐技术、RLHF安全、宪法AI与红队测试方法', articleCount: 42, color: '#3B82F6' },
-  { id: 'data-privacy', name: '数据隐私', icon: '🔒', description: '成员推理攻击、模型逆向、联邦学习与数据去标识化技术', articleCount: 25, color: '#8B5CF6' },
-  { id: 'compliance', name: '合规治理', icon: '📋', description: 'EU AI Act、中国生成式AI管理办法、审计框架与伦理准则', articleCount: 22, color: '#10B981' },
-  { id: 'red-team', name: '红队测试', icon: '🎯', description: '自动化红队工具、大模型渗透测试、事故响应与方法论', articleCount: 28, color: '#EC4899' },
-];
-
-const articles: KnowledgeArticle[] = [
-  // ====== 入门级（8篇） ======
-  { id: '1', title: '什么是Prompt注入？从零理解LLM安全', categoryId: 'prompt-injection', summary: '大语言模型最常见的安全威胁之一，本文从基本概念讲起，带你快速理解Prompt注入的原理与攻防全貌', difficulty: 'beginner', readTime: 5, tags: ['入门', 'Prompt注入'] },
-  { id: '2', title: '从零开始的LLM越狱攻击：概念与分类', categoryId: 'prompt-injection', summary: '系统梳理越狱攻击的类别——角色扮演、逻辑陷阱、编码绕过，明确定义每类攻击的边界与适用场景', difficulty: 'beginner', readTime: 7, tags: ['入门', '越狱攻击'] },
-  { id: '3', title: 'FGSM攻击：最简单的对抗样本生成方法', categoryId: 'adversarial', summary: 'Fast Gradient Sign Method的原理与TensorFlow实现，从零生成第一个对抗样本，理解对抗扰动的本质', difficulty: 'beginner', readTime: 6, tags: ['对抗攻击', '入门'] },
-  { id: '4', title: '对抗攻击入门：让AI看错图像的N种方法', categoryId: 'adversarial', summary: '从图像分类到目标检测，用通俗案例讲解对抗攻击为什么能骗过AI，以及工程师该如何应对', difficulty: 'beginner', readTime: 8, tags: ['对抗攻击', '入门'] },
-  { id: '5', title: '模型安全入门：后门攻击是如何植入的', categoryId: 'model-safety', summary: '攻击者在训练阶段植入触发器，让模型在特定输入下输出预设结果——从数据投毒到木马神经元的完整链路', difficulty: 'beginner', readTime: 6, tags: ['模型安全', '后门攻击'] },
-  { id: '6', title: '数据隐私入门：差分隐私是什么', categoryId: 'data-privacy', summary: '用加噪声的方式保护个体数据不被逆向推断，本文用最简例子讲清差分隐私的核心设计思路与隐私预算概念', difficulty: 'beginner', readTime: 5, tags: ['数据隐私', '差分隐私'] },
-  { id: '7', title: 'AI合规从零学：国内外法规全景图', categoryId: 'compliance', summary: '欧盟AI法案、中国生成式AI管理办法、美国行政令——三大监管框架的适用边界与关键合规要求对比', difficulty: 'beginner', readTime: 8, tags: ['合规治理', '入门'] },
-  { id: '8', title: 'AI红队测试入门：从传统渗透测试到LLM评估', categoryId: 'red-team', summary: '红队思维如何迁移到AI领域？本文对比传统安全测试与AI红队的方法论差异，给出LLM评估的入门路径', difficulty: 'beginner', readTime: 7, tags: ['红队', '入门'] },
-  // ====== 进阶级（10篇） ======
-  { id: '9', title: '直接注入 vs 间接注入：攻击手法对比', categoryId: 'prompt-injection', summary: '两种主流Prompt注入方式的原理与实例分析，通过实际Payload对比理解攻击面差异与防御侧重点', difficulty: 'intermediate', readTime: 8, tags: ['Prompt注入', '攻击'] },
-  { id: '10', title: '多语言注入攻击实战：突破英文过滤围栏', categoryId: 'prompt-injection', summary: '利用LLM在多语言推理上的薄弱性，通过中文、日文混合构造绕过英文过滤器的Prompt注入样本', difficulty: 'intermediate', readTime: 10, tags: ['Prompt注入', '多语言'] },
-  { id: '11', title: '对抗样本迁移性：黑盒攻击的核心技巧', categoryId: 'adversarial', summary: '在一个模型上生成的对抗样本如何在其他模型上同样有效？深入分析迁移性的影响因素与提升策略', difficulty: 'intermediate', readTime: 10, tags: ['对抗攻击', '迁移性'] },
-  { id: '12', title: 'CLIP模型的对抗攻击原理与防御', categoryId: 'adversarial', summary: '多模态视觉语言模型的独特攻击面——如何修改图像使CLIP输出错误匹配，以及当前主流的防御方案', difficulty: 'intermediate', readTime: 12, tags: ['对抗攻击', 'CLIP'] },
-  { id: '13', title: '模型水印技术：如何保护你的AI模型', categoryId: 'model-safety', summary: '深度学习模型水印的植入与验证方法，包括后门水印、触发集水印和指纹水印三类主流方案的对比', difficulty: 'intermediate', readTime: 10, tags: ['模型安全', '水印'] },
-  { id: '14', title: 'RLHF安全对齐：从Reward Hacking到Constitutional AI', categoryId: 'model-safety', summary: 'RLHF训练中的常见安全陷阱（奖励欺骗、伪对齐）及Constitutional AI等改进方案如何解决这些问题', difficulty: 'intermediate', readTime: 12, tags: ['模型安全', 'RLHF'] },
-  { id: '15', title: '成员推理攻击实战：判断数据是否被用于训练', categoryId: 'data-privacy', summary: '通过shadow model训练和置信度分析判断某条数据是否在模型训练集中出现过，附带Python实现', difficulty: 'intermediate', readTime: 10, tags: ['数据隐私', '成员推理'] },
-  { id: '16', title: '模型反转攻击：从输出反向重构训练数据', categoryId: 'data-privacy', summary: '利用模型梯度或输出置信度反向推导训练数据中的敏感特征，分析差分隐私对这类攻击的防御效果', difficulty: 'intermediate', readTime: 11, tags: ['数据隐私', '模型逆向'] },
-  { id: '17', title: '自动化红队工具链：从Garak到Giskard', categoryId: 'red-team', summary: '主流开源AI安全评估工具的横向对比与使用指南，包括安装配置、测试用例编写和报告解读', difficulty: 'intermediate', readTime: 14, tags: ['红队', '工具'] },
-  { id: '18', title: '大模型渗透测试：真实场景复现指南', categoryId: 'red-team', summary: '用真实架构案例演示LLM应用的渗透测试流程，从信息收集到漏洞利用再到报告撰写全链路', difficulty: 'intermediate', readTime: 15, tags: ['红队', '渗透测试'] },
-  // ====== 高级（7篇） ======
-  { id: '19', title: '物理世界对抗攻击：让路牌在AI眼中变成另一物', categoryId: 'adversarial', summary: '如何在物理世界中构造鲁棒的对抗贴纸或补丁，使自动驾驶等系统在真实环境中产生误判', difficulty: 'advanced', readTime: 14, tags: ['对抗攻击', '物理世界'] },
-  { id: '20', title: '宪法AI：让模型自我约束的安全对齐框架', categoryId: 'model-safety', summary: 'Anthropic提出的宪法AI方法——通过一组行为原则让模型自我评估和修正输出，减少对人类反馈的依赖', difficulty: 'advanced', readTime: 12, tags: ['模型安全', '宪法AI'] },
-  { id: '21', title: '联邦学习中的隐私泄露风险与梯度反演攻击', categoryId: 'data-privacy', summary: '梯度反演攻击如何窃取训练数据中的敏感信息，以及联邦学习场景下梯度压缩、扰动等防御手段效果评估', difficulty: 'advanced', readTime: 12, tags: ['数据隐私', '联邦学习'] },
-  { id: '22', title: 'AI系统事故响应与取证分析框架', categoryId: 'red-team', summary: 'AI安全事故发生的应急响应流程——从攻击检测、影响评估到模型修复和复盘改进的完整闭环', difficulty: 'advanced', readTime: 13, tags: ['红队', '事故响应'] },
-  { id: '23', title: 'EU AI Act深度解读：高风险AI的合规路径', categoryId: 'compliance', summary: '欧盟AI法案高风险系统的全生命周期合规要求拆解，从风险评估到技术文档再到人机协同监督的具体落地', difficulty: 'advanced', readTime: 12, tags: ['合规治理', 'EU AI Act'] },
-  { id: '24', title: '中国生成式AI管理办法：算法备案与内容合规', categoryId: 'compliance', summary: '国内生成式AI服务的管理框架、算法备案流程和安全评估要求，面向AI企业的实操合规指南', difficulty: 'advanced', readTime: 10, tags: ['合规治理', '中国法规'] },
-  { id: '25', title: '多模态对抗攻击：当图像与文本同时被欺骗', categoryId: 'adversarial', summary: '同时攻击视觉编码器和语言模型的联合对抗方法——跨模态干扰如何放大攻击效果及当前的防御瓶颈', difficulty: 'advanced', readTime: 14, tags: ['对抗攻击', '多模态'] },
-];
+// 知识库分类与文章数据已迁移至 src/data/knowledge.ts，由安全工程师团队维护
 
 const diffLabel: Record<string, string> = { beginner: '入门', intermediate: '进阶', advanced: '高级' };
 const diffBg: Record<string, string> = {

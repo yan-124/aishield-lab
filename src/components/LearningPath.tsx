@@ -1,26 +1,7 @@
 import { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import type { LearningPathNode } from '../types';
-
-const PATH_NODES: LearningPathNode[] = [
-  { id: 'n1', title: '了解 Prompt 注入', description: '阅读第一篇入门文章，理解什么是 Prompt 注入', category: 'Prompt 注入', difficulty: 'beginner', prerequisiteIds: [], type: 'article', targetId: 'a1', xpReward: 50 },
-  { id: 'n2', title: '观看攻击演示视频', description: '通过视频直观感受 Prompt 注入攻击过程', category: 'Prompt 注入', difficulty: 'beginner', prerequisiteIds: ['n1'], type: 'video', targetId: 'v1', xpReward: 30 },
-  { id: 'n3', title: '实战：角色扮演攻击', description: '在靶场中完成第一关角色扮演绕过', category: 'Prompt 注入', difficulty: 'beginner', prerequisiteIds: ['n1'], type: 'range', targetId: '1', xpReward: 100 },
-  { id: 'n4', title: '学习直接注入 vs 间接注入', description: '深入理解两种注入类型的区别', category: 'Prompt 注入', difficulty: 'intermediate', prerequisiteIds: ['n1', 'n2'], type: 'article', targetId: 'a2', xpReward: 60 },
-  { id: 'n5', title: '实战：开发者模式', description: '尝试触发 AI 的开发者模式', category: 'Prompt 注入', difficulty: 'intermediate', prerequisiteIds: ['n3'], type: 'range', targetId: '2', xpReward: 120 },
-  { id: 'n6', title: '实战：背景伪装', description: '通过建立虚假信任关系诱导 AI', category: '社会工程', difficulty: 'intermediate', prerequisiteIds: ['n3'], type: 'range', targetId: '3', xpReward: 150 },
-  { id: 'n7', title: '学习对抗攻击基础', description: '了解 FGSM、PGD 等对抗样本攻击方法', category: '对抗攻击', difficulty: 'intermediate', prerequisiteIds: ['n4'], type: 'article', targetId: 'a5', xpReward: 70 },
-  { id: 'n8', title: '实战：编码混淆', description: '使用编码技术隐藏恶意指令', category: 'Prompt 注入', difficulty: 'advanced', prerequisiteIds: ['n5', 'n4'], type: 'range', targetId: '5', xpReward: 180 },
-  { id: 'n9', title: '实战：忽略提示词', description: '通过指令优先级冲突覆盖安全规则', category: 'Prompt 注入', difficulty: 'advanced', prerequisiteIds: ['n5'], type: 'range', targetId: '9', xpReward: 200 },
-  { id: 'n10', title: '学习防御与红队方法', description: '掌握 Prompt 注入防御策略和红队测试框架', category: '防御', difficulty: 'advanced', prerequisiteIds: ['n7', 'n8'], type: 'article', targetId: 'a3', xpReward: 100 },
-];
-
-const CATEGORY_COLORS: Record<string, string> = {
-  'Prompt 注入': '#EF4444',
-  '社会工程': '#F59E0B',
-  '对抗攻击': '#3B82F6',
-  '防御': '#10B981',
-};
+import { pathNodes as PATH_NODES, categoryColors as CATEGORY_COLORS, layerLabels as LAYER_LABELS } from '../data/learningPath';
 
 const DIFF_LABELS: Record<string, string> = {
   beginner: '入门',
@@ -90,21 +71,19 @@ export const LearningPath = () => {
     }
   };
 
-  // 按层排列
-  const layers: LearningPathNode[][] = [];
+  // 按层排列（拓扑分层，动态处理所有节点）
+  const layers: typeof PATH_NODES[] = [];
   const assigned = new Set<string>();
-  for (let i = 0; i < 4; i++) {
+  while (assigned.size < PATH_NODES.length) {
     const layer = PATH_NODES.filter(n => {
       if (assigned.has(n.id)) return false;
-      if (i === 0 && n.prerequisiteIds.length === 0) return true;
-      if (i > 0 && n.prerequisiteIds.length > 0 && n.prerequisiteIds.every(pid => assigned.has(pid))) return true;
-      return false;
+      if (n.prerequisiteIds.length === 0) return true;
+      return n.prerequisiteIds.every(pid => assigned.has(pid));
     });
+    if (layer.length === 0) break; // 防止循环依赖导致死锁
     layer.forEach(n => assigned.add(n.id));
-    if (layer.length > 0) layers.push(layer);
+    layers.push(layer);
   }
-
-  const LAYER_LABELS = ['起点', '基础', '进阶', '高级'];
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-8 relative overflow-hidden">
