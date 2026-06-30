@@ -3,33 +3,16 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 /* ============================================================
-   AIShield Lab — ShieldyModel Component (v5 rewrite)
+   AIShield Lab — ShieldyModel Component (v7)
+   - 修复紫色/闪现问题：移除主题色注入，恢复原始材质颜色
+   - 简化动画逻辑：去掉每帧材质操作，消除闪烁
    - 修复鬼影问题：使用条件渲染替代透明度过渡
    - 修复遮挡问题：调整模型位置避免脚部被截断
-   - 模型2体积减小5%
+   - 模型体积调整
    - GLB加载失败时降级显示CSS盾牌
    ============================================================ */
 
-/* ── GLB Loader (v6 — themed color injection for white materials) ── */
-// Theme palette for color injection (matches AIShield Lab brand)
-const THEME_COLORS = [
-  0xA78BFA, // purple
-  0x7C3AED, // deep purple  
-  0x60A5FA, // blue
-  0x38BDF8, // cyan
-  0x818CF8, // indigo
-  0xC084FC, // light purple
-]
-
-function isPureWhite(color: any): boolean {
-  if (!color) return true // default white
-  const hex = color.getHex()
-  // Check if RGB channels are all near-maximum (>= 0xF0 per channel)
-  const r = (hex >> 16) & 0xFF
-  const g = (hex >> 8) & 0xFF
-  const b = hex & 0xFF
-  return r >= 0xF0 && g >= 0xF0 && b >= 0xF0
-}
+/* ── GLB Loader (v7 — minimal intervention, preserve original appearance) ── */
 
 function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Group> {
   return new Promise((resolve, reject) => {
@@ -39,44 +22,22 @@ function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Grou
         url,
         (gltf) => {
           const scene = gltf.scene.clone(true)
-          let meshIdx = 0
-          // Fix materials: kill emissive, inject themed colors for white/no-texture materials
+          // Minimal material fix: only disable problematic emissive, preserve everything else
           scene.traverse((child: any) => {
             if (child.isMesh && child.material) {
               const mats = Array.isArray(child.material) ? child.material : [child.material]
               mats.forEach((mat: any) => {
                 if (mat.isMeshStandardMaterial || mat.isMeshPhongMaterial) {
-                  // Step 1: ALWAYS kill emissive — no exceptions
-                  if (mat.emissive) {
-                    mat.emissive.setHex(0x000000)
-                  }
+                  // Kill emissive to prevent overexposure — the ONLY change we make
+                  if (mat.emissive) mat.emissive.setHex(0x000000)
                   mat.emissiveIntensity = 0
-                  if (mat.emissiveMap) {
-                    mat.emissiveMap = null
-                  }
-
-                  // Step 2: Handle baseColor based on texture presence
-                  const hasBaseTexture = !!mat.map
-                  if (!hasBaseTexture) {
-                    // No texture — check if baseColor is pure white
-                    if (isPureWhite(mat.color)) {
-                      // Pure white + no texture = inject themed color
-                      const themeColor = THEME_COLORS[meshIdx % THEME_COLORS.length]
-                      mat.color.setHex(themeColor)
-                    }
-                    // Non-white color without texture is fine — preserve it
-                  }
-                  // Has texture — preserve texture and baseColor, no changes needed
-
-                  // Step 3: Enhance surface definition for better visual quality
-                  mat.roughness = Math.max(0.35, Math.min(0.8, (mat.roughness ?? 0.6)))
-                  mat.metalness = Math.max(0.05, Math.min(0.35, (mat.metalness ?? 0.15)))
+                  if (mat.emissiveMap) mat.emissiveMap = null
+                  // Preserve original roughness/metalness/color/texture as-is
                 }
               })
-              meshIdx++
             }
           })
-          // Auto-center & scale (应用额外的缩放因子)
+          // Auto-center & scale
           const box = new THREE.Box3().setFromObject(scene)
           const size = box.getSize(new THREE.Vector3())
           const maxDim = Math.max(size.x, size.y, size.z) || 1
@@ -84,7 +45,6 @@ function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Grou
           scene.scale.setScalar(baseScale * scaleMultiplier)
           const box2 = new THREE.Box3().setFromObject(scene)
           const center = box2.getCenter(new THREE.Vector3())
-          // 向上偏移0.25，避免脚部被底部遮挡
           scene.position.set(-center.x, -center.y - 0.42 + 0.25, -center.z)
           resolve(scene)
         },
@@ -111,69 +71,18 @@ export function AnimatedModel({ model }: { model: THREE.Group }) {
   return <group ref={groupRef}><primitive object={model} /></group>
 }
 
-/* ── Single model with smooth fade-in then lock opaque ── */
+/* ── Single model with idle animation only (no opacity manipulation = no flicker) ── */
 function SingleModel({ model }: { model: THREE.Group }) {
   const groupRef = useRef<THREE.Group>(null!)
   const tRef = useRef(0)
-  const fadeInDone = useRef(false)
   
+  // Simple idle animation — no material changes, no flicker
   useFrame((_, delta) => {
     if (!groupRef.current) return
-    
-    // Fade-in animation: only run until opacity reaches ~0.98, then lock opaque
-    if (!fadeInDone.current) {
-      groupRef.current.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material) {
-          const mat = child.material as THREE.MeshStandardMaterial
-          if (mat.userData?.targetOpacity !== undefined) {
-            const current = mat.opacity ?? 0
-            const target = mat.userData.targetOpacity
-            if (Math.abs(current - target) < 0.02) {
-              // Close enough — lock to opaque
-              mat.opacity = 1
-              mat.transparent = false
-              mat.needsUpdate = true
-              delete mat.userData.targetOpacity
-            } else {
-              mat.opacity = THREE.MathUtils.lerp(current, target, 0.08)
-              mat.needsUpdate = true
-            }
-          }
-        }
-      })
-      // Check if all materials reached their target
-      let allDone = true
-      groupRef.current.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material) {
-          if ((child.material as THREE.MeshStandardMaterial).userData?.targetOpacity !== undefined) {
-            allDone = false
-          }
-        }
-      })
-      if (allDone) fadeInDone.current = true
-    }
-    
-    // Idle animation
     tRef.current += delta * 0.5
     groupRef.current.rotation.y = Math.sin(tRef.current) * 0.25
     groupRef.current.position.y = Math.sin(tRef.current * 1.5) * 0.04
   })
-  
-  // Set up fade-in targets when model changes
-  useEffect(() => {
-    fadeInDone.current = false
-    if (model) {
-      model.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material) {
-          const mat = child.material as THREE.MeshStandardMaterial
-          mat.userData.targetOpacity = mat.opacity || 1
-          mat.transparent = true
-          mat.opacity = 0
-          mat.needsUpdate = true
-        }
-      })
-    }
-  }, [model])
   
   return <group ref={groupRef}><primitive object={model} /></group>
 }
@@ -220,14 +129,14 @@ function Particles({ count = 30 }: { count?: number }) {
 export function SceneLighting() {
   return (
     <>
-      <ambientLight intensity={0.4} color="#e8eeff" />
-      <hemisphereLight intensity={0.3} color="#99ccff" groundColor="#0a0a15" />
-      <directionalLight position={[0, 6, 5]} intensity={1.5} color="#ffffff" />
-      <directionalLight position={[-4, 3, 3]} intensity={0.5} color="#60b8ff" />
-      <directionalLight position={[3, 2, -2]} intensity={0.35} color="#a78bfa" />
-      <pointLight position={[2, 1.5, -2]} intensity={0.6} color="#38BDF8" distance={6} />
-      <pointLight position={[0, -1, 1.5]} intensity={0.2} color="#ffffff" distance={5} />
-      <pointLight position={[-2, 0, 2]} intensity={0.3} color="#f472b6" distance={4} />
+      <ambientLight intensity={0.55} color="#f0f2ff" />
+      <hemisphereLight intensity={0.4} color="#b0c8ff" groundColor="#0a0812" />
+      <directionalLight position={[0, 6, 5]} intensity={1.8} color="#ffffff" />
+      <directionalLight position={[-4, 3, 3]} intensity={0.6} color="#80c0ff" />
+      <directionalLight position={[3, 2, -2]} intensity={0.4} color="#c0b0ff" />
+      <pointLight position={[2, 1.5, -2]} intensity={0.7} color="#50C8FF" distance={6} />
+      <pointLight position={[0, -1, 1.5]} intensity={0.25} color="#ffffff" distance={5} />
+      <pointLight position={[-2, 0, 2]} intensity={0.35} color="#ffa0c0" distance={4} />
     </>
   )
 }
