@@ -17,14 +17,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
-  "exclude": [
-    "src/components/game",
-    "src/components/layout",
-    "src/constants",
-    "src/utils",
-    "src/data",
-    "src/reducers",
-    "src/hooks/useGameData.ts"
-  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

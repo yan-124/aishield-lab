@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAppContext } from '../context/AppContext'
 import { articles as KNOWLEDGE_ARTICLES } from '../data/knowledge'
 import type { ViewMode } from '../types'

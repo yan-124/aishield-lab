@@ -50,3 +50,7 @@ lerna-debug.log*
 temp_backup/
 *.ps1
 *.txt
+
+# Cloudflare Wrangler — contains secrets, never commit
+wrangler.toml
+wrangler.toml.*
