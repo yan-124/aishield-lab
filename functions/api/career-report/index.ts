@@ -8,6 +8,9 @@
 
 import { verifyJWT, extractToken } from '../../_utils/auth'
 
+// Memory fallback for rate limiting when KV is unavailable
+const memoryRateLimit = new Map<string, { count: number; resetAt: number }>()
+
 const ALLOWED_ORIGINS = [
   'https://aiseclearn.com',
   'https://www.aiseclearn.com',
@@ -78,16 +81,45 @@ export async function onRequestPost(context: any) {
   // Rate limit: 3 requests per IP per hour
   const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown'
   const rateKey = `career_report_${clientIP}`
-  // Simple rate limit via CF cache (best-effort)
-  const rateLimit = parseInt((await env.CAREER_RATE_LIMIT?.get(rateKey)) || '0', 10)
-  if (rateLimit >= 3) {
+
+  // Try KV-based rate limit first, fall back to memory if KV unavailable
+  let rateLimit = 0
+  let kvAvailable = false
+  if (env.CAREER_RATE_LIMIT) {
+    try {
+      const stored = await env.CAREER_RATE_LIMIT.get(rateKey)
+      rateLimit = parseInt(stored || '0', 10)
+      kvAvailable = true
+    } catch {
+      // KV unavailable — fall through to memory fallback
+    }
+  }
+
+  // Memory-based fallback rate limit
+  if (!kvAvailable) {
+    const now = Date.now()
+    const memKey = `career_${clientIP}`
+    const entry = memoryRateLimit.get(memKey) || { count: 0, resetAt: 0 }
+    if (now > entry.resetAt) {
+      entry.count = 0
+      entry.resetAt = now + 3600_000
+    }
+    entry.count++
+    memoryRateLimit.set(memKey, entry)
+    rateLimit = entry.count
+  }
+
+  if (rateLimit > 3) {
     return new Response(JSON.stringify({
       error: '请求过于频繁，请一小时后再试',
     }), { status: 429, headers: corsHeaders })
   }
-  try {
-    await env.CAREER_RATE_LIMIT?.put(rateKey, String(rateLimit + 1), { expirationTtl: 3600 })
-  } catch {}
+
+  if (kvAvailable) {
+    try {
+      await env.CAREER_RATE_LIMIT.put(rateKey, String(rateLimit + 1), { expirationTtl: 3600 })
+    } catch {}
+  }
 
   // Require authentication — prevents anonymous API quota abuse
   const token = extractToken(request)

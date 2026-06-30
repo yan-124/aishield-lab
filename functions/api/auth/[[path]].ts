@@ -69,6 +69,16 @@ function needsHashUpgrade(storedHash: string): boolean {
   return !storedHash.startsWith('pbkdf2$');
 }
 
+// Constant-time string comparison — prevents timing attacks on admin secret
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 // Simple JWT-like token (HMAC-SHA256)
 async function createToken(payload: object, secret: string): Promise<string> {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
@@ -492,7 +502,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         token,
         user: { id: userId, email, nickname, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), isLoggedIn: true }
       }), {
-        status: 201, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        status: 201, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `aishield_token=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`, ...corsHeaders }
       });
     }
 
@@ -578,14 +588,20 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         token,
         user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: false, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), isLoggedIn: true }
       }), {
-        status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `aishield_token=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`, ...corsHeaders }
       });
     }
 
     // GET /api/auth/me - verify token and return user info
     if (method === 'GET' && path === 'me') {
+      // Try Authorization: Bearer first, then HttpOnly cookie
       const authHeader = request.headers.get('Authorization') || '';
-      const token = authHeader.replace('Bearer ', '') || url.searchParams.get('token') || '';
+      let token = authHeader.replace('Bearer ', '');
+      if (!token) {
+        const cookieHeader = request.headers.get('Cookie') || '';
+        const match = cookieHeader.match(/(?:^|;)\s*aishield_token\s*=\s*([^;]+)/);
+        if (match) token = decodeURIComponent(match[1]);
+      }
       
       if (!token) {
         return new Response(JSON.stringify({ error: 'No token provided' }), {
@@ -916,7 +932,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         token,
         user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: true, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), isLoggedIn: true }
       }), {
-        status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `aishield_token=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`, ...corsHeaders }
       });
     }
 
@@ -1204,7 +1220,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         token,
         user: { id: user.id, email, nickname: user.nickname, identity: user.identity, goals: user.goals, mfaEnabled: !!user.mfaEnabled, isAdmin: isAdminEmail(email, env.ADMIN_EMAILS || ''), isLoggedIn: true }
       }), {
-        status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+        status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `aishield_token=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`, ...corsHeaders }
       });
     }
 
@@ -1264,15 +1280,49 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
 
 
-    // POST /api/auth/stats/track - track an event
+    // POST /api/auth/stats/track - track an event (requires authentication)
     if (method === 'POST' && path === 'stats/track') {
       try {
+        // Require authentication — prevents anonymous event spoofing
+        const authHeader = request.headers.get('Authorization') || '';
+        let token = authHeader.replace('Bearer ', '');
+        if (!token) {
+          const cookieHeader = request.headers.get('Cookie') || '';
+          const match = cookieHeader.match(/(?:^|;)\s*aishield_token\s*=\s*([^;]+)/);
+          if (match) token = decodeURIComponent(match[1]);
+        }
+        // If no valid token, silently succeed without recording (prevents frontend errors)
+        if (!token) {
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+          });
+        }
+        const decoded = await verifyToken(token, JWT_SECRET);
+        if (!decoded) {
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+          });
+        }
+
         const body = await request.json() as { event?: string; meta?: any };
         if (!body.event) {
           return new Response(JSON.stringify({ error: 'Missing event' }), {
             status: 400, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
           });
         }
+
+        // Validate event name — whitelist to prevent arbitrary counter injection
+        const ALLOWED_EVENTS = new Set([
+          'register', 'login', 'mfa_setup', 'passkey_register',
+          'career_click', 'payment_success', 'chat_message',
+          'level_complete', 'daily_challenge',
+        ]);
+        if (!ALLOWED_EVENTS.has(body.event)) {
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders }
+          });
+        }
+
         const now = new Date();
         const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
         const timestamp = now.toISOString();
@@ -1287,7 +1337,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         const dayKey = 'events:' + dateStr;
         const dayStr = await env.AUTH_KV.get(dayKey);
         const dayEvents = dayStr ? JSON.parse(dayStr) : [];
-        dayEvents.push({ event: body.event, timestamp, meta: body.meta || null });
+        // Sanitize meta — only store strings/numbers, limit size
+        const safeMeta = body.meta && typeof body.meta === 'object'
+          ? Object.fromEntries(
+              Object.entries(body.meta)
+                .filter(([, v]) => typeof v === 'string' || typeof v === 'number')
+                .map(([k, v]) => [k, typeof v === 'string' ? String(v).slice(0, 500) : v])
+            )
+          : null;
+        dayEvents.push({ event: body.event, timestamp, meta: safeMeta, userId: decoded.userId });
         // Keep last 500 events per day
         if (dayEvents.length > 500) dayEvents.splice(0, dayEvents.length - 500);
         await env.AUTH_KV.put(dayKey, JSON.stringify(dayEvents), { expirationTtl: 86400 * 30 });
@@ -1310,7 +1368,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       const ADMIN_SECRET = env.ADMIN_SECRET || '';
 
       let isAuthorized = false;
-      if (ADMIN_SECRET && token === ADMIN_SECRET) {
+      if (ADMIN_SECRET && constantTimeCompare(token, ADMIN_SECRET)) {
         isAuthorized = true;
       } else {
         const decoded = await verifyToken(token, JWT_SECRET);

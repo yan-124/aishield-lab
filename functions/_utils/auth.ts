@@ -27,12 +27,37 @@ export async function verifyJWT(token: string, secret: string): Promise<any | nu
   } catch { return null; }
 }
 
+/**
+ * Extract JWT token from request:
+ * 1. Authorization: Bearer header (frontend backward compat)
+ * 2. aishield_token cookie (HttpOnly — preferred)
+ */
 export function extractToken(request: Request): string | null {
+  // Try Authorization header first
   const authHeader = request.headers.get('Authorization') || '';
   if (authHeader.startsWith('Bearer ')) {
-    return authHeader.slice(7);
+    const token = authHeader.slice(7).trim();
+    if (token) return token;
   }
+
+  // Fallback to HttpOnly cookie
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const match = cookieHeader.match(/(?:^|;)\s*aishield_token\s*=\s*([^;]+)/);
+  if (match) {
+    return decodeURIComponent(match[1]);
+  }
+
   return null;
+}
+
+/**
+ * Helper: create Set-Cookie headers for HttpOnly JWT cookie
+ * Callers must merge these into their response headers.
+ */
+export function getTokenCookieHeaders(token: string, maxAge = 604800): Record<string, string> {
+  return {
+    'Set-Cookie': `aishield_token=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${maxAge}`,
+  }
 }
 
 /** Require authentication — returns decoded token or throws a 401 Response */

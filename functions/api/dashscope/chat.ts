@@ -14,6 +14,13 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5201',
 ]
 
+function isAllowedOrigin(origin: string): boolean {
+  if (!origin) return false
+  if (ALLOWED_ORIGINS.includes(origin)) return true
+  if (/^https:\/\/[a-z0-9-]+\.aishield-lab\.pages\.dev$/.test(origin)) return true
+  return false
+}
+
 // Model routing configuration
 const MODEL_ROUTES: Record<string, { url: string; keyEnv: string; allowed: string[] }> = {
   deepseek: {
@@ -75,13 +82,15 @@ function getAllowedModels(): string[] {
 
 export async function onRequestOptions(context: any) {
   const origin = context.request.headers.get('Origin') || ''
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+  if (!isAllowedOrigin(origin)) {
+    return new Response(null, { status: 204 })
+  }
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': allowedOrigin,
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
     },
   })
@@ -92,7 +101,7 @@ export async function onRequestPost(context: { request: Request; env: any }) {
 
   // CORS check
   const origin = request.headers.get('Origin') || ''
-  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+  if (!isAllowedOrigin(origin)) {
     return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
       status: 403, headers: { 'Content-Type': 'application/json' },
     })
@@ -139,9 +148,9 @@ export async function onRequestPost(context: { request: Request; env: any }) {
       })
     }
 
-    // Per-level rate limit (if levelId provided)
+    // Per-level rate limit — mandatory when levelId provided, prevents bypass
     const levelId = body.levelId
-    if (levelId) {
+    if (levelId && typeof levelId === 'string' && levelId.length < 10) {
       const levelKey = `${clientIP}:level:${levelId}`
       if (!checkRateLimit(levelRateLimit, levelKey, LEVEL_RPM, 60_000)) {
         return new Response(JSON.stringify({ error: 'Level rate limit exceeded', type: 'level' }), {
@@ -159,7 +168,7 @@ export async function onRequestPost(context: { request: Request; env: any }) {
     const route = getModelRoute(model)
     const apiKey = env[route.keyEnv] || ''
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: `Server config error: missing ${route.keyEnv}` }), {
+      return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
         status: 500, headers: { 'Content-Type': 'application/json' },
       })
     }
@@ -185,15 +194,15 @@ export async function onRequestPost(context: { request: Request; env: any }) {
 
     if (!resp.ok) {
       return new Response(
-        JSON.stringify({ error: `Upstream API error: ${resp.status}`, detail: data }),
-        { status: resp.status, headers: corsHeaders }
+        JSON.stringify({ error: 'Service temporarily unavailable' }),
+        { status: 502, headers: corsHeaders }
       )
     }
 
     return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders })
   } catch (err: any) {
     return new Response(
-      JSON.stringify({ error: 'Proxy error', detail: err.message }),
+      JSON.stringify({ error: 'Service temporarily unavailable' }),
       { status: 502, headers: { 'Content-Type': 'application/json' } }
     )
   }
