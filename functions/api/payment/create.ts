@@ -142,6 +142,9 @@ export async function onRequestPost(context: any) {
       const text = await resp.text()
       try {
         responseData = JSON.parse(text)
+        // 把虎皮椒返回的原始数据也记录下来，方便排查金额问题
+        console.log('[Hupijiao DEBUG] Raw API response:', JSON.stringify(responseData))
+        console.log('[Hupijiao DEBUG] Sent total_fee:', params.total_fee)
       } catch (parseErr) {
         throw new Error(`Invalid JSON response: ${text.substring(0, 200)}`)
       }
