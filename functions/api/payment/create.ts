@@ -146,6 +146,8 @@ export async function onRequestPost(context: any) {
           url: responseData.url || '',
           urlQrcode: responseData.url_qrcode || '',
           url_qrcode: responseData.url_qrcode || '',
+          v: '2.0',
+          fee: finalAmount,
         }), { headers: corsHeaders })
       } else {
         throw new Error(responseData.errmsg || responseData.msg || '创建支付订单失败')
