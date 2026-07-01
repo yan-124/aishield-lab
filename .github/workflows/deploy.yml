@@ -7,7 +7,7 @@ on:
     branches: [main, master]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{""{"}}{{ github.workflow }}-${{""{"}}{{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -25,11 +25,10 @@ jobs:
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: '20'
 
       - name: 安装依赖
-        run: npm install
+        run: npm ci
 
       - name: 运行构建
         run: npm run build
@@ -37,15 +36,15 @@ jobs:
       - name: 部署到 Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{""{"}}{{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{""{"}}{{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist3 --project-name aishield-lab --branch main
 
       - name: 部署 Worker（Coze 代理）
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{""{"}}{{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{""{"}}{{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
           command: deploy
 
