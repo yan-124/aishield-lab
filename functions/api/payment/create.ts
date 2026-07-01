@@ -116,11 +116,6 @@ export async function onRequestPost(context: any) {
     }
   }
 
-  const formData = new URLSearchParams()
-  for (const [k, v] of Object.entries(params)) {
-    formData.append(k, v)
-  }
-
   const MAX_RETRIES = 3
   const REQUEST_TIMEOUT = 10000
   let lastError: any
@@ -133,8 +128,8 @@ export async function onRequestPost(context: any) {
 
       const resp = await fetch(`${HUPIJIAO_API_BASE}/payment/do.html`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
         signal: controller.signal,
       })
 
