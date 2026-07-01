@@ -77,6 +77,9 @@ export async function onRequestPost(context: any) {
   // 保留两位小数，确保 19.90 不会变成 19.9（某些支付网关对格式敏感）
   const normalizedAmount = Number(finalAmount).toFixed(2)
 
+  // Debug: log all payment creation details
+  console.log('[PAYMENT_CREATE]', JSON.stringify({ orderId, finalAmount, normalizedAmount, title: finalTitle, appid: env.HUPIJIAO_APP_ID?.slice(0,6) }))
+
   const params: Record<string, string> = {
     version: '1.1',
     appid: env.HUPIJIAO_APP_ID,
@@ -149,6 +152,7 @@ export async function onRequestPost(context: any) {
       }
 
       if (responseData.errcode === 0 && (responseData.url || responseData.url_qrcode)) {
+        console.log('[PAYMENT_RESPONSE]', JSON.stringify({ orderId, total_fee: normalizedAmount, responseAmount: responseData.total_fee, responseUrl: responseData.url?.slice(0,60) }))
         return new Response(JSON.stringify({
           orderId,
           url: responseData.url || '',

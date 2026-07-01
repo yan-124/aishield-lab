@@ -286,13 +286,14 @@ export function ShieldyModelCard({
 
 /* ── Main multi-variant component (standalone with Canvas) ── */
 const MODEL_URLS = [
+  'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-b.glb',
   'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-d.glb',
   'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-e.glb',
   'https://aiseclearn.oss-cn-beijing.aliyuncs.com/shieldy-f.glb',
 ]
 
 // 模型缩放配置：第二个模型减小5%
-const MODEL_SCALE_MULTIPLIERS = [1.0, 0.95, 1.0]
+const MODEL_SCALE_MULTIPLIERS = [1.0, 1.0, 0.95, 1.0]
 
 export function ShieldyScene() {
   const [model, setModel] = useState<THREE.Group | null>(null)
