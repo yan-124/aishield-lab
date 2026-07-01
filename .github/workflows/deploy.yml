@@ -1,0 +1,58 @@
+﻿name: 构建与部署
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: 构建并部署到 Cloudflare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行构建
+        run: npm run build
+
+      - name: 部署到 Cloudflare Pages
+        id: pages-deploy
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: aishield-lab
+          directory: dist3
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 部署 Worker（Coze 代理）
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: deploy
+
+      - name: 输出部署信息
+        run: |
+          echo "Pages 部署地址: ${{ steps.pages-deploy.outputs.url }}"
+          echo "环境: ${{ steps.pages-deploy.outputs.environment }}"

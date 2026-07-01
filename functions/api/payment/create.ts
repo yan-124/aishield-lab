@@ -29,7 +29,7 @@ const ALLOWED_AMOUNTS = new Set(['19.90', '99.00', '299.00'])
 const NOTIFY_URL = 'https://aiseclearn.com/api/payment/notify'
 const RETURN_URL = 'https://aiseclearn.com'
 
-const DEBUG_MODE = false
+const DEBUG_MODE = true
 
 export async function onRequestPost(context: any) {
   const { request, env } = context
@@ -117,10 +117,21 @@ export async function onRequestPost(context: any) {
   let lastError: any
   let responseData: any = null
 
+  // [DEBUG] 打印请求参数（脱敏后）— 用于诊断 9.9 元问题
+  console.log('[PAYMENT-DEBUG] Outgoing params to Hupijiao:', JSON.stringify({
+    appid: params.appid?.substring(0, 6) + '***',
+    trade_order_id: params.trade_order_id,
+    total_fee: params.total_fee,
+    title: params.title,
+    type: params.type,
+  }))
+  console.log('[PAYMENT-DEBUG] Raw total_fee string:', JSON.stringify(params.total_fee))
+  console.log('[PAYMENT-DEBUG] finalAmount variable:', finalAmount, 'type:', typeof finalAmount)
+
   for (let retry = 0; retry < MAX_RETRIES; retry++) {
     try {
       if (DEBUG_MODE) {
-        console.log(`[Retry ${retry + 1}/${MAX_RETRIES}] Calling Hupijiao API with params:`, JSON.stringify(params))
+        console.log(`[Retry ${retry + 1}/${MAX_RETRIES}] Calling Hupijiao API`)
       }
 
       const controller = new AbortController()
@@ -154,6 +165,19 @@ export async function onRequestPost(context: any) {
       }
 
       if (responseData.errcode === 0 && (responseData.url || responseData.url_qrcode)) {
+        // [DEBUG] 打印成功响应中的金额
+        console.log('[PAYMENT-DEBUG] Hupijiao SUCCESS response:', JSON.stringify({
+          errcode: responseData.errcode,
+          errmsg: responseData.errmsg,
+          hasUrl: !!responseData.url,
+          hasQrcode: !!responseData.url_qrcode,
+          qrcodeLength: responseData.url_qrcode?.length,
+          // 尝试找虎皮椒可能在响应里返回的金额字段
+          totalFee: responseData.total_fee,
+          money: responseData.money,
+          amount: responseData.amount,
+          cash: responseData.cash,
+        }))
         return new Response(JSON.stringify({
           orderId,
           url: responseData.url || '',

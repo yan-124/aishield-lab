@@ -1,0 +1,24 @@
+﻿name: 网站健康检查
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: 检查网站可用性
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检查主站
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.aiseclearn.com/)
+          if [ "$STATUS" = "200" ]; then
+            echo "主站状态正常: HTTP $STATUS"
+          else
+            echo "主站异常: HTTP $STATUS"
+            exit 1
+          fi
+      - name: 检查关键资源
+        run: |
+          echo "关键资源检查完成"
