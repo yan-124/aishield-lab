@@ -11,15 +11,8 @@ import * as THREE from 'three'
    ============================================================ */
 
 /* ── GLB Loader (v6 — themed color injection for white materials) ── */
-// Theme palette for color injection (matches AIShield Lab brand)
-const THEME_COLORS = [
-  0xA78BFA, // purple
-  0x7C3AED, // deep purple  
-  0x60A5FA, // blue
-  0x38BDF8, // cyan
-  0x818CF8, // indigo
-  0xC084FC, // light purple
-]
+// Theme palette removed — model colors preserved as designed
+// const THEME_COLORS = [...]
 
 function isPureWhite(color: any): boolean {
   if (!color) return true // default white
@@ -55,16 +48,12 @@ function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Grou
                     mat.emissiveMap = null
                   }
 
-                  // Step 2: Handle baseColor based on texture presence
+                  // Step 2: Preserve original colors — do NOT inject themed colors
+                  // The model designer intended white/silver colors, don't override them
                   const hasBaseTexture = !!mat.map
                   if (!hasBaseTexture) {
-                    // No texture — check if baseColor is pure white
-                    if (isPureWhite(mat.color)) {
-                      // Pure white + no texture = inject themed color
-                      const themeColor = THEME_COLORS[meshIdx % THEME_COLORS.length]
-                      mat.color.setHex(themeColor)
-                    }
-                    // Non-white color without texture is fine — preserve it
+                    // No texture — keep original baseColor (white/silver)
+                    // Previously injected purple colors here, removed to match design intent
                   }
                   // Has texture — preserve texture and baseColor, no changes needed
 

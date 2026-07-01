@@ -74,7 +74,8 @@ export async function onRequestPost(context: any) {
 
   // 虎皮椒 total_fee 是 decimal(18,2)，去掉末尾多余的零避免签名不一致
   // 19.90 → "19.9"，99.00 → "99"，299.00 → "299"
-  const normalizedAmount = String(Number(finalAmount))
+  // 保留两位小数，确保 19.90 不会变成 19.9（某些支付网关对格式敏感）
+  const normalizedAmount = Number(finalAmount).toFixed(2)
 
   const params: Record<string, string> = {
     version: '1.1',
