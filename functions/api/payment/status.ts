@@ -51,6 +51,11 @@ export async function onRequestGet(context: any) {
     return new Response(JSON.stringify({ paid: false, error: '缺少订单号' }), { status: 400, headers: corsHeaders })
   }
 
+  // 验证 orderId 格式（防止注入和路径遍历）
+  if (!/^[a-zA-Z0-9_-]{10,64}$/.test(orderId)) {
+    return new Response(JSON.stringify({ paid: false, error: '无效的订单号格式' }), { status: 400, headers: corsHeaders })
+  }
+
   const params: Record<string, string> = {
     appid: env.HUPIJIAO_APP_ID,
     out_trade_order: orderId,

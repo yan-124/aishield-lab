@@ -2,13 +2,26 @@
 // 部署后 Token 只存在于 Workers 环境变量中，前端不可见
 // 路径：/api/coze/chat
 
+const ALLOWED_ORIGINS = [
+  'https://aiseclearn.com',
+  'https://www.aiseclearn.com',
+  'http://localhost:5201',
+  'http://127.0.0.1:5201',
+]
+function getAllowedOrigin(request) {
+  const origin = request.headers.get('Origin') || ''
+  if (ALLOWED_ORIGINS.includes(origin)) return origin
+  if (origin.match(/^https:\/\/[a-z0-9-]+\.aishield-lab\.pages\.dev$/)) return origin
+  return ALLOWED_ORIGINS[0]
+}
+
 export default {
   async fetch(request, env) {
     // 只允许 POST 方法
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': getAllowedOrigin(request) },
       })
     }
 
@@ -17,7 +30,7 @@ export default {
       return new Response(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': getAllowedOrigin(request),
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type',
         },
@@ -29,7 +42,7 @@ export default {
     if (!COZE_TOKEN) {
       return new Response(JSON.stringify({ error: 'Server configuration error' }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': getAllowedOrigin(request) },
       })
     }
 
@@ -48,9 +61,9 @@ export default {
 
       if (!cozeResponse.ok) {
         const errText = await cozeResponse.text()
-        return new Response(JSON.stringify({ error: `Coze API error: ${cozeResponse.status}`, detail: errText }), {
+        return new Response(JSON.stringify({ error: `Coze API error: ${cozeResponse.status}` }), {
           status: cozeResponse.status,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': getAllowedOrigin(request) },
         })
       }
 
@@ -61,13 +74,13 @@ export default {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': getAllowedOrigin(request),
         },
       })
     } catch (err) {
-      return new Response(JSON.stringify({ error: 'Proxy error', detail: err.message }), {
+      return new Response(JSON.stringify({ error: 'Proxy error' }), {
         status: 502,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': getAllowedOrigin(request) },
       })
     }
   }

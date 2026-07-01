@@ -55,7 +55,7 @@ function checkSubmitRate(ip: string): boolean {
 
 export async function onRequestOptions(context: any) {
   const origin = context.request.headers.get('Origin') || ''
-  const allowedOrigin = isAllowedOrigin(origin) ? origin : ALLOWED_ORIGINS[0]
+  const allowedOrigin = isAllowedOrigin(origin) ? origin : ''
   return new Response(null, {
     status: 204,
     headers: {

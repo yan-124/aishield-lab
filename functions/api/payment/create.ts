@@ -21,15 +21,16 @@ function isAllowedOrigin(origin: string): boolean {
 }
 
 const DEFAULT_PRODUCT_TITLE = 'AIShield Lab - 月度会员'
-const DEFAULT_PRODUCT_PRICE = '19.90'
+const DEFAULT_PRODUCT_PRICE = '19.9'
 // Server-side amount whitelist — prevents client-side price manipulation
 // 网站直接收钱的产品：会员订阅（月度19.9 / 年度99 / 终身299）
-// 1v1服务不在网站直接收费，走微信私域成交
-const ALLOWED_AMOUNTS = new Set(['19.90', '99.00', '299.00'])
+// 虎皮椒 total_fee 是 decimal(18,2)，文档说"没小数位不用强制保留2位小数"
+// 所以 19.90 → 19.9，99.00 → 99，299.00 → 299
+const ALLOWED_AMOUNTS = new Set(['19.9', '19.90', '99', '99.00', '299', '299.00'])
 const NOTIFY_URL = 'https://aiseclearn.com/api/payment/notify'
 const RETURN_URL = 'https://aiseclearn.com'
 
-const DEBUG_MODE = true
+const DEBUG_MODE = false
 
 export async function onRequestPost(context: any) {
   const { request, env } = context
@@ -71,11 +72,15 @@ export async function onRequestPost(context: any) {
   const finalAmount = (amount && ALLOWED_AMOUNTS.has(amount)) ? amount : DEFAULT_PRODUCT_PRICE
   const finalTitle = title || DEFAULT_PRODUCT_TITLE
 
+  // 虎皮椒 total_fee 是 decimal(18,2)，去掉末尾多余的零避免签名不一致
+  // 19.90 → "19.9"，99.00 → "99"，299.00 → "299"
+  const normalizedAmount = String(Number(finalAmount))
+
   const params: Record<string, string> = {
     version: '1.1',
     appid: env.HUPIJIAO_APP_ID,
     trade_order_id: orderId,
-    total_fee: finalAmount,
+    total_fee: normalizedAmount,
     title: finalTitle,
     time: Math.floor(Date.now() / 1000).toString(),
     notify_url: NOTIFY_URL,
@@ -117,23 +122,8 @@ export async function onRequestPost(context: any) {
   let lastError: any
   let responseData: any = null
 
-  // [DEBUG] 打印请求参数（脱敏后）— 用于诊断 9.9 元问题
-  console.log('[PAYMENT-DEBUG] Outgoing params to Hupijiao:', JSON.stringify({
-    appid: params.appid?.substring(0, 6) + '***',
-    trade_order_id: params.trade_order_id,
-    total_fee: params.total_fee,
-    title: params.title,
-    type: params.type,
-  }))
-  console.log('[PAYMENT-DEBUG] Raw total_fee string:', JSON.stringify(params.total_fee))
-  console.log('[PAYMENT-DEBUG] finalAmount variable:', finalAmount, 'type:', typeof finalAmount)
-
   for (let retry = 0; retry < MAX_RETRIES; retry++) {
     try {
-      if (DEBUG_MODE) {
-        console.log(`[Retry ${retry + 1}/${MAX_RETRIES}] Calling Hupijiao API`)
-      }
-
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT)
 
@@ -153,31 +143,11 @@ export async function onRequestPost(context: any) {
       const text = await resp.text()
       try {
         responseData = JSON.parse(text)
-        // 把虎皮椒返回的原始数据也记录下来，方便排查金额问题
-        console.log('[Hupijiao DEBUG] Raw API response:', JSON.stringify(responseData))
-        console.log('[Hupijiao DEBUG] Sent total_fee:', params.total_fee)
       } catch (parseErr) {
         throw new Error(`Invalid JSON response: ${text.substring(0, 200)}`)
       }
 
-      if (DEBUG_MODE) {
-        console.log('[Retry ' + (retry + 1) + '/' + MAX_RETRIES + '] Hupijiao API response:', JSON.stringify(responseData))
-      }
-
       if (responseData.errcode === 0 && (responseData.url || responseData.url_qrcode)) {
-        // [DEBUG] 打印成功响应中的金额
-        console.log('[PAYMENT-DEBUG] Hupijiao SUCCESS response:', JSON.stringify({
-          errcode: responseData.errcode,
-          errmsg: responseData.errmsg,
-          hasUrl: !!responseData.url,
-          hasQrcode: !!responseData.url_qrcode,
-          qrcodeLength: responseData.url_qrcode?.length,
-          // 尝试找虎皮椒可能在响应里返回的金额字段
-          totalFee: responseData.total_fee,
-          money: responseData.money,
-          amount: responseData.amount,
-          cash: responseData.cash,
-        }))
         return new Response(JSON.stringify({
           orderId,
           url: responseData.url || '',
@@ -190,9 +160,6 @@ export async function onRequestPost(context: any) {
 
     } catch (err: any) {
       lastError = err
-      if (DEBUG_MODE) {
-        console.error('[Retry ' + (retry + 1) + '/' + MAX_RETRIES + '] Error:', err.message)
-      }
       if (retry < MAX_RETRIES - 1) {
         await new Promise(r => setTimeout(r, 500 * (retry + 1)))
       }
@@ -202,7 +169,5 @@ export async function onRequestPost(context: any) {
   return new Response(JSON.stringify({
     error: '支付服务异常: ' + (lastError.message || 'unknown'),
     errCode: responseData?.errcode || 0,
-    details: DEBUG_MODE ? lastError.stack : undefined,
-    rawResponse: DEBUG_MODE && responseData ? responseData : undefined,
   }), { status: 500, headers: corsHeaders })
 }

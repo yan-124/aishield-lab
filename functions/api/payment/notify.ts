@@ -54,10 +54,28 @@ async function handleNotify(context: any) {
           return new Response('fail: amount mismatch', { status: 400 })
         }
 
-        // 验证订单状态（防止重复确认）
-        if (order.status === 'success') {
-          console.log(`Duplicate payment notify for ${orderId}`)
+        // 验证订单状态（防止重复确认）— 检查是否已在处理中或已完成
+        if (order.status === 'success' || order.status === 'processing') {
+          console.log(`Duplicate or in-flight payment notify for ${orderId}`)
           return new Response('success', { status: 200 })
+        }
+
+        // 先将状态标记为 processing，防止竞态条件下的重复处理
+        order.status = 'processing'
+        await env.AUTH_KV.put(
+          `payment_order:${orderId}`,
+          JSON.stringify(order),
+          { expirationTtl: 86400 * 90 }
+        )
+
+        // 二次确认：再次读取订单，确保当前请求确实拿到了 processing 状态
+        const recheckData = await env.AUTH_KV.get(`payment_order:${orderId}`)
+        if (recheckData) {
+          const recheckOrder = JSON.parse(recheckData)
+          if (recheckOrder.status === 'success') {
+            console.log(`Concurrent payment already succeeded for ${orderId}`)
+            return new Response('success', { status: 200 })
+          }
         }
 
         // 更新订单状态为成功
