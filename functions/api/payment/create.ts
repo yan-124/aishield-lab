@@ -80,17 +80,16 @@ export async function onRequestPost(context: any) {
   // Debug: log all payment creation details
   console.log('[PAYMENT_CREATE]', JSON.stringify({ orderId, finalAmount, normalizedAmount, title: finalTitle, appid: env.HUPIJIAO_APP_ID?.slice(0,6) }))
 
-  const params: Record<string, string> = {
+  const params: Record<string, string | number> = {
     version: '1.1',
     appid: env.HUPIJIAO_APP_ID,
     trade_order_id: orderId,
-    total_fee: normalizedAmount,
+    total_fee: Number(normalizedAmount),
     title: finalTitle,
-    time: Math.floor(Date.now() / 1000).toString(),
+    time: Math.floor(Date.now() / 1000),
     notify_url: NOTIFY_URL,
     return_url: RETURN_URL,
     nonce_str: generateNonceStr(16),
-    type: 'NATIVE',
   }
 
   params.hash = generateSign(params, env.HUPIJIAO_APP_SECRET)
