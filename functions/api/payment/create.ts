@@ -72,21 +72,15 @@ export async function onRequestPost(context: any) {
   const finalAmount = (amount && ALLOWED_AMOUNTS.has(amount)) ? amount : DEFAULT_PRODUCT_PRICE
   const finalTitle = title || DEFAULT_PRODUCT_TITLE
 
-  // 虎皮椒 total_fee 是 decimal(18,2)，去掉末尾多余的零避免签名不一致
-  // 19.90 → "19.9"，99.00 → "99"，299.00 → "299"
-  // 保留两位小数，确保 19.90 不会变成 19.9（某些支付网关对格式敏感）
-  const normalizedAmount = Number(finalAmount).toFixed(2)
+  console.log('[PAYMENT_CREATE]', JSON.stringify({ orderId, finalAmount, title: finalTitle, appid: env.HUPIJIAO_APP_ID?.slice(0,6) }))
 
-  // Debug: log all payment creation details
-  console.log('[PAYMENT_CREATE]', JSON.stringify({ orderId, finalAmount, normalizedAmount, title: finalTitle, appid: env.HUPIJIAO_APP_ID?.slice(0,6) }))
-
-  const params: Record<string, string | number> = {
+  const params: Record<string, string> = {
     version: '1.1',
     appid: env.HUPIJIAO_APP_ID,
     trade_order_id: orderId,
-    total_fee: Number(normalizedAmount),
+    total_fee: finalAmount,  // "19.9" string, no Number() conversion
     title: finalTitle,
-    time: Math.floor(Date.now() / 1000),
+    time: Math.floor(Date.now() / 1000).toString(),
     notify_url: NOTIFY_URL,
     return_url: RETURN_URL,
     nonce_str: generateNonceStr(16),
@@ -146,25 +140,12 @@ export async function onRequestPost(context: any) {
       }
 
       if (responseData.errcode === 0 && (responseData.url || responseData.url_qrcode)) {
-        console.log('[PAYMENT_RESPONSE]', JSON.stringify({ orderId, total_fee: normalizedAmount, responseAmount: responseData.total_fee, responseUrl: responseData.url?.slice(0,60) }))
-        // DEBUG: 记录完整请求参数
-        const debugParams = { ...params }
-        delete (debugParams as any).hash
-        delete (debugParams as any).appid
-        
+        console.log('[PAYMENT_RESPONSE]', JSON.stringify({ orderId, total_fee: finalAmount, responseAmount: responseData.total_fee, responseUrl: responseData.url?.slice(0,60) }))
         return new Response(JSON.stringify({
           orderId,
           url: responseData.url || '',
           urlQrcode: responseData.url_qrcode || '',
           url_qrcode: responseData.url_qrcode || '',
-          // DEBUG: 临时添加，用于排查金额问题，确认后删除
-          _debug: { 
-            total_fee: normalizedAmount, 
-            title: finalTitle, 
-            raw_response_amount: responseData.total_fee || 'N/A',
-            request_params: debugParams,
-            request_body: JSON.stringify(params)
-          }
         }), { headers: corsHeaders })
       } else {
         throw new Error(responseData.errmsg || responseData.msg || '创建支付订单失败')
