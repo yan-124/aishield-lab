@@ -147,13 +147,24 @@ export async function onRequestPost(context: any) {
 
       if (responseData.errcode === 0 && (responseData.url || responseData.url_qrcode)) {
         console.log('[PAYMENT_RESPONSE]', JSON.stringify({ orderId, total_fee: normalizedAmount, responseAmount: responseData.total_fee, responseUrl: responseData.url?.slice(0,60) }))
+        // DEBUG: 记录完整请求参数
+        const debugParams = { ...params }
+        delete (debugParams as any).hash
+        delete (debugParams as any).appid
+        
         return new Response(JSON.stringify({
           orderId,
           url: responseData.url || '',
           urlQrcode: responseData.url_qrcode || '',
           url_qrcode: responseData.url_qrcode || '',
           // DEBUG: 临时添加，用于排查金额问题，确认后删除
-          _debug: { total_fee: normalizedAmount, title: finalTitle, raw_response_amount: responseData.total_fee || 'N/A' }
+          _debug: { 
+            total_fee: normalizedAmount, 
+            title: finalTitle, 
+            raw_response_amount: responseData.total_fee || 'N/A',
+            request_params: debugParams,
+            request_body: JSON.stringify(params)
+          }
         }), { headers: corsHeaders })
       } else {
         throw new Error(responseData.errmsg || responseData.msg || '创建支付订单失败')
