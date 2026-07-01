@@ -37,14 +37,11 @@ jobs:
         run: npm run build
 
       - name: 部署到 Cloudflare Pages
-        id: pages-deploy
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: aishield-lab
-          directory: dist3
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy dist3 --project-name=aishield-lab --branch=main
 
       - name: 部署 Worker（Coze 代理）
         uses: cloudflare/wrangler-action@v3
@@ -56,5 +53,4 @@ jobs:
 
       - name: 输出部署信息
         run: |
-          echo "Pages 部署地址: ${{ steps.pages-deploy.outputs.url }}"
-          echo "环境: ${{ steps.pages-deploy.outputs.environment }}"
+          echo "Pages 和 Worker 部署完成"
