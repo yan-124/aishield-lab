@@ -158,6 +158,8 @@ export async function onRequestPost(context: any) {
           url: responseData.url || '',
           urlQrcode: responseData.url_qrcode || '',
           url_qrcode: responseData.url_qrcode || '',
+          // DEBUG: 临时添加，用于排查金额问题，确认后删除
+          _debug: { total_fee: normalizedAmount, title: finalTitle, raw_response_amount: responseData.total_fee || 'N/A' }
         }), { headers: corsHeaders })
       } else {
         throw new Error(responseData.errmsg || responseData.msg || '创建支付订单失败')
