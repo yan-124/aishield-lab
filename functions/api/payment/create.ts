@@ -26,7 +26,7 @@ const DEFAULT_PRODUCT_PRICE = '19.9'
 // 网站直接收钱的产品：会员订阅（月度19.9 / 年度99 / 终身299）
 // 虎皮椒 total_fee 是 decimal(18,2)，文档说"没小数位不用强制保留2位小数"
 // 所以 19.90 → 19.9，99.00 → 99，299.00 → 299
-const ALLOWED_AMOUNTS = new Set(['19.9', '19.90', '99', '99.00', '299', '299.00'])
+const ALLOWED_AMOUNTS = new Set(['9.9', '9.90', '19.9', '19.90', '39.9', '39.90', '69.9', '69.90', '99', '99.00', '129.9', '129.90', '299', '299.00', '299.9', '299.90', '499.9', '499.90'])
 const NOTIFY_URL = 'https://aiseclearn.com/api/payment/notify'
 const RETURN_URL = 'https://aiseclearn.com'
 

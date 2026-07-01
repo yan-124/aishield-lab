@@ -28,6 +28,7 @@ function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Grou
   return new Promise((resolve, reject) => {
     import('three/examples/jsm/loaders/GLTFLoader.js').then(({ GLTFLoader }) => {
       const loader = new GLTFLoader()
+      loader.setCrossOrigin("anonymous")
       loader.load(
         url,
         (gltf) => {
@@ -39,13 +40,10 @@ function loadGLB(url: string, scaleMultiplier: number = 1.0): Promise<THREE.Grou
               const mats = Array.isArray(child.material) ? child.material : [child.material]
               mats.forEach((mat: any) => {
                 if (mat.isMeshStandardMaterial || mat.isMeshPhongMaterial) {
-                  // Step 1: ALWAYS kill emissive — no exceptions
-                  if (mat.emissive) {
-                    mat.emissive.setHex(0x000000)
-                  }
-                  mat.emissiveIntensity = 0
-                  if (mat.emissiveMap) {
-                    mat.emissiveMap = null
+                  // Step 1: Preserve emissive glow (eyes, chest details)
+                  // Only reduce if excessively bright to avoid bloom artifacts
+                  if (mat.emissiveIntensity > 2) {
+                    mat.emissiveIntensity = 1.5
                   }
 
                   // Step 2: Preserve original colors — do NOT inject themed colors
